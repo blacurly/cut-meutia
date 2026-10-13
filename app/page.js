@@ -1,69 +1,57 @@
-import Image from "next/image";
+import { ArrowRight, HeartHandshake, ShieldCheck, Search } from "lucide-react";
+import Link from "next/link";
+import Badge from "@/components/ui/Badge";
+import Banner from "@/components/ui/Banner";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import ProgressBarWithCard from "@/components/ui/ProgressBarWithCard";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.js
-            </code>{" "}
-            file.
+    <main className="min-h-screen bg-[#f8faf9]">
+      <header className="border-b border-[#e2ebe8] bg-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <Link href="/" className="flex items-center gap-2 text-xl font-bold text-[#173b3f]">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#2a9d8f] text-white"><HeartHandshake size={20} /></span>
+            Ayomi
+          </Link>
+          <nav className="hidden items-center gap-6 text-sm font-medium text-[#60706d] sm:flex">
+            <a href="#cara-kerja" className="hover:text-[#264653]">Cara kerja</a>
+            <a href="#keamanan" className="hover:text-[#264653]">Keamanan</a>
+            <Button variant="secondary" size="sm">Masuk</Button>
+          </nav>
+        </div>
+      </header>
+      <section className="mx-auto grid max-w-6xl gap-10 px-6 py-16 md:grid-cols-[1.1fr_.9fr] md:items-center md:py-24">
+        <div>
+          <Badge variant="green">Pengasuhan aman dimulai dari sini</Badge>
+          <h1 className="mt-5 max-w-xl text-4xl font-bold leading-tight tracking-tight text-[#173b3f] md:text-6xl">
+            Temukan daycare yang membuat hati lebih tenang.
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-5 max-w-lg text-lg leading-8 text-[#60706d]">
+            Ayomi membantu orang tua memeriksa legalitas, keamanan, dan kualitas daycare secara transparan.
           </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Button icon={<Search size={18} />}>Cari daycare</Button>
+            <Button variant="ghost" icon={<ArrowRight size={18} />} iconPosition="right">Pelajari cara kerja</Button>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        <Card color="yellow" className="relative overflow-hidden">
+          <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#f4c95d]/40" />
+          <div className="relative">
+            <div className="flex items-center justify-between">
+              <p className="font-semibold text-[#806000]">Contoh profil terverifikasi</p>
+              <ShieldCheck className="text-[#2a9d8f]" />
+            </div>
+            <h2 className="mt-8 text-2xl font-bold text-[#173b3f]">Taman Ceria Gresik</h2>
+            <p className="mt-1 text-sm text-[#60706d]">Gresik, Jawa Timur · 1,2 km</p>
+            <div className="mt-6"><ProgressBarWithCard label="AI Safety Score" value={92} subtitle="Berdasarkan legalitas, rasio pengasuh, dan ulasan terverifikasi." /></div>
+          </div>
+        </Card>
+      </section>
+      <section id="keamanan" className="mx-auto max-w-6xl px-6 pb-16">
+        <Banner type="ai" title="Dibangun untuk rasa aman" description="Setiap informasi dirancang agar orang tua dapat mengambil keputusan dengan data yang jelas dan dapat dipertanggungjawabkan." ctaText="Lihat standar keamanan" />
+      </section>
+    </main>
   );
 }
