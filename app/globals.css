@@ -1,25 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8faf9;
-  --foreground: #173b3f;
-  --ayomi-navy: #173b3f;
+  --background: #f8f9fa;
+  --foreground: #1a2e35;
+  --ayomi-navy: #264653;
   --ayomi-teal: #2a9d8f;
-  --ayomi-yellow: #f4c95d;
+  --ayomi-yellow: #e9c46a;
+  --ayomi-coral: #e76f51;
   --ayomi-sand: #fff8e8;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-jakarta-sans);
+  --font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-jakarta-sans), Arial, Helvetica, sans-serif;
 }
 
 button, input, textarea, select { font: inherit; }
+
+::selection {
+  background: #e9c46a;
+  color: #264653;
+}
