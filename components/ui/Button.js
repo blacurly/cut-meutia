@@ -3,6 +3,7 @@
 import { cn } from "./utils";
 
 const variants = {
+  accent: "bg-[#2a9d8f] text-white hover:brightness-105 focus-visible:ring-[#2a9d8f]",
   primary: "bg-[#264653] text-white shadow-sm hover:bg-[#1f3944] focus-visible:ring-[#264653]",
   secondary: "border border-[#264653] bg-white text-[#264653] hover:bg-[#eef6f4] focus-visible:ring-[#264653]",
   ghost: "text-[#264653] hover:bg-[#eef6f4] focus-visible:ring-[#264653]",
@@ -24,9 +25,12 @@ export default function Button({
   onClick,
   children,
   type = "button",
+  className,
+  ...props
 }) {
   return (
     <button
+      {...props}
       type={type}
       disabled={disabled}
       onClick={onClick}
@@ -35,6 +39,7 @@ export default function Button({
         variants[variant] || variants.primary,
         sizes[size] || sizes.md,
         fullWidth && "w-full",
+        className,
       )}
     >
       {icon && iconPosition === "left" ? icon : null}
