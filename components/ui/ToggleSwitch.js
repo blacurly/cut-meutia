@@ -1,10 +1,11 @@
 "use client";
 
-export default function ToggleSwitch({ checked, onChange, disabled = false }) {
+export default function ToggleSwitch({ checked, onChange, disabled = false, label = "Aktifkan pilihan" }) {
   return (
     <button
       type="button"
       role="switch"
+      aria-label={label}
       aria-checked={checked}
       disabled={disabled}
       onClick={() => onChange(!checked)}
