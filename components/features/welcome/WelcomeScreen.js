@@ -54,6 +54,7 @@ export default function WelcomeScreen({ language = "id" }) {
                 <Building2 size={20} aria-hidden="true" />
               </Link>
               <Link href={entryHref("admin")} className={styles.adminLink}>{copy.admin}</Link>
+              <Link href="/" className={styles.adminLink} style={{color:"#e9c46a"}}>{language==="en"?"Explore the public daycare directory":"Jelajahi katalog daycare tanpa masuk"}</Link>
             </nav>
           </div>
           <div className={styles.panelFooter}>
