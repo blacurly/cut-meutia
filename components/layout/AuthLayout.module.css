@@ -1,0 +1,63 @@
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 100svh; }
+.showcase { position: sticky; top: 0; align-self: start; display: flex; flex-direction: column; justify-content: space-between; min-height: 100svh; padding: 40px clamp(32px, 5vw, 80px); background: #264653; color: #fff; }
+.brandContent { max-width: 540px; padding-block: 32px; }
+.eyebrow { display: flex; align-items: center; gap: 9px; color: #e9c46a; font-size: 10px; line-height: 1.6; font-weight: 600; letter-spacing: 1.5px; }
+.eyebrow svg { flex-shrink: 0; }
+.brandContent h2 { margin-top: 22px; font-size: clamp(30px, 2.8vw, 40px); font-weight: 700; line-height: 1.32; letter-spacing: -1.4px; white-space: pre-line; }
+.description { max-width: 430px; margin-top: 18px; color: #cbd5e1; font-size: 14px; line-height: 1.9; }
+.metrics { display: grid; gap: 14px; margin-top: 34px; }
+.metrics li { display: flex; align-items: center; gap: 15px; padding: 18px; border: 1px solid #fff; border-radius: 12px; background: #fff; color: #1a2e35; }
+.metricIcon { display: grid; place-items: center; width: 46px; height: 46px; flex-shrink: 0; border: 1px solid #2a9d8f26; border-radius: 10px; background: #2a9d8f0d; color: #2a9d8f; }
+.amber { background: #e9c46a15; border-color: #e9c46a40; color: #e9c46a; }
+.metrics h3 { font-size: 13px; font-weight: 700; line-height: 1.6; }
+.metrics p { margin-top: 5px; color: #556670; font-size: 11px; line-height: 1.8; }
+.brandFooter { display: flex; align-items: center; gap: 10px; padding-top: 20px; border-top: 1px solid #ffffff26; color: #cbd5e1; font-size: 11px; line-height: 1.8; }
+.brandFooter svg { flex-shrink: 0; color: #e9c46a; }
+.workspace { min-width: 0; display: flex; flex-direction: column; padding: 40px clamp(28px, 4vw, 68px) 24px; background: #f8f9fa; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.back { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; color: #556670; font-size: 11px; }
+.back:hover { color: #264653; }
+.language { display: flex; align-items: center; gap: 2px; padding: 2px; border: 1px solid #e2e8f0; border-radius: 999px; background: #fff; }
+.language a { display: grid; place-items: center; width: 34px; min-height: 32px; border-radius: 999px; color: #556670; font-size: 10px; font-weight: 600; }
+.language a[aria-current="page"] { background: #264653; color: #fff; }
+.language span { color: #94a3b8; font-size: 10px; }
+.formArea { width: 100%; max-width: 480px; margin: auto; padding-block: 42px; }
+.footer { display: flex; justify-content: center; align-items: center; gap: 7px; color: #556670; font-size: 10px; line-height: 1.8; }
+.footer svg { color: #2a9d8f; flex-shrink: 0; }
+.layout a:focus-visible { outline: 2px solid #2a9d8f; outline-offset: 4px; border-radius: 5px; }
+
+@media (min-width: 1600px) {
+  .brandContent { width: 100%; margin-inline: auto; }
+}
+@media (max-width: 1100px) {
+  .showcase { padding-inline: 32px; }
+  .workspace { padding-inline: 28px; }
+  .metrics li { padding: 16px; gap: 12px; }
+  .metrics h3 { font-size: 12px; }
+}
+@media (max-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .showcase { position: static; min-height: auto; padding: 24px 32px; }
+  .showcase > a img { width: 38px; height: 38px; }
+  .showcase > a > span { font-size: 32px; }
+  .brandContent { max-width: none; padding: 22px 0 0; }
+  .eyebrow, .description, .brandFooter { display: none; }
+  .brandContent h2 { margin: 0; white-space: normal; font-size: 24px; letter-spacing: -0.7px; }
+  .metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 22px; }
+  .metrics li { align-items: flex-start; flex-direction: column; padding: 14px; gap: 10px; }
+  .metrics p { display: none; }
+  .metricIcon { width: 34px; height: 34px; border-radius: 8px; }
+  .metricIcon svg { width: 19px; height: 19px; }
+  .metrics h3 { font-size: 10px; }
+  .workspace { padding: 24px 32px; }
+  .formArea { padding-block: 32px; }
+}
+@media (max-width: 480px) {
+  .showcase { padding: 22px; }
+  .brandContent { padding-top: 16px; }
+  .brandContent h2 { font-size: 21px; }
+  .metrics { display: none; }
+  .workspace { padding: 20px 22px; }
+  .back { font-size: 10px; gap: 6px; }
+  .footer { font-size: 9px; }
+}
