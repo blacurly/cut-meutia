@@ -23,7 +23,9 @@ body {
   font-family: var(--font-jakarta-sans), Arial, Helvetica, sans-serif;
 }
 
-button, input, textarea, select { font: inherit; }
+@layer base {
+  button, input, textarea, select { font: inherit; }
+}
 
 ::selection {
   background: #e9c46a;

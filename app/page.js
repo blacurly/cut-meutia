@@ -1,6 +1,3 @@
-﻿import WelcomeScreen from "@/components/features/welcome/WelcomeScreen";
+import PublicCatalog from "@/components/features/PublicCatalog";
 
-export default async function Home({ searchParams }) {
-  const { lang } = await searchParams;
-  return <WelcomeScreen language={lang === "en" ? "en" : "id"} />;
-}
+export default function Home() { return <PublicCatalog/>; }
