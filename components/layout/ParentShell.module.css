@@ -1,0 +1,57 @@
+.navbar { position:sticky; top:0; z-index:50; height:64px; background:#ffffffF2; backdrop-filter:blur(8px); border-bottom:1px solid #e2e8f0; color:#264653; }
+.navInner { position:relative; max-width:1280px; height:64px; margin:auto; padding-inline:24px; display:flex; align-items:center; gap:20px; }
+.brand { display:flex; align-items:center; gap:12px; flex-shrink:0; }
+.brand > a img { width:34px; height:34px; }
+.brand > a > span { font-size:27px; }
+.tagline { display:none; align-items:center; gap:5px; font-size:8px; font-weight:600; }
+.tagline i { width:5px; height:5px; border-radius:50%; background:#2a9d8f; }
+.desktopLinks { display:flex; align-items:center; gap:2px; margin-left:auto; }
+.desktopLinks a { padding:9px 10px; border-radius:6px; font-size:11px; white-space:nowrap; font-weight:500; }
+.desktopLinks a:hover,.desktopLinks a[aria-current=page] { background:#f1f5f9; color:#264653; }
+.desktopLinks a[aria-current=page] { font-weight:700; }
+.actions { display:flex; align-items:center; gap:7px; margin-left:auto; }
+.iconButton { position:relative; display:grid; place-items:center; width:35px; height:36px; border:0; border-radius:8px; background:transparent; color:#264653; cursor:pointer; }
+.iconButton:hover { background:#f1f5f9; }
+.count { position:absolute; top:-1px; right:-1px; min-width:15px; height:15px; padding-inline:3px; border-radius:99px; background:#2a9d8f; color:#fff; font-size:9px; display:grid; place-items:center; }
+.urgent { background:#e76f51; animation:notice-pulse 1.8s ease-in-out infinite; }
+.authActions { display:flex; gap:8px; font-size:11px; font-weight:600; }
+.authActions a { padding:8px 13px; border:1px solid #264653; border-radius:8px; }
+.authActions a:last-child { background:#264653; color:#fff; }
+.profileButton { display:flex; align-items:center; gap:7px; background:transparent; padding:4px; border:0; border-radius:7px; cursor:pointer; font-size:10px; }
+.avatar { display:grid; place-items:center; width:31px; height:31px; border-radius:50%; background:#e9c46a35; font-weight:700; }
+.dropdown { position:absolute; right:24px; top:59px; width:310px; max-width:calc(100vw - 36px); padding:9px; border:1px solid #e2e8f0; border-radius:12px; background:#fff; box-shadow:0 12px 30px #26465313; }
+.dropdown > a,.dropdown > button { display:flex; align-items:center; gap:8px; width:100%; padding:10px; border:0; border-radius:6px; background:#fff; text-align:left; font-size:12px; cursor:pointer; }
+.dropdown > a:hover,.dropdown > button:hover { background:#f1f5f9; }
+.dropdownHeading { display:flex; justify-content:space-between; gap:8px; padding:10px; border-bottom:1px solid #eef2f5; font-size:12px; }
+.dropdownHeading span,.dropdownHeading a { font-size:10px; color:#637680; }
+.menuText { padding:12px 10px; font-size:11px; line-height:1.8; color:#637680; }
+.menuText label { display:block; margin-bottom:6px; }
+.notificationLink small { display:block; color:#278579; margin-top:4px; }
+.hamburger { display:none; }
+.mobileMenu { display:grid; grid-template-rows:0fr; overflow:hidden; transition:grid-template-rows .2s ease-in-out; background:#fff; }
+.mobileOpen { grid-template-rows:1fr; border-bottom:1px solid #e2e8f0; }
+.mobileMenu > div { min-height:0; overflow:hidden; }
+.mobileAction { display:block; width:100%; padding:12px; text-align:left; font-size:14px; cursor:pointer; border:0; background:transparent; border-radius:8px; }
+.mobileAction:hover { background:#f1f5f9; }
+.mobileMenu nav { min-height:0; overflow:hidden; max-width:1280px; width:100%; margin:auto; padding:8px 20px 18px; }
+.mobileMenu nav > a { display:block; padding:12px; border-radius:8px; font-size:14px; }
+.mobileMenu a:hover { background:#f1f5f9; }
+.demoBar { display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; padding:8px 20px; border-bottom:1px solid #e9c46a45; background:#fffaf0; color:#79622f; font-size:10px; line-height:1.8; }
+.demoBar a { font-weight:700; text-decoration:underline; text-underline-offset:3px; }
+.footer { border-top:1px solid #e2e8f0; background:#fff; }
+.footerInner { max-width:1280px; margin:auto; padding:28px; display:flex; justify-content:space-between; align-items:center; gap:24px; color:#637680; font-size:11px; line-height:1.8; }
+.footerLinks { display:flex; flex-wrap:wrap; gap:20px; }
+.tray { position:fixed; z-index:35; bottom:18px; left:50%; transform:translateX(-50%); display:flex; align-items:center; justify-content:space-between; gap:16px; width:min(860px,calc(100% - 32px)); padding:14px 18px; border:1px solid #cbded9; border-radius:14px; background:#fff; box-shadow:0 8px 30px #26465322; }
+.tray strong { font-size:13px; color:#264653; }
+.trayChips { display:flex; gap:7px; margin-top:6px; }
+.trayChips button { display:flex; align-items:center; gap:5px; padding:4px 7px; border-radius:5px; background:#f1f5f9; border:0; font-size:9px; cursor:pointer; }
+.skip { position:fixed; z-index:100; left:12px; top:10px; padding:12px; border-radius:8px; background:#264653; color:white; transform:translateY(-160%); }
+.skip:focus { transform:none; }
+.navbar a:focus-visible,.navbar button:focus-visible { outline:2px solid #2a9d8f; outline-offset:3px; }
+@keyframes notice-pulse{50%{opacity:.5;}}
+@media(min-width:1400px){.tagline{display:flex;}}
+@media(min-width:1101px){.mobileMenu{display:none;}}
+@media(max-width:1100px){.desktopLinks{display:none;}.hamburger{display:grid;}.profileLabel{display:none;}}
+@media(max-width:600px){.navInner{padding-inline:16px;gap:10px;}.brand > a > span{font-size:25px;}.brand > a img{width:31px;height:31px;}.brand > a{gap:5px;}.actions{gap:2px;}.authActions{display:none;}.footerInner{align-items:flex-start;flex-direction:column;padding:24px 18px;}.tray{padding:12px;gap:8px;}.trayChips{display:none;}.tray strong{font-size:11px;}.demoBar{font-size:9px;gap:6px;}.dropdown{right:16px;}.iconButton{width:30px;}}
+@media(prefers-reduced-motion:reduce){.urgent{animation:none;}.mobileMenu{transition:none;}}
+@media(max-width:600px){.actions>.iconButton:first-child,.actions>a.iconButton,.profileButton{display:none;}.dropdown[id="navbar-profile"]{display:none;}}

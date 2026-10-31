@@ -1,5 +1,7 @@
 import localFont from "next/font/local";
 import "./globals.css";
+import ParentDemoProvider from "@/components/features/ParentDemoProvider";
+import ParentShell from "@/components/layout/ParentShell";
 
 const jakartaSans = localFont({
   src: "../public/fonts/PlusJakartaSans-Variable.ttf",
@@ -20,7 +22,7 @@ export default function RootLayout({ children }) {
       lang="id"
       className={`${jakartaSans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col"><ParentDemoProvider><ParentShell>{children}</ParentShell></ParentDemoProvider></body>
     </html>
   );
 }
