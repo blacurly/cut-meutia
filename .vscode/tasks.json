@@ -1,0 +1,36 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Ayomi: build",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"build"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Ayomi: dev",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"${workspaceFolder}/node_modules/next/dist/bin/next",
+				"dev",
+				"${workspaceFolder}",
+				"--hostname",
+				"127.0.0.1",
+				"--port",
+				"3000"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}
