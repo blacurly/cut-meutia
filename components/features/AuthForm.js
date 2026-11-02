@@ -183,6 +183,8 @@ export default function AuthForm({ mode, role, language }) {
         )}
       </div>
       {!adminRegistration && role !== "admin" && <p className={styles.switchMode}>{registering ? copy.haveAccount : copy.noAccount} <Link href={authHref(registering ? "login" : "register", role, language)}>{registering ? copy.loginLink : copy.registerLink}</Link></p>}
+      {role === "caregiver" && <p className={styles.switchMode}><Link href="/pengelola">{language === "en" ? "Explore the caregiver demo without an account" : "Coba demo Pengelola tanpa akun"}</Link></p>}
+      {role === "admin" && !registering && <p className={styles.switchMode}><Link href="/admin">{language === "en" ? "Explore the administrator demo" : "Coba demo Administrator"}</Link></p>}
 
       <Modal open={Boolean(dialog)} onClose={closeDialog} title={dialog === "reset" ? copy.resetTitle : dialog === "privacy" ? copy.privacy : copy.terms} closeLabel={copy.close} size="sm">
         {dialog === "reset" ? <form method="post" onSubmit={submitRecovery} className={styles.recoveryForm} noValidate>
