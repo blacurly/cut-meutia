@@ -6,6 +6,7 @@ export async function GET(request) {
   const code = requestUrl.searchParams.get("code");
   const next = requestUrl.searchParams.get("next") || "/beranda";
   const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/beranda";
+  const recoveryFlow = safeNext === "/atur-ulang-sandi";
 
   if (code) {
     const supabase = await createClient();
@@ -13,5 +14,8 @@ export async function GET(request) {
     if (!error) return NextResponse.redirect(new URL(safeNext, requestUrl.origin));
   }
 
-  return NextResponse.redirect(new URL("/masuk?auth=confirmation-error", requestUrl.origin));
+  return NextResponse.redirect(new URL(
+    recoveryFlow ? "/masuk?auth=recovery-expired" : "/masuk?auth=confirmation-error",
+    requestUrl.origin,
+  ));
 }

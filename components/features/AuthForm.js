@@ -23,7 +23,7 @@ function GoogleMark() {
   return <span aria-hidden="true" className={styles.googleMark}>G</span>;
 }
 
-export default function AuthForm({ mode, role, language }) {
+export default function AuthForm({ mode, role, language, initialAuthMessage = null }) {
   const copy = authCopy[language];
   const registering = mode === "register";
   const adminRegistration = registering && role === "admin";
@@ -32,7 +32,7 @@ export default function AuthForm({ mode, role, language }) {
   const [isNavigating, startTransition] = useTransition();
   const [values, setValues] = useState(emptyValues);
   const [errors, setErrors] = useState({});
-  const [feedback, setFeedback] = useState(null);
+  const [feedback, setFeedback] = useState(() => initialAuthMessage ? { kind: "error", message: copy[initialAuthMessage] } : null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [dialog, setDialog] = useState(null);
@@ -126,7 +126,19 @@ export default function AuthForm({ mode, role, language }) {
       const destination = profile.role === "parent" ? "/beranda" : profile.role === "admin" ? "/admin" : "/pengelola";
       startTransition(() => router.replace(destination));
     } catch (error) {
-      const key = error.message === "profile" ? "profileUnavailable" : error.message === "role" ? "roleMismatch" : "authFailed";
+      const key = error.message === "profile"
+        ? "profileUnavailable"
+        : error.message === "role"
+          ? "roleMismatch"
+          : error.code === "invalid_credentials"
+            ? "invalidCredentials"
+            : error.code === "email_not_confirmed"
+              ? "emailNotConfirmed"
+              : error.status === 400
+                ? "invalidCredentials"
+              : error.name === "AuthRetryableFetchError" || error.name === "AbortError"
+                ? "authUnavailable"
+              : "authFailed";
       setFeedback({ kind: "error", message: copy[key] });
     } finally {
       setIsSubmitting(false);
@@ -140,7 +152,7 @@ export default function AuthForm({ mode, role, language }) {
     setDialog("reset");
   }
 
-  function submitRecovery(event) {
+  async function submitRecovery(event) {
     event.preventDefault();
     const next = validateAuthForm({ email: resetEmail, password: "present" });
     if (next.email) {
@@ -149,7 +161,26 @@ export default function AuthForm({ mode, role, language }) {
       return;
     }
     setResetError("");
-    setResetNotice(copy.resetUnavailable);
+    setIsSubmitting(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
+        redirectTo: `${window.location.origin}/auth/callback?next=/atur-ulang-sandi`,
+      });
+      if (error) throw error;
+      setResetNotice(copy.resetSent);
+    } catch (error) {
+      const message = error.code === "over_email_send_rate_limit"
+        ? copy.resetRateLimited
+        : error.code === "email_address_not_authorized"
+          ? copy.resetEmailNotAuthorized
+          : error.name === "AuthRetryableFetchError" || error.name === "AbortError"
+            ? copy.authUnavailable
+            : copy.resetFailed;
+      setResetError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function field(name, Icon, options = {}) {
@@ -249,7 +280,7 @@ export default function AuthForm({ mode, role, language }) {
           <label htmlFor="recovery-email">{copy.fields.email}</label>
           <Input id="recovery-email" name="recoveryEmail" type="email" autoComplete="email" icon={<Mail size={17} aria-hidden="true" />} placeholder={copy.placeholders.email} value={resetEmail} onChange={(event) => { setResetEmail(event.target.value); setResetError(""); setResetNotice(""); }} error={resetError} required />
           {resetNotice && <p className={styles.feedback} role="status">{resetNotice}</p>}
-          <Button type="submit" variant="accent" fullWidth>{copy.resetButton}</Button>
+          <Button type="submit" variant="accent" fullWidth disabled={isSubmitting}>{isSubmitting ? copy.submitting : copy.resetButton}</Button>
         </form> : <div className={styles.legalContent}><p>{dialog === "privacy" ? copy.privacyBody : copy.termsBody}</p><Button onClick={closeDialog} fullWidth>{copy.understood}</Button></div>}
       </Modal>
     </div>
