@@ -9,6 +9,7 @@ import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 import Tabs from "@/components/ui/Tabs";
 import { AUTH_ROLES, authHref, normalizePhone, passwordCriteria, validateAuthForm } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/client";
 import { authCopy } from "./auth-copy";
 import styles from "./AuthForm.module.css";
 
@@ -32,6 +33,7 @@ export default function AuthForm({ mode, role, language }) {
   const [values, setValues] = useState(emptyValues);
   const [errors, setErrors] = useState({});
   const [feedback, setFeedback] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [dialog, setDialog] = useState(null);
   const [resetEmail, setResetEmail] = useState("");
@@ -62,7 +64,7 @@ export default function AuthForm({ mode, role, language }) {
     if (name === "phone" && !next.phone) setValues((previous) => ({ ...previous, phone: normalizePhone(previous.phone) }));
   }
 
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault();
     const nextErrors = validateAuthForm(values, { mode, role });
     setErrors(nextErrors);
@@ -71,9 +73,64 @@ export default function AuthForm({ mode, role, language }) {
       event.currentTarget.elements.namedItem(Object.keys(nextErrors)[0])?.focus();
       return;
     }
-    // No auth provider is configured yet. Never persist credentials, fabricate
-    // a session, or grant access based on the selected presentation role.
-    setFeedback({ kind: "info", message: registering ? copy.registerUnavailable : copy.loginUnavailable });
+    if (registering && role !== "parent") {
+      setFeedback({ kind: "error", message: copy.staffInviteOnly });
+      return;
+    }
+
+    setIsSubmitting(true);
+    setFeedback(null);
+    try {
+      const supabase = createClient();
+      if (registering) {
+        const { data, error } = await supabase.auth.signUp({
+          email: values.email.trim(),
+          password: values.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=/beranda`,
+            data: { full_name: values.name.trim(), phone: normalizePhone(values.phone) },
+          },
+        });
+        if (error) throw error;
+
+        if (!data.session) {
+          setFeedback({ kind: "info", message: copy.confirmEmail });
+          return;
+        }
+        startTransition(() => router.replace("/beranda"));
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: values.email.trim(),
+        password: values.password,
+      });
+      if (error) throw error;
+
+      const { data: profile, error: profileError } = await supabase
+        .from("users")
+        .select("role, status")
+        .eq("id", data.user.id)
+        .single();
+      if (profileError || !profile) {
+        await supabase.auth.signOut();
+        throw new Error("profile");
+      }
+      const allowedRole = role === "caregiver"
+        ? ["manager", "caregiver"].includes(profile.role)
+        : profile.role === role;
+      if (!allowedRole || profile.status !== "active") {
+        await supabase.auth.signOut();
+        throw new Error("role");
+      }
+      const destination = profile.role === "parent" ? "/beranda" : profile.role === "admin" ? "/admin" : "/pengelola";
+      startTransition(() => router.replace(destination));
+    } catch (error) {
+      const key = error.message === "profile" ? "profileUnavailable" : error.message === "role" ? "roleMismatch" : "authFailed";
+      setFeedback({ kind: "error", message: copy[key] });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function openRecovery() {
@@ -147,7 +204,7 @@ export default function AuthForm({ mode, role, language }) {
         ) : (
           <>
             <form method="post" onSubmit={submit} noValidate aria-label={registering ? copy.register : copy.login}>
-              <fieldset disabled={!hydrated || isNavigating} className={styles.fields}>
+              <fieldset disabled={!hydrated || isNavigating || isSubmitting} className={styles.fields}>
                 {registering && field("name", UserRound, { autoComplete: "name", maxLength: 100 })}
                 {field("email", Mail, { type: "email", autoComplete: "email", autoCapitalize: "none", spellCheck: false, maxLength: 254 })}
                 {registering && field("phone", Phone, { type: "tel", inputMode: "tel", autoComplete: "tel-national", prefix: "+62", "aria-label": `${copy.fields.phone} (+62)`, maxLength: 24 })}
@@ -172,7 +229,7 @@ export default function AuthForm({ mode, role, language }) {
                   {errors.terms && <p id="auth-terms-error" className={styles.inlineError}>{copy.errors.terms}</p>}
                 </div>}
                 {feedback && <div className={`${styles.feedback} ${feedback.kind === "error" ? styles.error : ""}`} role={feedback.kind === "error" ? "alert" : "status"}>{feedback.kind === "error" ? <AlertCircle size={17} aria-hidden="true" /> : <Info size={17} aria-hidden="true" />}<span>{feedback.message}</span></div>}
-                <Button type="submit" variant="accent" fullWidth icon={<ArrowRight size={18} aria-hidden="true" />} iconPosition="right" className={styles.submit} disabled={!hydrated || isNavigating}>{isNavigating ? copy.loading : registering ? copy.register : copy.login}</Button>
+                <Button type="submit" variant="accent" fullWidth icon={<ArrowRight size={18} aria-hidden="true" />} iconPosition="right" className={styles.submit} disabled={!hydrated || isNavigating || isSubmitting}>{isSubmitting ? copy.submitting : isNavigating ? copy.loading : registering ? copy.register : copy.login}</Button>
               </fieldset>
             </form>
             {role !== "admin" && <>
