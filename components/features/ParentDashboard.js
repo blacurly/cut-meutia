@@ -5,7 +5,7 @@ import { useParentDemo } from "./ParentDemoProvider";
 import { activeEnrollments, dateLabel, getDaycare, statusLabels, todayISO } from "@/lib/parent";
 import { journalExamples } from "@/data/daycares";
 import { parentJournals } from "@/lib/caregiver";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { DemoGate, EmptyState, LinkButton, PageHeader, Panel } from "./ParentUI";
 import p from "./Parent.module.css";
 
@@ -25,7 +25,7 @@ function ConnectedParentDashboard({ user }) {
     try {
       const [{ data: profile, error: profileError }, { data: rows, error: childrenError }] = await Promise.all([
         supabase.from("users").select("role, status, full_name").eq("id", user.id).maybeSingle(),
-        supabase.from("children").select("child_id, full_name, status").eq("parent_id", user.id).is("deleted_at", null).order("created_at", { ascending: false }),
+        supabase.from("children").select("id, full_name, status").eq("parent_id", user.id).is("deleted_at", null).order("created_at", { ascending: false }),
       ]);
       if (profileError || childrenError) throw new Error("load_failed");
       if (!profile || profile.role !== "parent" || profile.status !== "active") {
@@ -51,17 +51,22 @@ function ConnectedParentDashboard({ user }) {
     <div className={p.metrics}><Panel><Users size={19} color="#2a9d8f" /><strong>{children.length}</strong><p className={p.small}>Anak terdaftar</p></Panel></div>
     <Panel>
       <div className={p.between}><h2 className={p.sectionTitle}>Anak saya</h2><LinkButton secondary href="/profil#anak">Kelola profil anak</LinkButton></div>
-      {children.length ? <div className={p.stack} style={{ marginTop: 16 }}>{children.map((child) => <div className={p.childCard} key={child.child_id}><span className={p.avatar}>{child.full_name.slice(0, 1)}</span><div><strong>{child.full_name}</strong><p className={p.small}>{child.status === "active" ? "Profil aktif" : "Profil tidak aktif"}</p></div><LinkButton secondary href="/profil#anak">Lihat profil</LinkButton></div>)}</div> : <EmptyState title="Belum ada profil anak" description="Tambahkan profil anak dari halaman akun untuk mulai menggunakan layanan Ayomi." href="/profil#anak" action="Tambah profil anak" />}
+      {children.length ? <div className={p.stack} style={{ marginTop: 16 }}>{children.map((child) => <div className={p.childCard} key={child.id}><span className={p.avatar}>{child.full_name.slice(0, 1)}</span><div><strong>{child.full_name}</strong><p className={p.small}>{child.status === "active" ? "Profil aktif" : "Profil tidak aktif"}</p></div><LinkButton secondary href="/profil#anak">Lihat profil</LinkButton></div>)}</div> : <EmptyState title="Belum ada profil anak" description="Tambahkan profil anak dari halaman akun untuk mulai menggunakan layanan Ayomi." href="/profil#anak" action="Tambah profil anak" />}
     </Panel>
     <p className={p.notice} style={{ marginTop: 20 }}>Pendaftaran daycare, logbook, dan notifikasi masih dalam proses integrasi ke database.</p>
   </>;
 }
 
 function ParentDashboardContent() {
-  const supabase = useMemo(() => createClient(), []);
-  const [user, setUser] = useState(undefined);
+  const supabaseConfigured = isSupabaseConfigured();
+  const supabase = useMemo(
+    () => isSupabaseConfigured() ? createClient() : null,
+    [],
+  );
+  const [user, setUser] = useState(supabaseConfigured ? undefined : null);
 
   useEffect(() => {
+    if (!supabase) return undefined;
     let active = true;
     supabase.auth.getUser().then(({ data, error }) => {
       if (active) setUser(error ? null : data.user || null);

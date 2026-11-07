@@ -5,7 +5,10 @@ import AuthForm from "./AuthForm";
 export default async function AuthPage({ mode, searchParams }) {
   const params = await searchParams;
   const { language, role } = normalizeAuthQuery(params);
-  const initialAuthMessage = params?.auth === "recovery-expired" ? "recoveryLinkExpired" : null;
+  const initialAuthMessage = {
+    "recovery-expired": "recoveryLinkExpired",
+    "confirmation-error": "confirmationError",
+  }[params?.auth] || null;
   return (
     <AuthLayout language={language} role={role} mode={mode}>
       <AuthForm key={`${mode}:${language}:${initialAuthMessage || ""}`} language={language} role={role} mode={mode} initialAuthMessage={initialAuthMessage} />

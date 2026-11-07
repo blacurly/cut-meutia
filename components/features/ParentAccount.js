@@ -7,7 +7,7 @@ import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 import StarRating from "@/components/ui/StarRating";
 import { normalizePhone } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { activeEnrollments, dateLabel, emptyDemo, getDaycare, todayISO, validISODate, validateChild } from "@/lib/parent";
 import { useParentDemo } from "./ParentDemoProvider";
 import { DemoGate, EmptyState, LinkButton, PageHeader, Panel } from "./ParentUI";
@@ -35,7 +35,7 @@ function HealthProfileEditor({ supabase, child, onClose }) {
         const { data, error: loadError } = await supabase
           .from("child_health_profiles")
           .select("allergies, medical_history, special_needs, medication_notes, version")
-          .eq("child_id", child.child_id)
+          .eq("child_id", child.id)
           .maybeSingle();
         if (loadError) throw loadError;
         if (active && data) {
@@ -55,7 +55,7 @@ function HealthProfileEditor({ supabase, child, onClose }) {
     };
     void Promise.resolve().then(load);
     return () => { active = false; };
-  }, [child.child_id, supabase]);
+  }, [child.id, supabase]);
 
   async function save(event) {
     event.preventDefault();
@@ -68,7 +68,7 @@ function HealthProfileEditor({ supabase, child, onClose }) {
     setSaving(true);
     try {
       const { data, error: saveError } = await supabase.rpc("app_parent_update_child_health", {
-        p_child_id: child.child_id,
+        p_child_id: child.id,
         p_allergies: health.allergies,
         p_medical_history: health.medical_history,
         p_special_needs: health.special_needs,
@@ -104,8 +104,8 @@ function HealthProfileEditor({ supabase, child, onClose }) {
   return <Panel>
     <div className={p.between}><div><h3 className={p.sectionTitle}>Data kesehatan · {child.full_name}</h3><p className={p.small}>Versi {version} · perubahan dicatat dalam riwayat.</p></div><button type="button" className={p.link} onClick={onClose}>Tutup</button></div>
     {loading ? <p className={p.notice} role="status">Memuat data kesehatan…</p> : <form className={p.form} method="post" onSubmit={save} noValidate>
-      {fields.map(([name, label]) => <div className={p.field} key={name}><label htmlFor={`health-${child.child_id}-${name}`}>{label}</label><Input id={`health-${child.child_id}-${name}`} type="textarea" value={health[name]} onChange={(event) => setHealth((value) => ({ ...value, [name]: event.target.value }))} maxLength={4000} /></div>)}
-      <div className={p.field}><label htmlFor={`health-${child.child_id}-reason`}>Alasan perubahan (opsional)</label><Input id={`health-${child.child_id}-reason`} value={reason} onChange={(event) => setReason(event.target.value)} maxLength={500} /></div>
+      {fields.map(([name, label]) => <div className={p.field} key={name}><label htmlFor={`health-${child.id}-${name}`}>{label}</label><Input id={`health-${child.id}-${name}`} type="textarea" value={health[name]} onChange={(event) => setHealth((value) => ({ ...value, [name]: event.target.value }))} maxLength={4000} /></div>)}
+      <div className={p.field}><label htmlFor={`health-${child.id}-reason`}>Alasan perubahan (opsional)</label><Input id={`health-${child.id}-reason`} value={reason} onChange={(event) => setReason(event.target.value)} maxLength={500} /></div>
       {error && <p className={p.error} role="alert">{error}</p>}
       {notice && <p className={p.feedback} role="status">{notice}</p>}
       <button className={p.button} type="submit" disabled={saving}>{saving ? "Menyimpan…" : "Simpan data kesehatan"}</button>
@@ -133,7 +133,7 @@ function AuthenticatedParentProfile({ user }) {
     try {
       const [{ data: parent, error: parentError }, { data: rows, error: childrenError }] = await Promise.all([
         supabase.from("users").select("role, status, full_name, phone").eq("id", user.id).maybeSingle(),
-        supabase.from("children").select("child_id, full_name, birth_date, created_at").eq("parent_id", user.id).is("deleted_at", null).order("created_at", { ascending: false }),
+        supabase.from("children").select("id, full_name, birth_date, created_at").eq("parent_id", user.id).is("deleted_at", null).order("created_at", { ascending: false }),
       ]);
 
       if (parentError || childrenError) {
@@ -259,13 +259,13 @@ function AuthenticatedParentProfile({ user }) {
       <Panel>
         <h2 className={p.sectionTitle}>Anak saya ({children.length})</h2>
         {children.length ? <div className={p.stack} style={{ marginTop: 16 }}>
-          {children.map((item) => <div className={p.stack} key={item.child_id}>
+          {children.map((item) => <div className={p.stack} key={item.id}>
             <div className={p.childCard}>
               <span className={p.avatar}>{item.full_name.slice(0, 1)}</span>
               <div style={{ flex: 1 }}><strong>{item.full_name}</strong><p className={p.small}>Lahir {dateLabel(item.birth_date)}</p></div>
-              <button type="button" className={p.link} aria-expanded={healthChildId === item.child_id} onClick={() => setHealthChildId((current) => current === item.child_id ? "" : item.child_id)}>{healthChildId === item.child_id ? "Tutup kesehatan" : "Data kesehatan"}</button>
+              <button type="button" className={p.link} aria-expanded={healthChildId === item.id} onClick={() => setHealthChildId((current) => current === item.id ? "" : item.id)}>{healthChildId === item.id ? "Tutup kesehatan" : "Data kesehatan"}</button>
             </div>
-            {healthChildId === item.child_id && <HealthProfileEditor supabase={supabase} child={item} onClose={() => setHealthChildId("")} />}
+            {healthChildId === item.id && <HealthProfileEditor supabase={supabase} child={item} onClose={() => setHealthChildId("")} />}
           </div>)}
         </div> : <p className={p.muted} style={{ marginTop: 12 }}>Belum ada profil anak di akun ini.</p>}
       </Panel>
@@ -284,10 +284,17 @@ function AuthenticatedParentProfile({ user }) {
 }
 
 function ParentProfileContent() {
-  const supabase = useMemo(() => createClient(), []);
-  const [authUser, setAuthUser] = useState(undefined);
+  const supabaseConfigured = isSupabaseConfigured();
+  const supabase = useMemo(
+    () => isSupabaseConfigured() ? createClient() : null,
+    [],
+  );
+  const [authUser, setAuthUser] = useState(
+    supabaseConfigured ? undefined : null,
+  );
 
   useEffect(() => {
+    if (!supabase) return undefined;
     let active = true;
     supabase.auth.getUser().then(({ data, error }) => {
       if (active) setAuthUser(error ? null : data.user || null);
