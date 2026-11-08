@@ -7,6 +7,7 @@ import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 import StarRating from "@/components/ui/StarRating";
 import { normalizePhone } from "@/lib/auth";
+import { ApiRequestError, requestApi } from "@/lib/api-client";
 import { createClient } from "@/lib/supabase/client";
 import { activeEnrollments, dateLabel, emptyDemo, getDaycare, todayISO, validISODate, validateChild } from "@/lib/parent";
 import { useParentDemo } from "./ParentDemoProvider";
@@ -19,7 +20,7 @@ function Profile() {
   function addChild(event) { event.preventDefault(); const invalid = validateChild(child); if (Object.keys(invalid).length) { setChildError(Object.values(invalid)[0]); return; } if (state.children.some(c => c.name.toLowerCase() === child.name.trim().toLowerCase() && c.dob === child.dob)) { setChildError("Profil anak dengan nama dan tanggal lahir tersebut sudah tersedia."); return; } const newChild = { id: crypto.randomUUID(), name: child.name.trim(), dob: child.dob }; update(s => ({ ...s, children: [...s.children, newChild], selectedChild: newChild.id })); setChild({ name: "", dob: "" }); setChildError(""); }
   return <div className={p.stack}><div className={p.notice}>Gunakan identitas contoh. Informasi di halaman ini hanya disimpan di browser dan bukan akun Ayomi sungguhan.</div><div className={p.twoColumns}><Panel><h2 className={p.sectionTitle}>Profil Orang Tua</h2><form className={p.form} method="post" onSubmit={save} noValidate>{[["name", "Nama lengkap", UserRound, "text"], ["email", "Email contoh (opsional)", Mail, "email"], ["phone", "WhatsApp contoh (opsional)", Phone, "tel"]].map(([name, label, Icon, type]) => <div className={p.field} key={name}><label htmlFor={`profile-${name}`}>{label}</label><Input id={`profile-${name}`} name={name} type={type} value={profile[name]} onChange={e => { setProfile(v => ({ ...v, [name]: e.target.value })); setNotice(""); }} error={errors[name]} icon={<Icon size={17} />} prefix={name === "phone" ? "+62" : undefined} maxLength={name === "email" ? 254 : name === "phone" ? 24 : 80} required={name === "name"} /></div>)}{notice && <p className={p.feedback} role="status">{notice}</p>}<button className={p.button} type="submit">Simpan profil demo</button></form></Panel><Panel><h2 className={p.sectionTitle}>Pengaturan demo</h2><p className={p.muted}>Status, komentar, laporan, dan profil hanya tersedia di browser ini. Anda dapat menghapus semuanya untuk mengulang alur dari awal.</p><div className={p.stack} style={{ marginTop: 20, gap: 10 }}><LinkButton secondary href="/status-pendaftaran">Status pendaftaran</LinkButton><LinkButton secondary href="/notifikasi">Notifikasi</LinkButton><button className={`${p.button} ${p.danger}`} onClick={() => setReset(true)}>Hapus semua data demo</button></div></Panel></div><section id="anak" className={p.section}><h2 className={p.sectionTitle}>Anak saya ({state.children.length})</h2><div className={p.twoColumns}><div className={p.stack}>{state.children.length ? state.children.map(c => { const linked = state.enrollments.some(e => e.childId === c.id); const active = activeEnrollments(state).find(e => e.childId === c.id); return <Panel key={c.id}><div className={p.childCard} style={{ border: 0, padding: 0 }}><span className={p.avatar}>{c.name.slice(0, 1)}</span><div><h3 style={{ fontWeight: 700 }}>{c.name}</h3><p className={p.small}>Lahir {dateLabel(c.dob)}</p><p className={p.small}>{active ? getDaycare(active.daycareId)?.name : "Belum ada pengasuhan aktif"}</p></div></div><div className={p.row} style={{ marginTop: 15 }}><button className={`${p.button} ${p.secondary}`} aria-pressed={state.selectedChild === c.id} onClick={() => update(s => ({ ...s, selectedChild: c.id }))}>{state.selectedChild === c.id ? "Anak dipilih" : "Pilih anak"}</button><button className={p.link} disabled={linked} title={linked ? "Profil digunakan dalam riwayat pendaftaran" : "Hapus profil anak yang belum memiliki pengajuan"} onClick={() => update(s => ({ ...s, children: s.children.filter(v => v.id !== c.id), selectedChild: s.selectedChild === c.id ? "" : s.selectedChild }))}>Hapus</button></div>{linked && <p className={p.small} style={{ marginTop: 8 }}>Profil disimpan bersama riwayat pendaftaran. Gunakan reset demo untuk menghapus seluruh riwayat.</p>}</Panel>; }) : <EmptyState title="Belum ada profil anak" description="Tambahkan profil contoh di formulir atau saat melakukan pendaftaran daycare."><span className={p.small}>Data anak hanya tersimpan lokal.</span></EmptyState>}</div><Panel><h3 className={p.sectionTitle}>Tambahkan anak contoh</h3><form className={p.form} method="post" onSubmit={addChild} noValidate><div className={p.field}><label htmlFor="new-child-name">Nama anak</label><Input id="new-child-name" value={child.name} onChange={e => setChild(v => ({ ...v, name: e.target.value }))} placeholder="Contoh: Arka Pratama" maxLength={80} required /></div><div className={p.field}><label htmlFor="new-child-dob">Tanggal lahir</label><Input id="new-child-dob" type="date" max={todayISO()} value={child.dob} onChange={e => setChild(v => ({ ...v, dob: e.target.value }))} required /><p className={p.small}>Usia contoh yang didukung: 6 bulan–6 tahun.</p></div>{childError && <p role="alert" className={p.error}>{childError}</p>}<button type="submit" className={p.button}><Plus size={16} />Tambahkan anak</button></form></Panel></div></section><Modal open={reset} onClose={close} title="Hapus semua data demo?" size="sm"><p className={p.muted}>Profil, anak, pilihan komparasi, pengajuan, laporan, komentar, ulasan, dan notifikasi demo pada browser ini akan dihapus. Tindakan ini tidak memengaruhi akun nyata.</p><div className={p.row} style={{ marginTop: 20 }}><button className={`${p.button} ${p.danger}`} onClick={() => { update(() => emptyDemo); router.push("/"); }}>Hapus data demo</button><button className={`${p.button} ${p.secondary}`} onClick={close}>Batal</button></div></Modal></div>;
 }
-function HealthProfileEditor({ supabase, child, onClose }) {
+function HealthProfileEditor({ child, onClose }) {
   const [health, setHealth] = useState({ allergies: "", medical_history: "", special_needs: "", medication_notes: "" });
   const [version, setVersion] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -32,12 +33,7 @@ function HealthProfileEditor({ supabase, child, onClose }) {
     let active = true;
     const load = async () => {
       try {
-        const { data, error: loadError } = await supabase
-          .from("child_health_profiles")
-          .select("allergies, medical_history, special_needs, medication_notes, version")
-          .eq("child_id", child.child_id)
-          .maybeSingle();
-        if (loadError) throw loadError;
+        const { health: data } = await requestApi(`/api/children/${child.child_id}/health`);
         if (active && data) {
           setHealth({
             allergies: data.allergies || "",
@@ -55,7 +51,7 @@ function HealthProfileEditor({ supabase, child, onClose }) {
     };
     void Promise.resolve().then(load);
     return () => { active = false; };
-  }, [child.child_id, supabase]);
+  }, [child.child_id]);
 
   async function save(event) {
     event.preventDefault();
@@ -67,28 +63,13 @@ function HealthProfileEditor({ supabase, child, onClose }) {
     }
     setSaving(true);
     try {
-      const { data, error: saveError } = await supabase.rpc("app_parent_update_child_health", {
-        p_child_id: child.child_id,
-        p_allergies: health.allergies,
-        p_medical_history: health.medical_history,
-        p_special_needs: health.special_needs,
-        p_medication_notes: health.medication_notes,
-        p_reason: reason.trim() || null,
+      const { version: nextVersion } = await requestApi(`/api/children/${child.child_id}/health`, {
+        method: "PATCH", body: { ...health, reason: reason.trim() || null },
       });
-      if (saveError) {
-        const messages = {
-          not_authenticated: "Sesi login berakhir. Masuk kembali lalu coba lagi.",
-          parent_account_not_active: "Akun Orang Tua belum aktif untuk memperbarui kesehatan anak.",
-          child_not_owned: "Anak ini tidak terhubung ke akun Parent yang sedang masuk.",
-          health_text_too_long: "Setiap catatan kesehatan maksimal 4.000 karakter.",
-        };
-        setError(messages[saveError.message] || "Data kesehatan belum tersimpan. Coba lagi beberapa saat.");
-        return;
-      }
-      setVersion(Number(data) || version);
+      setVersion(Number(nextVersion) || version);
       setNotice("Data kesehatan tersimpan dan riwayat perubahannya tercatat.");
-    } catch {
-      setError("Koneksi terputus. Data kesehatan belum dapat disimpan.");
+    } catch (error) {
+      setError(error instanceof ApiRequestError ? error.message : "Koneksi terputus. Data kesehatan belum dapat disimpan.");
     } finally {
       setSaving(false);
     }
@@ -114,7 +95,6 @@ function HealthProfileEditor({ supabase, child, onClose }) {
 }
 
 function AuthenticatedParentProfile({ user }) {
-  const supabase = useMemo(() => createClient(), []);
   const [profile, setProfile] = useState(null);
   const [profileDraft, setProfileDraft] = useState({ name: "", phone: "" });
   const [profileSaving, setProfileSaving] = useState(false);
@@ -131,31 +111,22 @@ function AuthenticatedParentProfile({ user }) {
 
   const loadAccount = useCallback(async () => {
     try {
-      const [{ data: parent, error: parentError }, { data: rows, error: childrenError }] = await Promise.all([
-        supabase.from("users").select("role, status, full_name, phone").eq("id", user.id).maybeSingle(),
-        supabase.from("children").select("child_id, full_name, birth_date, created_at").eq("parent_id", user.id).is("deleted_at", null).order("created_at", { ascending: false }),
-      ]);
-
-      if (parentError || childrenError) {
-        setError("Data akun belum dapat dimuat. Muat ulang halaman untuk mencoba lagi.");
-        return;
-      }
-      if (!parent || parent.role !== "parent" || parent.status !== "active") {
-        setAccessError("Halaman ini hanya tersedia untuk akun Orang Tua yang aktif.");
-        return;
-      }
+      const { profile: parent, children: rows } = await requestApi("/api/me");
+      setError("");
+      setAccessError("");
       setProfile(parent);
       setProfileDraft({
         name: parent.full_name || "",
         phone: parent.phone && parent.phone !== "NULL" ? normalizePhone(parent.phone) : "",
       });
       setChildren(rows || []);
-    } catch {
-      setError("Koneksi terputus. Data akun belum dapat dimuat.");
+    } catch (error) {
+      if (error instanceof ApiRequestError && error.status === 403) setAccessError(error.message);
+      else setError(error instanceof ApiRequestError ? error.message : "Koneksi terputus. Data akun belum dapat dimuat.");
     } finally {
       setLoading(false);
     }
-  }, [supabase, user.id]);
+  }, []);
 
   useEffect(() => { void Promise.resolve().then(loadAccount); }, [loadAccount]);
 
@@ -176,24 +147,13 @@ function AuthenticatedParentProfile({ user }) {
 
     setProfileSaving(true);
     try {
-      const { error: saveError } = await supabase.rpc("app_update_parent_profile", {
-        p_full_name: fullName,
-        p_phone: phone || null,
+      const { profile: savedProfile } = await requestApi("/api/me", {
+        method: "PATCH", body: { full_name: fullName, phone: phone || null },
       });
-      if (saveError) {
-        const messages = {
-          not_authenticated: "Sesi login berakhir. Masuk kembali lalu coba lagi.",
-          parent_account_not_active: "Akun Orang Tua belum aktif untuk memperbarui profil.",
-          invalid_parent_name: "Nama harus terdiri dari 2 sampai 100 karakter.",
-          invalid_parent_phone: "Masukkan nomor WhatsApp Indonesia yang valid.",
-        };
-        setProfileError(messages[saveError.message] || "Profil belum tersimpan. Coba lagi beberapa saat.");
-        return;
-      }
-      setProfile((value) => ({ ...value, full_name: fullName, phone: phone || null }));
+      setProfile(savedProfile);
       setProfileNotice("Profil berhasil disimpan ke akun Ayomi.");
-    } catch {
-      setProfileError("Koneksi terputus. Profil belum dapat disimpan.");
+    } catch (error) {
+      setProfileError(error instanceof ApiRequestError ? error.message : "Koneksi terputus. Profil belum dapat disimpan.");
     } finally {
       setProfileSaving(false);
     }
@@ -214,26 +174,15 @@ function AuthenticatedParentProfile({ user }) {
 
     setSaving(true);
     try {
-      const { error: saveError } = await supabase.rpc("app_create_parent_child", {
-        p_full_name: child.name.trim(),
-        p_birth_date: child.dob,
+      await requestApi("/api/children", {
+        method: "POST", body: { full_name: child.name.trim(), birth_date: child.dob },
       });
-      if (saveError) {
-        const messages = {
-          not_authenticated: "Sesi login berakhir. Masuk kembali lalu coba lagi.",
-          parent_account_not_active: "Akun Orang Tua belum aktif untuk menyimpan data anak.",
-          invalid_child_name: "Nama anak harus terdiri dari 2 sampai 80 karakter.",
-          invalid_child_birth_date: "Tanggal lahir tidak valid atau berada di masa depan.",
-        };
-        setError(messages[saveError.message] || "Data anak belum tersimpan. Coba lagi beberapa saat.");
-        return;
-      }
 
       setChild({ name: "", dob: "" });
       setNotice("Profil anak berhasil disimpan ke akun Ayomi.");
       await loadAccount();
-    } catch {
-      setError("Koneksi terputus. Profil anak belum dapat dipastikan tersimpan; periksa daftar anak sebelum mencoba lagi.");
+    } catch (error) {
+      setError(error instanceof ApiRequestError ? error.message : "Koneksi terputus. Profil anak belum dapat dipastikan tersimpan; periksa daftar anak sebelum mencoba lagi.");
     } finally {
       setSaving(false);
     }
@@ -265,7 +214,7 @@ function AuthenticatedParentProfile({ user }) {
               <div style={{ flex: 1 }}><strong>{item.full_name}</strong><p className={p.small}>Lahir {dateLabel(item.birth_date)}</p></div>
               <button type="button" className={p.link} aria-expanded={healthChildId === item.child_id} onClick={() => setHealthChildId((current) => current === item.child_id ? "" : item.child_id)}>{healthChildId === item.child_id ? "Tutup kesehatan" : "Data kesehatan"}</button>
             </div>
-            {healthChildId === item.child_id && <HealthProfileEditor supabase={supabase} child={item} onClose={() => setHealthChildId("")} />}
+            {healthChildId === item.child_id && <HealthProfileEditor child={item} onClose={() => setHealthChildId("")} />}
           </div>)}
         </div> : <p className={p.muted} style={{ marginTop: 12 }}>Belum ada profil anak di akun ini.</p>}
       </Panel>
@@ -299,7 +248,7 @@ function ParentProfileContent() {
   }, [supabase]);
 
   if (authUser === undefined) return <p className={p.notice} role="status">Memeriksa sesi akun…</p>;
-  if (authUser) return <AuthenticatedParentProfile user={authUser} />;
+  if (authUser) return <AuthenticatedParentProfile key={authUser.id} user={authUser} />;
   return <DemoGate><Profile /></DemoGate>;
 }
 

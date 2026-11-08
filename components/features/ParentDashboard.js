@@ -6,6 +6,7 @@ import { activeEnrollments, dateLabel, getDaycare, statusLabels, todayISO } from
 import { journalExamples } from "@/data/daycares";
 import { parentJournals } from "@/lib/caregiver";
 import { createClient } from "@/lib/supabase/client";
+import { ApiRequestError, requestApi } from "@/lib/api-client";
 import { DemoGate, EmptyState, LinkButton, PageHeader, Panel } from "./ParentUI";
 import p from "./Parent.module.css";
 
@@ -15,7 +16,6 @@ function Dashboard() {
 }
 
 function ConnectedParentDashboard({ user }) {
-  const supabase = useMemo(() => createClient(), []);
   const [account, setAccount] = useState(null);
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,23 +23,15 @@ function ConnectedParentDashboard({ user }) {
 
   const load = useCallback(async () => {
     try {
-      const [{ data: profile, error: profileError }, { data: rows, error: childrenError }] = await Promise.all([
-        supabase.from("users").select("role, status, full_name").eq("id", user.id).maybeSingle(),
-        supabase.from("children").select("child_id, full_name, status").eq("parent_id", user.id).is("deleted_at", null).order("created_at", { ascending: false }),
-      ]);
-      if (profileError || childrenError) throw new Error("load_failed");
-      if (!profile || profile.role !== "parent" || profile.status !== "active") {
-        setError("Dashboard ini hanya tersedia untuk akun Orang Tua yang aktif.");
-        return;
-      }
+      const { profile, children: rows } = await requestApi("/api/me");
       setAccount(profile);
       setChildren(rows || []);
-    } catch {
-      setError("Data akun belum dapat dimuat. Periksa koneksi lalu muat ulang halaman.");
+    } catch (error) {
+      setError(error instanceof ApiRequestError ? error.message : "Data akun belum dapat dimuat. Periksa koneksi lalu muat ulang halaman.");
     } finally {
       setLoading(false);
     }
-  }, [supabase, user.id]);
+  }, []);
 
   useEffect(() => { void Promise.resolve().then(load); }, [load]);
 
@@ -73,7 +65,7 @@ function ParentDashboardContent() {
   }, [supabase]);
 
   if (user === undefined) return <p className={p.notice} role="status">Memeriksa sesi akun…</p>;
-  if (user) return <ConnectedParentDashboard user={user} />;
+  if (user) return <ConnectedParentDashboard key={user.id} user={user} />;
   return <DemoGate><Dashboard /></DemoGate>;
 }
 

@@ -4,7 +4,7 @@ import { Filter, Search, SlidersHorizontal, X } from "lucide-react";
 import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 import { filterDirectoryDaycares, parseDirectoryFilters } from "@/lib/daycare-directory";
-import { createClient } from "@/lib/supabase/client";
+import { requestApi } from "@/lib/api-client";
 import { DaycareCard, EmptyState, PageHeader } from "./ParentUI";
 import p from "./Parent.module.css";
 
@@ -29,12 +29,11 @@ function FilterFields({filters,change,prefix,daycares,facilityOptions}) {
 }
 export default function DaycareSearch({initialFilters}) {
   const [filters,setFilters]=useState(initialFilters);const [page,setPage]=useState(1);const [open,setOpen]=useState(false);const [daycares,setDaycares]=useState([]);const [loading,setLoading]=useState(true);const [error,setError]=useState("");const [retry,setRetry]=useState(0);const close=useCallback(()=>setOpen(false),[]);
-  const supabase=useMemo(()=>createClient(),[]);
   const facilityOptions=useMemo(()=>Object.fromEntries(daycares.flatMap(daycare=>daycare.facilities.map((key,index)=>[key,daycare.facilityLabels[index]||key]))),[daycares]);
   const results=useMemo(()=>filterDirectoryDaycares(filters,daycares),[filters,daycares]);const totalPages=Math.max(1,Math.ceil(results.length/6));const currentPage=Math.min(page,totalPages);
-  useEffect(()=>{const controller=new AbortController();async function load(){try{const {data:{session},error:sessionError}=await supabase.auth.getSession();if(sessionError)throw sessionError;const headers=session?.access_token?{Authorization:`Bearer ${session.access_token}`}:{};
-    const response=await fetch("/api/daycare/list",{credentials:"same-origin",headers,signal:controller.signal});const payload=await response.json();if(!response.ok)throw new Error(payload?.error||`Permintaan gagal (${response.status}).`);if(!Array.isArray(payload))throw new Error("Format data daycare dari API tidak valid.");setDaycares(payload);
-  }catch(error){if(error.name!=="AbortError")setError(error.message||"Data daycare tidak dapat dimuat.");}finally{if(!controller.signal.aborted)setLoading(false);}}void load();return()=>controller.abort();},[retry,supabase]);
+  useEffect(()=>{const controller=new AbortController();async function load(){try{
+    const payload=await requestApi("/api/daycare/list",{signal:controller.signal});if(!Array.isArray(payload))throw new Error("Format data daycare dari API tidak valid.");setDaycares(payload);
+  }catch(error){if(error.name!=="AbortError")setError(error.message||"Data daycare tidak dapat dimuat.");}finally{if(!controller.signal.aborted)setLoading(false);}}void load();return()=>controller.abort();},[retry]);
   useEffect(()=>{const sync=()=>{setFilters(parseDirectoryFilters(new URLSearchParams(window.location.search)));setPage(1);};window.addEventListener("popstate",sync);return()=>window.removeEventListener("popstate",sync);},[]);
   function save(next){setFilters(next);setPage(1);const query=new URLSearchParams(Object.entries(next).map(([key,value])=>[key,Array.isArray(value)?value.join(","):value]).filter(([,value])=>value)).toString();window.history.replaceState(null,"",`/pencarian${query?`?${query}`:""}`);}
   function change(key,value){const next={...filters,[key]:value};if(key==="province"){next.city="";next.district="";}if(key==="city")next.district="";save(next);}
