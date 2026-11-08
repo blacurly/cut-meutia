@@ -40,7 +40,7 @@ BEGIN
   IF p_child_id IS NULL OR NOT EXISTS (
     SELECT 1
     FROM public.children AS c
-    WHERE c.child_id = p_child_id
+    WHERE c.id = p_child_id
       AND c.parent_id = v_parent_id
       AND c.deleted_at IS NULL
   ) THEN
@@ -59,7 +59,7 @@ BEGIN
   -- older child row that predates profile initialization.
   PERFORM 1
   FROM public.children AS c
-  WHERE c.child_id = p_child_id
+  WHERE c.id = p_child_id
     AND c.parent_id = v_parent_id
     AND c.deleted_at IS NULL
   FOR UPDATE;
@@ -67,8 +67,11 @@ BEGIN
     RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'child_not_owned';
   END IF;
 
-  INSERT INTO public.child_health_profiles (child_id, updated_by)
-  VALUES (p_child_id, v_parent_id)
+  INSERT INTO public.child_health_profiles (
+    child_id, allergies, medical_history, special_needs,
+    medication_notes, updated_by
+  )
+  VALUES (p_child_id, '', '', '', '', v_parent_id)
   ON CONFLICT (child_id) DO NOTHING;
 
   SELECT * INTO v_profile
@@ -83,10 +86,10 @@ BEGIN
     'medication_notes', v_profile.medication_notes
   );
   v_after_data := jsonb_build_object(
-    'allergies', NULLIF(btrim(p_allergies), ''),
-    'medical_history', NULLIF(btrim(p_medical_history), ''),
-    'special_needs', NULLIF(btrim(p_special_needs), ''),
-    'medication_notes', NULLIF(btrim(p_medication_notes), '')
+    'allergies', btrim(COALESCE(p_allergies, '')),
+    'medical_history', btrim(COALESCE(p_medical_history, '')),
+    'special_needs', btrim(COALESCE(p_special_needs, '')),
+    'medication_notes', btrim(COALESCE(p_medication_notes, ''))
   );
 
   IF v_before_data = v_after_data THEN
@@ -105,13 +108,19 @@ BEGIN
       updated_at = now()
   WHERE child_id = p_child_id;
 
-  INSERT INTO public.child_health_change_logs (
-    child_id, from_version, to_version, before_data, after_data, changed_by, reason
-  ) VALUES (
-    p_child_id, v_profile.version, v_new_version,
-    v_before_data, v_after_data, v_parent_id, v_reason
-  )
+  -- health_history writes the unique audit row after the profile update.
+  -- Attach the optional reason to that row instead of inserting a duplicate.
+  UPDATE public.child_health_change_logs
+  SET reason = v_reason
+  WHERE child_id = p_child_id
+    AND to_version = v_new_version
   RETURNING id INTO v_log_id;
+
+  IF v_log_id IS NULL THEN
+    RAISE EXCEPTION USING
+      ERRCODE = '55000',
+      MESSAGE = 'health_history_not_recorded';
+  END IF;
 
   -- Notify only currently authorized daycare staff. The notice contains no
   -- health details; staff must re-check access before opening the profile.

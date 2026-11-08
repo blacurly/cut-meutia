@@ -5,7 +5,7 @@ import { useParentDemo } from "./ParentDemoProvider";
 import { activeEnrollments, dateLabel, getDaycare, statusLabels, todayISO } from "@/lib/parent";
 import { journalExamples } from "@/data/daycares";
 import { parentJournals } from "@/lib/caregiver";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { ApiRequestError, requestApi } from "@/lib/api-client";
 import { DemoGate, EmptyState, LinkButton, PageHeader, Panel } from "./ParentUI";
 import p from "./Parent.module.css";
@@ -50,10 +50,12 @@ function ConnectedParentDashboard({ user }) {
 }
 
 function ParentDashboardContent() {
-  const supabase = useMemo(() => createClient(), []);
-  const [user, setUser] = useState(undefined);
+  const supabaseConfigured = isSupabaseConfigured();
+  const supabase = useMemo(() => isSupabaseConfigured() ? createClient() : null, []);
+  const [user, setUser] = useState(supabaseConfigured ? undefined : null);
 
   useEffect(() => {
+    if (!supabase) return undefined;
     let active = true;
     supabase.auth.getUser().then(({ data, error }) => {
       if (active) setUser(error ? null : data.user || null);

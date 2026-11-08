@@ -8,7 +8,7 @@ import Modal from "@/components/ui/Modal";
 import StarRating from "@/components/ui/StarRating";
 import { normalizePhone } from "@/lib/auth";
 import { ApiRequestError, requestApi } from "@/lib/api-client";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { activeEnrollments, dateLabel, emptyDemo, getDaycare, todayISO, validISODate, validateChild } from "@/lib/parent";
 import { useParentDemo } from "./ParentDemoProvider";
 import { DemoGate, EmptyState, LinkButton, PageHeader, Panel } from "./ParentUI";
@@ -233,10 +233,12 @@ function AuthenticatedParentProfile({ user }) {
 }
 
 function ParentProfileContent() {
-  const supabase = useMemo(() => createClient(), []);
-  const [authUser, setAuthUser] = useState(undefined);
+  const supabaseConfigured = isSupabaseConfigured();
+  const supabase = useMemo(() => isSupabaseConfigured() ? createClient() : null, []);
+  const [authUser, setAuthUser] = useState(supabaseConfigured ? undefined : null);
 
   useEffect(() => {
+    if (!supabase) return undefined;
     let active = true;
     supabase.auth.getUser().then(({ data, error }) => {
       if (active) setAuthUser(error ? null : data.user || null);

@@ -2,25 +2,37 @@
 -- Public signup always creates a Parent. Role is deliberately not read from
 -- user-supplied Auth metadata.
 
+BEGIN;
+
 CREATE OR REPLACE FUNCTION public.create_parent_profile_for_auth_user()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = ''
 AS $$
+DECLARE
+  v_full_name text := left(btrim(COALESCE(NEW.raw_user_meta_data ->> 'full_name', '')), 150);
+  v_phone text := NULLIF(left(btrim(COALESCE(NEW.raw_user_meta_data ->> 'phone', '')), 32), '');
 BEGIN
+  IF char_length(v_full_name) < 2 THEN
+    v_full_name := 'Orang Tua';
+  END IF;
+
   INSERT INTO public.users (id, role, full_name, phone, status)
   VALUES (
     NEW.id,
     'parent',
-    NULLIF(trim(NEW.raw_user_meta_data ->> 'full_name'), ''),
-    NULLIF(trim(NEW.raw_user_meta_data ->> 'phone'), ''),
+    v_full_name,
+    v_phone,
     'active'
   );
   RETURN NEW;
 END;
 $$;
 
+-- The foundation schema used ayomi_auth_user_created. Remove both known names
+-- before creating the single canonical trigger to prevent duplicate profiles.
+DROP TRIGGER IF EXISTS ayomi_auth_user_created ON auth.users;
 DROP TRIGGER IF EXISTS on_auth_user_created_parent_profile ON auth.users;
 CREATE TRIGGER on_auth_user_created_parent_profile
   AFTER INSERT ON auth.users
@@ -33,3 +45,8 @@ CREATE POLICY users_select_own_profile
   FOR SELECT
   TO authenticated
   USING (id = (SELECT auth.uid()));
+
+REVOKE EXECUTE ON FUNCTION public.create_parent_profile_for_auth_user()
+  FROM PUBLIC, anon, authenticated, service_role;
+
+COMMIT;

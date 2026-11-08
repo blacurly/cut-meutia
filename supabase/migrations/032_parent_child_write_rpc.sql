@@ -40,11 +40,10 @@ BEGIN
 
   INSERT INTO public.children (parent_id, full_name, birth_date, status)
   VALUES (v_parent_id, btrim(p_full_name), p_birth_date, 'active')
-  RETURNING child_id INTO v_child_id;
+  RETURNING id INTO v_child_id;
 
-  -- Start with an empty health profile; health details are entered separately.
-  INSERT INTO public.child_health_profiles (child_id, updated_by)
-  VALUES (v_child_id, v_parent_id);
+  -- child_health_initialize creates the one empty health profile and its
+  -- initial audit record. Do not insert a second profile here.
 
   RETURN v_child_id;
 END;

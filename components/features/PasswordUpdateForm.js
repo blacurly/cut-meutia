@@ -7,7 +7,7 @@ import { AlertCircle, CheckCircle2, KeyRound, Lock, Mail } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { passwordCriteria } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { authCopy } from "./auth-copy";
 import styles from "./AuthForm.module.css";
 
@@ -18,12 +18,13 @@ export default function PasswordUpdateForm({ language = "id" }) {
   const [token, setToken] = useState("");
   const [password, setPassword] = useState("");
   const [hasSession, setHasSession] = useState(false);
-  const [checkingSession, setCheckingSession] = useState(true);
+  const [checkingSession, setCheckingSession] = useState(isSupabaseConfigured);
   const [feedback, setFeedback] = useState(null);
   const [saving, setSaving] = useState(false);
   const criteria = passwordCriteria(password);
 
   useEffect(() => {
+    if (!isSupabaseConfigured()) return undefined;
     let active = true;
     const supabase = createClient();
     supabase.auth.getSession().then(({ data, error }) => {

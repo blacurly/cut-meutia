@@ -12,6 +12,7 @@ export const authCopy = {
     brandFooter: "Mengayomi sepenuh hati, sejak langkah pertama.",
     loginEyebrow: "SENANG BERTEMU ANDA KEMBALI", registerEyebrow: "LANGKAH PERTAMA BERSAMA AYOMI",
     recoveryLinkExpired: "Tautan reset lama sudah kedaluwarsa atau sudah dipakai. Minta kode pemulihan baru dari Lupa kata sandi? lalu masukkan kode di halaman atur ulang.",
+    confirmationError: "Tautan konfirmasi tidak valid atau sudah kedaluwarsa. Minta tautan baru atau hubungi administrator Ayomi.",
     title: "Selamat Datang di Ayomi", subtitle: "Silakan pilih peran akun Anda untuk melanjutkan.",
     roleLabel: "Pilih peran akun", roles: { parent: "Orang Tua", caregiver: "Pengelola Daycare", admin: "Admin" },
     roleDescriptions: {
@@ -78,6 +79,7 @@ export const authCopy = {
     brandFooter: "Caring wholeheartedly, from the very first step.",
     loginEyebrow: "IT’S GOOD TO SEE YOU AGAIN", registerEyebrow: "YOUR FIRST STEP WITH AYOMI",
     recoveryLinkExpired: "The old reset link has expired or was used. Request a new recovery code from Forgot password and enter it on the reset page.",
+    confirmationError: "The confirmation link is invalid or has expired. Request a new link or contact an Ayomi administrator.",
     title: "Welcome to Ayomi", subtitle: "Please select your account role to continue.",
     roleLabel: "Select account role", roles: { parent: "Parent", caregiver: "Daycare Manager", admin: "Admin" },
     roleDescriptions: {
