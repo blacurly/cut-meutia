@@ -1,4 +1,4 @@
 import DaycareSearch from "@/components/features/DaycareSearch";
-import { parseFilters } from "@/lib/parent";
+import { parseDirectoryFilters } from "@/lib/daycare-directory";
 export const metadata={title:"Direktori Daycare | Ayomi"};
-export default async function SearchPage({searchParams}) {const filters=parseFilters(await searchParams);return <DaycareSearch key={JSON.stringify(filters)} initialFilters={filters}/>;}
+export default async function SearchPage({searchParams}) {const filters=parseDirectoryFilters(await searchParams);return <DaycareSearch key={JSON.stringify(filters)} initialFilters={filters}/>;}

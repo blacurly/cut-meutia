@@ -5,7 +5,7 @@ export const facilities = {
   access: "Fingerprint Access", meals: "Katering Gizi Organik",
 };
 export const regions = {
-  "Jawa Timur": { Gresik: ["Kebomas", "Manyar"], Surabaya: ["Wonokromo", "Rungkut"] },
+  "Jawa Timur": { Gresik: ["Kebomas", "Manyar"], Surabaya: ["Wonokromo", "Rungkut", "Sukolilo"] },
   "DKI Jakarta": { "Jakarta Selatan": ["Tebet", "Setiabudi"] },
   "Jawa Barat": { Bandung: ["Coblong", "Sukajadi"] },
 };

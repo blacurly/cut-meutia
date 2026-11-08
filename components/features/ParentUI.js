@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import Modal from "@/components/ui/Modal";
 import { ArrowLeftRight, ArrowRight, Check, CheckCircle2, MapPin, Search, ShieldCheck, Star, Users } from "lucide-react";
 import { useParentDemo } from "./ParentDemoProvider";
 import { availableSlots, rupiah, toggleCompare } from "@/lib/parent";
@@ -25,6 +26,51 @@ export function CompareButton({ daycare }) {
   return <div><button disabled={!hydrated} className={`${p.button} ${p.secondary} ${p.full}`} aria-pressed={selected} onClick={toggle}>{selected ? <Check size={15} /> : <ArrowLeftRight size={15} />} {selected ? "Dipilih" : "Bandingkan"}</button>{error && <p role="alert" className={p.error}>{error}</p>}</div>;
 }
 export function DaycareCard({ daycare }) {
-  const { state } = useParentDemo(); const slots = availableSlots(daycare, state);
-  return <article className={p.card}><div style={{ position: "relative" }}><Link href={`/detail/${daycare.id}`} aria-label={`Lihat detail ${daycare.name}`}><DemoPhoto src={daycare.image} name={daycare.name} /></Link><div className={p.photoBadges}><span className={`${p.badge} ${!daycare.verified ? p.neutral : ""}`}><CheckCircle2 size={12} />{daycare.verified ? "Terverifikasi · demo" : "Dalam tinjauan"}</span><span className={`${p.badge} ${p.amber}`}><ShieldCheck size={12} />{daycare.score}</span></div></div><div className={p.cardBody}><h2><Link href={`/detail/${daycare.id}`}>{daycare.name}</Link></h2><p className={p.small}><MapPin size={12} style={{ display: "inline", marginRight: 4 }} />{daycare.district}, {daycare.city}</p><div className={p.cardMetrics}><span><Users size={14} />Rasio 1:{daycare.ratio}</span><span><Star size={14} />{daycare.rating} ({daycare.reviewCount})</span><span>{slots > 0 ? `Sisa ${slots} slot contoh` : "Slot contoh penuh"}</span><span>{daycare.distance} km · contoh</span></div><strong className={p.price}>{rupiah(daycare.price)}</strong><span className={p.small}> / bulan</span><div className={p.cardActions}><CompareButton daycare={daycare} /><LinkButton href={`/detail/${daycare.id}`}>Lihat detail<ArrowRight size={14} /></LinkButton></div></div></article>;
+  const { state } = useParentDemo();
+  const [detailOpen, setDetailOpen] = useState(false);
+  const closeDetail = useCallback(() => setDetailOpen(false), []);
+  const live = daycare.source === "supabase";
+  const slots = live ? null : availableSlots(daycare, state);
+  const detailHref = `/detail/${daycare.id}`;
+  const photo = <DemoPhoto src={daycare.image || "/images/daycare-room.webp"} name={daycare.name} />;
+  const verificationLabel = live ? (daycare.status === "active" ? "Daycare aktif" : daycare.status) : daycare.verified ? "Terverifikasi · demo" : "Dalam tinjauan";
+
+  return <>
+    <article className={p.card}>
+      <div style={{ position: "relative" }}>
+        {live ? <button type="button" onClick={() => setDetailOpen(true)} aria-label={`Lihat detail ${daycare.name}`} style={{ display: "block", width: "100%", padding: 0, border: 0, cursor: "pointer" }}>{photo}</button> : <Link href={detailHref} aria-label={`Lihat detail ${daycare.name}`}>{photo}</Link>}
+        <div className={p.photoBadges} style={{ pointerEvents: "none" }}>
+          <span className={`${p.badge} ${!daycare.verified ? p.neutral : ""}`}><CheckCircle2 size={12} />{verificationLabel}</span>
+          {!live && <span className={`${p.badge} ${p.amber}`}><ShieldCheck size={12} />{daycare.score ?? "Belum dinilai"}</span>}
+        </div>
+      </div>
+      <div className={p.cardBody}>
+        <h2>{live ? <button type="button" onClick={() => setDetailOpen(true)} style={{ font: "inherit", color: "inherit", textAlign: "left", cursor: "pointer" }}>{daycare.name}</button> : <Link href={detailHref}>{daycare.name}</Link>}</h2>
+        <p className={p.small}><MapPin size={12} style={{ display: "inline", marginRight: 4 }} />{[daycare.district, daycare.city].filter(Boolean).join(", ")}</p>
+        {live ? <><p className={p.small}>{daycare.address}</p><div className={p.cardMetrics}>
+          {daycare.capacity != null && <span><Users size={14} />Kapasitas {daycare.capacity} anak / hari</span>}
+          {daycare.facilityLabels?.map(label => <span key={label}><Check size={14} />{label}</span>)}
+        </div></> : <><div className={p.cardMetrics}>
+          <span><Users size={14} />{daycare.ratio == null ? "Rasio belum tersedia" : `Rasio 1:${daycare.ratio}`}</span>
+          <span><Star size={14} />{daycare.rating == null ? "Belum ada rating" : `${daycare.rating} (${daycare.reviewCount ?? 0})`}</span>
+          <span>{live ? "Slot belum tersedia" : slots > 0 ? `Sisa ${slots} slot contoh` : "Slot contoh penuh"}</span>
+          <span>{daycare.distance == null ? "Jarak belum tersedia" : `${daycare.distance} km${live ? "" : " · contoh"}`}</span>
+        </div>
+        <strong className={p.price}>{daycare.price == null ? "Biaya belum tersedia" : rupiah(daycare.price)}</strong>
+        {daycare.price != null && <span className={p.small}> / bulan</span>}</>}
+        <div className={p.cardActions}>
+          {live ? <button type="button" disabled className={`${p.button} ${p.secondary} ${p.full}`} title="Perbandingan daycare terdaftar belum tersedia"><ArrowLeftRight size={15} />Bandingkan</button> : <CompareButton daycare={daycare} />}
+          {live ? <button type="button" className={p.button} onClick={() => setDetailOpen(true)}>Lihat detail<ArrowRight size={14} /></button> : <LinkButton href={detailHref}>Lihat detail<ArrowRight size={14} /></LinkButton>}
+        </div>
+      </div>
+    </article>
+    {live && <Modal open={detailOpen} onClose={closeDetail} title={daycare.name}>
+      <div className={p.stack}>
+        <p><MapPin size={14} style={{ display: "inline" }} /> {[daycare.address, daycare.district, daycare.city, daycare.province].filter(Boolean).join(", ")}</p>
+        <p>{daycare.description || "Deskripsi belum tersedia."}</p>
+        {daycare.facilityLabels?.length > 0 && <p>{daycare.facilityLabels.join(" · ")}</p>}
+        {daycare.capacity != null && <p>Kapasitas harian: {daycare.capacity} anak</p>}
+      </div>
+    </Modal>}
+  </>;
 }
