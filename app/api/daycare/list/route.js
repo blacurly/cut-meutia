@@ -1,11 +1,7 @@
 import { apiRoute } from "@/lib/api/http";
-import { authenticate } from "@/lib/api/server";
-import { databaseData } from "@/lib/api/parent";
-import { toDirectoryDaycare } from "@/lib/daycare-directory";
+import { authenticateOptional } from "@/lib/api/server";
+import { listDirectory } from "@/lib/api/directory";
 
-export const GET = apiRoute(authenticate, async ({ supabase }) => {
-  const data = databaseData(await supabase.from("daycares")
-    .select("id,slug,name,description,address,province_code,city_code,district_code,facilities,daily_capacity,status")
-    .eq("status", "active").is("deleted_at", null).order("name"));
-  return data.map(toDirectoryDaycare);
-});
+// Public: the catalog can be browsed before login (docs/alur-bisnis 3.1).
+export const GET = apiRoute(authenticateOptional, context =>
+  listDirectory(context, { mediaBaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL }));

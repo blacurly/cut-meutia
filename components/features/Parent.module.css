@@ -1153,3 +1153,49 @@
         transition: none !important;
     }
 }
+/* Public directory: neutral placeholder until a daycare photo is approved. */
+.photoPlaceholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #e7f2ef, #f4efe2);
+    color: #456470;
+    text-align: center;
+    padding: 16px;
+}
+
+.photoInitials {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #ffffffcc;
+    color: #264653;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.photoBadges .neutral {
+    background: #ffffffee;
+    color: #456470;
+}
+
+.listingMeta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.detailList {
+    display: grid;
+    gap: 6px;
+    padding-left: 18px;
+    list-style: disc;
+}
