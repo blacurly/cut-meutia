@@ -37,6 +37,33 @@ CREATE TABLE public.activity_acknowledgements (
 );
 ALTER TABLE public.activity_acknowledgements ENABLE ROW LEVEL SECURITY;
 
+CREATE TABLE public.activity_comments (
+  id uuid DEFAULT gen_random_uuid() NOT NULL,
+  activity_id uuid NOT NULL,
+  author_id uuid NOT NULL,
+  author_role text NOT NULL,
+  body text NOT NULL,
+  request_id text NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  deleted_at timestamp with time zone,
+  CONSTRAINT activity_comments_author_id_request_id_key UNIQUE (author_id, request_id),
+  CONSTRAINT activity_comments_pkey PRIMARY KEY (id),
+  CONSTRAINT activity_comments_author_role_check CHECK ((author_role = ANY (ARRAY['parent'::text, 'manager'::text, 'caregiver'::text]))),
+  CONSTRAINT activity_comments_body_check CHECK (((char_length(btrim(body)) >= 1) AND (char_length(btrim(body)) <= 1000))),
+  CONSTRAINT activity_comments_request_id_check CHECK (((char_length(request_id) >= 1) AND (char_length(request_id) <= 100)))
+);
+ALTER TABLE public.activity_comments ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE public.activity_reactions (
+  activity_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  reaction text DEFAULT 'love'::text NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  CONSTRAINT activity_reactions_pkey PRIMARY KEY (activity_id, user_id, reaction),
+  CONSTRAINT activity_reactions_reaction_check CHECK ((reaction = 'love'::text))
+);
+ALTER TABLE public.activity_reactions ENABLE ROW LEVEL SECURITY;
+
 CREATE TABLE public.admin_actions (
   id uuid DEFAULT gen_random_uuid() NOT NULL,
   admin_id uuid NOT NULL,
@@ -454,6 +481,48 @@ CREATE TABLE public.daycare_documents (
   CONSTRAINT daycare_documents_version_check CHECK ((version > 0))
 );
 ALTER TABLE public.daycare_documents ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE public.daycare_listing_profiles (
+  listing_id uuid NOT NULL,
+  data_origin text DEFAULT 'synthetic'::text NOT NULL,
+  generator_version text,
+  description text NOT NULL,
+  monthly_fee_min integer NOT NULL,
+  monthly_fee_max integer NOT NULL,
+  daily_fee integer NOT NULL,
+  registration_fee integer DEFAULT 0 NOT NULL,
+  caregiver_ratio smallint NOT NULL,
+  caregiver_count smallint NOT NULL,
+  daily_capacity smallint NOT NULL,
+  age_min_months smallint NOT NULL,
+  age_max_months smallint NOT NULL,
+  opening_time time without time zone NOT NULL,
+  closing_time time without time zone NOT NULL,
+  operating_days text NOT NULL,
+  packages jsonb DEFAULT '[]'::jsonb NOT NULL,
+  gallery_images text[] DEFAULT '{}'::text[] NOT NULL,
+  gallery_is_illustration boolean DEFAULT true NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL,
+  CONSTRAINT daycare_listing_profiles_pkey PRIMARY KEY (listing_id),
+  CONSTRAINT daycare_listing_profiles_age_min_months_check CHECK ((age_min_months >= 0)),
+  CONSTRAINT daycare_listing_profiles_caregiver_count_check CHECK ((caregiver_count > 0)),
+  CONSTRAINT daycare_listing_profiles_caregiver_ratio_check CHECK (((caregiver_ratio >= 1) AND (caregiver_ratio <= 15))),
+  CONSTRAINT daycare_listing_profiles_check CHECK ((monthly_fee_max >= monthly_fee_min)),
+  CONSTRAINT daycare_listing_profiles_check1 CHECK ((age_max_months > age_min_months)),
+  CONSTRAINT daycare_listing_profiles_check2 CHECK ((closing_time > opening_time)),
+  CONSTRAINT daycare_listing_profiles_check3 CHECK (((data_origin <> 'synthetic'::text) OR (generator_version IS NOT NULL))),
+  CONSTRAINT daycare_listing_profiles_daily_capacity_check CHECK ((daily_capacity > 0)),
+  CONSTRAINT daycare_listing_profiles_daily_fee_check CHECK ((daily_fee > 0)),
+  CONSTRAINT daycare_listing_profiles_data_origin_check CHECK ((data_origin = ANY (ARRAY['synthetic'::text, 'manager'::text, 'verified'::text]))),
+  CONSTRAINT daycare_listing_profiles_description_check CHECK (((char_length(btrim(description)) >= 20) AND (char_length(btrim(description)) <= 1500))),
+  CONSTRAINT daycare_listing_profiles_gallery_images_check CHECK ((array_to_string(gallery_images, ' '::text) ~ '^(/images/[a-z0-9-]+\.(webp|png|jpg)( |$))*$'::text)),
+  CONSTRAINT daycare_listing_profiles_monthly_fee_min_check CHECK ((monthly_fee_min > 0)),
+  CONSTRAINT daycare_listing_profiles_operating_days_check CHECK (((char_length(btrim(operating_days)) >= 3) AND (char_length(btrim(operating_days)) <= 60))),
+  CONSTRAINT daycare_listing_profiles_packages_check CHECK ((jsonb_typeof(packages) = 'array'::text)),
+  CONSTRAINT daycare_listing_profiles_registration_fee_check CHECK ((registration_fee >= 0))
+);
+ALTER TABLE public.daycare_listing_profiles ENABLE ROW LEVEL SECURITY;
 
 CREATE TABLE public.daycare_listings (
   id uuid DEFAULT gen_random_uuid() NOT NULL,
@@ -1274,6 +1343,10 @@ ALTER TABLE public.account_sanctions ADD CONSTRAINT account_sanctions_target_day
 ALTER TABLE public.account_sanctions ADD CONSTRAINT account_sanctions_target_user_id_fkey FOREIGN KEY (target_user_id) REFERENCES users(id) ON DELETE RESTRICT;
 ALTER TABLE public.activity_acknowledgements ADD CONSTRAINT activity_acknowledgements_activity_id_fkey FOREIGN KEY (activity_id) REFERENCES daily_report_activities(id) ON DELETE RESTRICT;
 ALTER TABLE public.activity_acknowledgements ADD CONSTRAINT activity_acknowledgements_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT;
+ALTER TABLE public.activity_comments ADD CONSTRAINT activity_comments_activity_id_fkey FOREIGN KEY (activity_id) REFERENCES daily_report_activities(id) ON DELETE CASCADE;
+ALTER TABLE public.activity_comments ADD CONSTRAINT activity_comments_author_id_fkey FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE RESTRICT;
+ALTER TABLE public.activity_reactions ADD CONSTRAINT activity_reactions_activity_id_fkey FOREIGN KEY (activity_id) REFERENCES daily_report_activities(id) ON DELETE CASCADE;
+ALTER TABLE public.activity_reactions ADD CONSTRAINT activity_reactions_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
 ALTER TABLE public.admin_actions ADD CONSTRAINT admin_actions_admin_id_fkey FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE RESTRICT;
 ALTER TABLE public.admin_actions ADD CONSTRAINT admin_actions_audit_log_id_fkey FOREIGN KEY (audit_log_id) REFERENCES audit_logs(id) ON DELETE RESTRICT;
 ALTER TABLE public.admin_actions ADD CONSTRAINT admin_actions_complaint_id_fkey FOREIGN KEY (complaint_id) REFERENCES complaints(id) ON DELETE RESTRICT;
@@ -1347,6 +1420,7 @@ ALTER TABLE public.daycare_delegations ADD CONSTRAINT daycare_delegations_revoke
 ALTER TABLE public.daycare_documents ADD CONSTRAINT daycare_documents_daycare_id_fkey FOREIGN KEY (daycare_id) REFERENCES daycares(id) ON DELETE RESTRICT;
 ALTER TABLE public.daycare_documents ADD CONSTRAINT daycare_documents_submitted_by_fkey FOREIGN KEY (submitted_by) REFERENCES users(id) ON DELETE RESTRICT;
 ALTER TABLE public.daycare_documents ADD CONSTRAINT daycare_documents_supersedes_id_daycare_id_fkey FOREIGN KEY (supersedes_id, daycare_id) REFERENCES daycare_documents(id, daycare_id) ON DELETE RESTRICT;
+ALTER TABLE public.daycare_listing_profiles ADD CONSTRAINT daycare_listing_profiles_listing_id_fkey FOREIGN KEY (listing_id) REFERENCES daycare_listings(id) ON DELETE CASCADE;
 ALTER TABLE public.daycare_listings ADD CONSTRAINT daycare_listings_claimed_daycare_id_fkey FOREIGN KEY (claimed_daycare_id) REFERENCES daycares(id) ON DELETE RESTRICT;
 ALTER TABLE public.daycare_members ADD CONSTRAINT daycare_members_daycare_id_fkey FOREIGN KEY (daycare_id) REFERENCES daycares(id) ON DELETE RESTRICT;
 ALTER TABLE public.daycare_members ADD CONSTRAINT daycare_members_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT;
@@ -1458,6 +1532,7 @@ ALTER TABLE public.users ADD CONSTRAINT users_auth_user_fkey FOREIGN KEY (id) RE
 -- ===================== INDEX (selain PK/UNIQUE constraint) =====================
 CREATE INDEX account_sanctions_daycare_idx ON public.account_sanctions USING btree (target_daycare_id, starts_at);
 CREATE INDEX account_sanctions_user_idx ON public.account_sanctions USING btree (target_user_id, starts_at);
+CREATE INDEX activity_comments_activity_idx ON public.activity_comments USING btree (activity_id, created_at);
 CREATE INDEX admin_actions_complaint_idx ON public.admin_actions USING btree (complaint_id);
 CREATE INDEX admin_actions_investigation_idx ON public.admin_actions USING btree (investigation_id);
 CREATE INDEX ai_jobs_feature_created_idx ON public.ai_jobs USING btree (feature, created_at);
@@ -1486,6 +1561,8 @@ CREATE INDEX daily_report_activities_report_idx ON public.daily_report_activitie
 CREATE INDEX daily_reports_enrollment_idx ON public.daily_reports USING btree (enrollment_id, report_date);
 CREATE INDEX daycare_delegations_daycare_id_idx ON public.daycare_delegations USING btree (daycare_id);
 CREATE INDEX daycare_documents_daycare_type_idx ON public.daycare_documents USING btree (daycare_id, document_type, status);
+CREATE INDEX daycare_listing_profiles_fee_idx ON public.daycare_listing_profiles USING btree (monthly_fee_min);
+CREATE INDEX daycare_listing_profiles_ratio_idx ON public.daycare_listing_profiles USING btree (caregiver_ratio);
 CREATE INDEX daycare_listings_facility_tags_idx ON public.daycare_listings USING gin (facility_tags);
 CREATE INDEX daycare_listings_legal_idx ON public.daycare_listings USING btree (legal_status);
 CREATE INDEX daycare_listings_region_idx ON public.daycare_listings USING btree (province_code, city_name, district_name);
@@ -1571,6 +1648,112 @@ BEGIN
   ON CONFLICT (activity_id, ack_type) DO UPDATE
     SET user_id = EXCLUDED.user_id,
         acknowledged_at = EXCLUDED.acknowledged_at;
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.app_activity_viewer_role(p_activity_id uuid)
+ RETURNS text
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE
+  v_parent_id uuid;
+  v_daycare_id uuid;
+  v_enrollment_id uuid;
+BEGIN
+  IF auth.uid() IS NULL OR p_activity_id IS NULL THEN
+    RETURN NULL;
+  END IF;
+  SELECT e.parent_id, e.daycare_id, e.id
+    INTO v_parent_id, v_daycare_id, v_enrollment_id
+  FROM public.daily_report_activities AS a
+  JOIN public.daily_reports AS r ON r.id = a.report_id
+  JOIN public.enrollments AS e ON e.id = r.enrollment_id
+  WHERE a.id = p_activity_id
+    AND a.deleted_at IS NULL
+    AND a.status = 'sent'
+    AND e.status IN ('approved', 'completed');
+  IF NOT FOUND THEN
+    RETURN NULL;
+  END IF;
+  IF v_parent_id = auth.uid() AND public.app_current_role() IS NOT DISTINCT FROM 'parent' THEN
+    RETURN 'parent';
+  END IF;
+  IF COALESCE(public.app_is_daycare_manager(v_daycare_id), false) THEN
+    RETURN 'manager';
+  END IF;
+  IF COALESCE(public.app_is_current_assigned_caregiver(v_enrollment_id), false) THEN
+    RETURN 'caregiver';
+  END IF;
+  RETURN NULL;
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.app_add_activity_comment(p_activity_id uuid, p_body text, p_request_id text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE
+  v_role text;
+  v_request_id text := COALESCE(NULLIF(btrim(p_request_id), ''), gen_random_uuid()::text);
+  v_comment_id uuid;
+  v_caregiver_id uuid;
+  v_parent_id uuid;
+  v_enrollment_id uuid;
+  v_recipient_id uuid;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION USING ERRCODE = '28000', MESSAGE = 'not_authenticated';
+  END IF;
+  v_role := public.app_activity_viewer_role(p_activity_id);
+  IF v_role IS NULL THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0002', MESSAGE = 'activity_not_found';
+  END IF;
+  IF p_body IS NULL OR char_length(btrim(p_body)) NOT BETWEEN 1 AND 1000 THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'invalid_comment_body';
+  END IF;
+  IF char_length(v_request_id) > 100 THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'invalid_request_id';
+  END IF;
+
+  INSERT INTO public.activity_comments (activity_id, author_id, author_role, body, request_id)
+  VALUES (p_activity_id, auth.uid(), v_role, btrim(p_body), v_request_id)
+  ON CONFLICT (author_id, request_id) DO NOTHING
+  RETURNING id INTO v_comment_id;
+
+  IF v_comment_id IS NULL THEN
+    -- Retried request: return the comment created the first time.
+    SELECT id INTO v_comment_id FROM public.activity_comments
+    WHERE author_id = auth.uid() AND request_id = v_request_id AND activity_id = p_activity_id;
+    IF v_comment_id IS NULL THEN
+      RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'invalid_request_id';
+    END IF;
+    RETURN public.app_internal_activity_comment_json(v_comment_id);
+  END IF;
+
+  SELECT a.caregiver_id, e.parent_id, e.id
+    INTO v_caregiver_id, v_parent_id, v_enrollment_id
+  FROM public.daily_report_activities AS a
+  JOIN public.daily_reports AS r ON r.id = a.report_id
+  JOIN public.enrollments AS e ON e.id = r.enrollment_id
+  WHERE a.id = p_activity_id;
+
+  v_recipient_id := CASE WHEN v_role = 'parent' THEN v_caregiver_id ELSE v_parent_id END;
+  IF v_recipient_id IS DISTINCT FROM auth.uid() THEN
+    PERFORM public.app_internal_notify(
+      v_recipient_id, 'daily_activity_comment',
+      CASE WHEN v_role = 'parent' THEN 'Komentar baru dari orang tua'
+           ELSE 'Balasan baru di catatan harian' END,
+      left(btrim(p_body), 140), 'normal',
+      'activity-comment:' || v_comment_id::text || ':' || v_recipient_id::text,
+      v_enrollment_id
+    );
+  END IF;
+
+  RETURN public.app_internal_activity_comment_json(v_comment_id);
 END;
 $function$;
 
@@ -2242,6 +2425,28 @@ AS $function$
     AND u.status = 'active'
 $function$;
 
+CREATE OR REPLACE FUNCTION public.app_delete_activity_comment(p_comment_id uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE
+  v_comment public.activity_comments%ROWTYPE;
+BEGIN
+  SELECT * INTO v_comment FROM public.activity_comments
+  WHERE id = p_comment_id AND deleted_at IS NULL
+  FOR UPDATE;
+  IF NOT FOUND OR public.app_activity_viewer_role(v_comment.activity_id) IS NULL THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0002', MESSAGE = 'comment_not_found';
+  END IF;
+  IF v_comment.author_id <> auth.uid() THEN
+    RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'comment_delete_not_allowed';
+  END IF;
+  UPDATE public.activity_comments SET deleted_at = now() WHERE id = p_comment_id;
+END;
+$function$;
+
 CREATE OR REPLACE FUNCTION public.app_delete_draft_activity(p_activity_id uuid)
  RETURNS void
  LANGUAGE plpgsql
@@ -2365,6 +2570,21 @@ BEGIN
       ), '[]'::jsonb)
     );
 END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.app_internal_activity_comment_json(p_comment_id uuid)
+ RETURNS jsonb
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+  SELECT jsonb_build_object(
+    'id', c.id, 'activity_id', c.activity_id, 'body', c.body,
+    'author_role', c.author_role, 'author_name', u.full_name,
+    'is_mine', c.author_id = auth.uid(), 'created_at', c.created_at)
+  FROM public.activity_comments AS c
+  JOIN public.users AS u ON u.id = c.author_id
+  WHERE c.id = p_comment_id;
 $function$;
 
 CREATE OR REPLACE FUNCTION public.app_internal_audit(p_action text, p_entity_type text, p_entity_id uuid, p_daycare_id uuid, p_reason text, p_before jsonb, p_after jsonb, p_request_id text)
@@ -2543,6 +2763,24 @@ AS $function$
   )
 $function$;
 
+CREATE OR REPLACE FUNCTION public.app_list_activity_comments(p_activity_id uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+BEGIN
+  IF public.app_activity_viewer_role(p_activity_id) IS NULL THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0002', MESSAGE = 'activity_not_found';
+  END IF;
+  RETURN COALESCE((
+    SELECT jsonb_agg(public.app_internal_activity_comment_json(c.id) ORDER BY c.created_at)
+    FROM public.activity_comments AS c
+    WHERE c.activity_id = p_activity_id AND c.deleted_at IS NULL
+  ), '[]'::jsonb);
+END;
+$function$;
+
 CREATE OR REPLACE FUNCTION public.app_list_daily_activities(p_enrollment_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -2573,7 +2811,13 @@ BEGIN
       'is_urgent', a.is_urgent, 'urgent_reason', a.urgent_reason, 'sent_at', a.sent_at,
       'version', a.version, 'caregiver_name', u.full_name,
       'parent_read_at', (SELECT k.acknowledged_at FROM public.activity_acknowledgements AS k
-                         WHERE k.activity_id = a.id AND k.ack_type = 'parent_read'))
+                         WHERE k.activity_id = a.id AND k.ack_type = 'parent_read'),
+      'love_count', (SELECT count(*) FROM public.activity_reactions AS x
+                     WHERE x.activity_id = a.id AND x.reaction = 'love'),
+      'loved_by_me', EXISTS (SELECT 1 FROM public.activity_reactions AS x
+                             WHERE x.activity_id = a.id AND x.user_id = auth.uid()),
+      'comment_count', (SELECT count(*) FROM public.activity_comments AS c
+                        WHERE c.activity_id = a.id AND c.deleted_at IS NULL))
       ORDER BY a.occurred_at DESC)
     FROM public.daily_report_activities AS a
     JOIN public.daily_reports AS r ON r.id = a.report_id
@@ -3572,6 +3816,65 @@ BEGIN
 END;
 $function$;
 
+CREATE OR REPLACE FUNCTION public.app_set_activity_reaction(p_activity_id uuid, p_active boolean)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+DECLARE
+  v_role text;
+  v_caregiver_id uuid;
+  v_enrollment_id uuid;
+  v_title text;
+  v_inserted integer := 0;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION USING ERRCODE = '28000', MESSAGE = 'not_authenticated';
+  END IF;
+  IF p_active IS NULL THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'invalid_reaction_state';
+  END IF;
+  v_role := public.app_activity_viewer_role(p_activity_id);
+  IF v_role IS NULL THEN
+    RAISE EXCEPTION USING ERRCODE = 'P0002', MESSAGE = 'activity_not_found';
+  END IF;
+  IF v_role <> 'parent' THEN
+    RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'reaction_not_allowed';
+  END IF;
+
+  IF p_active THEN
+    INSERT INTO public.activity_reactions (activity_id, user_id, reaction)
+    VALUES (p_activity_id, auth.uid(), 'love')
+    ON CONFLICT DO NOTHING;
+    GET DIAGNOSTICS v_inserted = ROW_COUNT;
+    IF v_inserted > 0 THEN
+      SELECT a.caregiver_id, r.enrollment_id, a.title
+        INTO v_caregiver_id, v_enrollment_id, v_title
+      FROM public.daily_report_activities AS a
+      JOIN public.daily_reports AS r ON r.id = a.report_id
+      WHERE a.id = p_activity_id;
+      -- One notification per activity, even if the parent toggles again.
+      PERFORM public.app_internal_notify(
+        v_caregiver_id, 'daily_activity_loved', 'Orang tua menyukai catatan Anda',
+        'Catatan "' || left(v_title, 80) || '" mendapat tanda suka dari orang tua.',
+        'normal', 'activity-love:' || p_activity_id::text, v_enrollment_id
+      );
+    END IF;
+  ELSE
+    DELETE FROM public.activity_reactions
+    WHERE activity_id = p_activity_id AND user_id = auth.uid() AND reaction = 'love';
+  END IF;
+
+  RETURN jsonb_build_object(
+    'activity_id', p_activity_id,
+    'loved_by_me', p_active,
+    'love_count', (SELECT count(*) FROM public.activity_reactions
+                   WHERE activity_id = p_activity_id AND reaction = 'love')
+  );
+END;
+$function$;
+
 CREATE OR REPLACE FUNCTION public.app_submit_review(p_enrollment_id uuid, p_rating integer, p_body text, p_request_id text)
  RETURNS uuid
  LANGUAGE plpgsql
@@ -3739,6 +4042,10 @@ CREATE POLICY activity_acknowledgements_parent_read ON public.activity_acknowled
      JOIN daily_reports r ON ((r.id = a.report_id)))
      JOIN enrollments e ON ((e.id = r.enrollment_id)))
   WHERE ((a.id = activity_acknowledgements.activity_id) AND (a.status = 'sent'::text) AND (e.parent_id = auth.uid()) AND (e.status = ANY (ARRAY['approved'::text, 'completed'::text]))))));
+CREATE POLICY activity_comments_viewer_read ON public.activity_comments AS PERMISSIVE FOR SELECT TO authenticated
+  USING (((deleted_at IS NULL) AND (app_activity_viewer_role(activity_id) IS NOT NULL)));
+CREATE POLICY activity_reactions_viewer_read ON public.activity_reactions AS PERMISSIVE FOR SELECT TO authenticated
+  USING ((app_activity_viewer_role(activity_id) IS NOT NULL));
 CREATE POLICY attachment_variants_parent_masked_read ON public.attachment_variants AS PERMISSIVE FOR SELECT TO authenticated
   USING (app_can_parent_read_logbook_variant(id));
 CREATE POLICY authorized_pickups_parent_read ON public.authorized_pickups AS PERMISSIVE FOR SELECT TO authenticated
@@ -3786,6 +4093,12 @@ CREATE POLICY daily_reports_parent_read ON public.daily_reports AS PERMISSIVE FO
   WHERE ((e.id = daily_reports.enrollment_id) AND (e.parent_id = auth.uid()) AND (e.status = ANY (ARRAY['approved'::text, 'completed'::text]))))));
 CREATE POLICY daycare_delegations_manager_or_participant_read ON public.daycare_delegations AS PERMISSIVE FOR SELECT TO authenticated
   USING ((app_is_daycare_manager(daycare_id) OR (grantor_id = auth.uid()) OR (grantee_id = auth.uid())));
+CREATE POLICY daycare_listing_profiles_admin_read ON public.daycare_listing_profiles AS PERMISSIVE FOR SELECT TO authenticated
+  USING ((app_current_role() = 'admin'::text));
+CREATE POLICY daycare_listing_profiles_public_read ON public.daycare_listing_profiles AS PERMISSIVE FOR SELECT TO anon,authenticated
+  USING ((EXISTS ( SELECT 1
+   FROM daycare_listings l
+  WHERE ((l.id = daycare_listing_profiles.listing_id) AND (l.visibility = 'published'::text)))));
 CREATE POLICY daycare_listings_admin_read ON public.daycare_listings AS PERMISSIVE FOR SELECT TO authenticated
   USING ((app_current_role() = 'admin'::text));
 CREATE POLICY daycare_listings_public_read ON public.daycare_listings AS PERMISSIVE FOR SELECT TO anon,authenticated
@@ -3871,6 +4184,8 @@ GRANT REFERENCES, SELECT, TRIGGER, TRUNCATE ON public.account_sanctions TO anon;
 GRANT REFERENCES, SELECT, TRIGGER, TRUNCATE ON public.account_sanctions TO authenticated;
 GRANT REFERENCES, SELECT, TRIGGER, TRUNCATE ON public.activity_acknowledgements TO anon;
 GRANT REFERENCES, SELECT, TRIGGER, TRUNCATE ON public.activity_acknowledgements TO authenticated;
+GRANT SELECT ON public.activity_comments TO authenticated;
+GRANT SELECT ON public.activity_reactions TO authenticated;
 GRANT REFERENCES, SELECT, TRIGGER, TRUNCATE ON public.admin_actions TO anon;
 GRANT REFERENCES, SELECT, TRIGGER, TRUNCATE ON public.admin_actions TO authenticated;
 GRANT REFERENCES, SELECT, TRIGGER, TRUNCATE ON public.ai_jobs TO anon;
@@ -3911,6 +4226,8 @@ GRANT REFERENCES, SELECT, TRIGGER, TRUNCATE ON public.daycare_delegations TO ano
 GRANT REFERENCES, SELECT, TRIGGER, TRUNCATE ON public.daycare_delegations TO authenticated;
 GRANT REFERENCES, SELECT, TRIGGER, TRUNCATE ON public.daycare_documents TO anon;
 GRANT REFERENCES, SELECT, TRIGGER, TRUNCATE ON public.daycare_documents TO authenticated;
+GRANT SELECT ON public.daycare_listing_profiles TO anon;
+GRANT SELECT ON public.daycare_listing_profiles TO authenticated;
 GRANT SELECT ON public.daycare_listings TO anon;
 GRANT SELECT ON public.daycare_listings TO authenticated;
 GRANT REFERENCES, SELECT, TRIGGER, TRUNCATE ON public.daycare_members TO anon;
@@ -3994,6 +4311,8 @@ GRANT REFERENCES, SELECT, TRIGGER, TRUNCATE ON public.users TO authenticated;
 
 -- ===================== HAK EKSEKUSI FUNGSI =====================
 GRANT EXECUTE ON FUNCTION public.app_acknowledge_activity(p_activity_id uuid, p_ack_type text) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.app_activity_viewer_role(p_activity_id uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.app_add_activity_comment(p_activity_id uuid, p_body text, p_request_id text) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.app_admin_list_moderation_queue() TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.app_admin_moderate_review(p_version_id uuid, p_decision text, p_reason text, p_request_id text) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.app_admin_moderate_review_reply(p_version_id uuid, p_decision text, p_reason text, p_request_id text) TO authenticated, service_role;
@@ -4008,13 +4327,16 @@ GRANT EXECUTE ON FUNCTION public.app_create_incident(p_enrollment_id uuid, p_occ
 GRANT EXECUTE ON FUNCTION public.app_create_parent_child(p_full_name text, p_birth_date date) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.app_create_payment_ledger_entry(p_charge_id uuid, p_method text, p_idempotency_key text, p_expires_at timestamp with time zone) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.app_current_role() TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.app_delete_activity_comment(p_comment_id uuid) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.app_delete_draft_activity(p_activity_id uuid) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.app_expire_overdue_enrollments(p_limit integer) TO service_role;
 GRANT EXECUTE ON FUNCTION public.app_get_enrollment(p_enrollment_id uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.app_internal_activity_comment_json(p_comment_id uuid) TO service_role;
 GRANT EXECUTE ON FUNCTION public.app_is_active_daycare_member(p_daycare_id uuid, p_member_role text) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.app_is_current_assigned_caregiver(p_enrollment_id uuid) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.app_is_daycare_manager(p_daycare_id uuid) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.app_is_parent_of_child(p_child_id uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.app_list_activity_comments(p_activity_id uuid) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.app_list_daily_activities(p_enrollment_id uuid) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.app_list_daycare_offerings(p_daycare_id uuid) TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.app_list_enrollments(p_daycare_id uuid) TO authenticated, service_role;
@@ -4035,6 +4357,7 @@ GRANT EXECUTE ON FUNCTION public.app_parent_update_child(p_child_id uuid, p_full
 GRANT EXECUTE ON FUNCTION public.app_parent_update_child_health(p_child_id uuid, p_allergies text, p_medical_history text, p_special_needs text, p_medication_notes text, p_reason text) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.app_parent_withdraw_review(p_review_id uuid, p_reason text, p_request_id text) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.app_save_daily_activity(p_activity_id uuid, p_enrollment_id uuid, p_report_date date, p_activity_type text, p_title text, p_body text, p_occurred_at timestamp with time zone, p_details jsonb, p_status text, p_is_urgent boolean, p_urgent_reason text, p_change_reason text, p_request_id text) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.app_set_activity_reaction(p_activity_id uuid, p_active boolean) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.app_submit_review(p_enrollment_id uuid, p_rating integer, p_body text, p_request_id text) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.app_update_incident_status(p_incident_id uuid, p_status text, p_reason text, p_request_id text) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.app_update_parent_profile(p_full_name text, p_phone text) TO authenticated, service_role;

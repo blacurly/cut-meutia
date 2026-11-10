@@ -1,11 +1,11 @@
 # Dokumentasi API Ayomi (fitur non-AI)
 
-REST API dibangun dengan Next.js Route Handlers di `app/api/`. Logika bisnis dan validasi ada di `lib/api/`; aturan akses dan transaksi ada di fungsi database Supabase (`supabase/migrations/035`–`040`). Fitur AI belum termasuk dokumen ini.
+REST API dibangun dengan Next.js Route Handlers di `app/api/`. Logika bisnis dan validasi ada di `lib/api/`; aturan akses dan transaksi ada di fungsi database Supabase (`supabase/migrations/035`–`042`). Fitur AI belum termasuk dokumen ini.
 
 ## Autentikasi
 
-- **Browser:** sesi Supabase Auth dari cookie (otomatis setelah login di `/masuk`).
-- **Klien lain (Thunder Client, aplikasi):** header `Authorization: Bearer <access_token>` dari Supabase Auth.
+- **Browser:** sesi Supabase Auth dari cookie, ditulis oleh `POST /api/auth/login` atau halaman `/masuk`.
+- **Klien lain (Thunder Client, Postman, aplikasi):** header `Authorization: Bearer <access_token>`. Token didapat dari `session.access_token` pada response `POST /api/auth/login`.
 - Endpoint bertanda **Publik** bisa dipanggil tanpa login. Endpoint lain mengembalikan `401` tanpa sesi yang valid.
 - Peran (Orang Tua, Pengelola, Pengasuh, Admin) dibaca dari database, bukan dari request. Mengganti ID di URL atau body tidak menaikkan hak akses.
 
@@ -38,7 +38,12 @@ Daftar lengkap kode error dan pesannya ada di `lib/api/errors.js`.
 
 | Method | Endpoint | Akses | Fungsi |
 | --- | --- | --- | --- |
-| GET | `/api/daycare/list` | Publik | Katalog daycare (104 daycare 3 provinsi + mitra untuk pengguna login) |
+| POST | `/api/auth/register` | Publik | Daftar akun Orang Tua |
+| POST | `/api/auth/login` | Publik | Masuk; mengembalikan peran, tujuan halaman, dan `access_token` |
+| POST | `/api/auth/logout` | Publik | Keluar dan hapus cookie sesi |
+| GET | `/api/daycares` | Publik | Katalog daycare dengan filter server (lihat di bawah). Alias lama: `/api/daycare/list` |
+| GET | `/api/daycares/{id}` | Publik | Detail daycare berdasarkan UUID atau slug: profil, galeri, paket biaya |
+| GET | `/api/daycares/compare?ids=a,b,c` | Publik | Bandingkan 2–3 daycare berdampingan |
 | GET | `/api/daycares/{id}/offerings` | Publik | Layanan dan harga yang disetujui dari daycare mitra |
 | GET | `/api/daycares/{id}/reviews` | Publik | Ulasan yang lolos moderasi (tanpa identitas penulis) |
 | GET | `/api/me` | Login | Profil Orang Tua dan daftar anak |
@@ -63,6 +68,11 @@ Daftar lengkap kode error dan pesannya ada di `lib/api/errors.js`.
 | PATCH | `/api/enrollments/{id}/activities/{activityId}` | Pengasuh penulis | Ubah draf (wajib alasan perubahan) |
 | DELETE | `/api/enrollments/{id}/activities/{activityId}` | Pengasuh penulis | Hapus draf yang belum terkirim |
 | POST | `/api/activities/{id}/acknowledgements` | Orang Tua / Pengelola | Tandai dibaca (`parent_read`) atau ditinjau (`manager_review`) |
+| PUT | `/api/activities/{id}/love` | Orang Tua | Beri tanda love (favorit) pada catatan |
+| DELETE | `/api/activities/{id}/love` | Orang Tua | Hapus tanda love |
+| GET | `/api/activities/{id}/comments` | Orang Tua, Pengelola, Pengasuh bertugas | Daftar komentar catatan |
+| POST | `/api/activities/{id}/comments` | Orang Tua, Pengelola, Pengasuh bertugas | Tulis komentar |
+| DELETE | `/api/activities/{id}/comments/{commentId}` | Penulis komentar | Hapus komentar sendiri |
 | GET | `/api/incidents` | Orang Tua, Pengelola, Admin | Laporan insiden sesuai cakupan |
 | POST | `/api/incidents` | Orang Tua, Pengelola, Pengasuh bertugas | Laporkan insiden |
 | PATCH | `/api/incidents/{id}` | Pengelola, Admin | Ubah status (`in_progress`, `resolved`) |
@@ -76,7 +86,92 @@ Daftar lengkap kode error dan pesannya ada di `lib/api/errors.js`.
 | PATCH | `/api/admin/moderation/{reviews\|replies}/{versionId}` | Admin | Setujui atau tolak |
 | PATCH | `/api/admin/transactions/{id}` | Admin | Catat hasil pembayaran manual |
 
-Endpoint dengan CRUD lengkap: `/api/children`, `/api/enrollments`, dan `/api/enrollments/{id}/activities`.
+Endpoint dengan CRUD lengkap: `/api/children`, `/api/enrollments`, `/api/enrollments/{id}/activities`, dan `/api/activities/{id}/comments`.
+
+## Akun — `/api/auth/*`
+
+```http
+POST /api/auth/register
+Content-Type: application/json
+
+{ "email": "bunda@example.com", "password": "rahasia123", "full_name": "Bunda Sari", "phone": "081234567890", "terms": true }
+```
+
+`201 Created`. Bila konfirmasi email aktif di Supabase: `{ "user": null, "role": "parent", "needs_email_confirmation": true, "session": null }`. Response ini sama untuk email yang sudah terdaftar, sehingga endpoint tidak membocorkan daftar email. Pendaftaran mandiri selalu membuat akun Orang Tua; akun Pengelola, Pengasuh, dan Admin dibuat lewat undangan.
+
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{ "email": "bunda@example.com", "password": "rahasia123", "role": "parent" }
+```
+
+`200 OK`:
+
+```json
+{
+  "user": { "id": "…", "email": "bunda@example.com" },
+  "profile": { "role": "parent", "full_name": "Bunda Sari" },
+  "session": { "access_token": "eyJ…", "token_type": "bearer", "expires_at": 1794300000 },
+  "redirect_to": "/beranda"
+}
+```
+
+`role` bersifat opsional: `parent`, `caregiver` (Pengelola atau Pengasuh), atau `admin`. Jika peran akun tidak cocok, sesi langsung ditutup (`403 role_not_allowed`). Refresh token tidak pernah dikirim di body; sesi browser diperbarui lewat cookie.
+
+| Error | Arti |
+| --- | --- |
+| `400 invalid_email`, `invalid_password`, `invalid_phone`, `invalid_full_name`, `invalid_terms` | Input tidak valid |
+| `401 invalid_credentials` | Email atau kata sandi salah |
+| `403 email_not_confirmed`, `account_not_active`, `role_not_allowed` | Akun belum bisa masuk ke portal ini |
+| `409 email_already_registered` | Email sudah terdaftar (hanya bila konfirmasi email nonaktif) |
+| `429 too_many_requests` | Batas percobaan Supabase Auth tercapai |
+
+## Katalog, detail, dan perbandingan daycare
+
+Katalog berisi 104 daycare dari dataset publik DKI Jakarta, Jawa Barat, dan Jawa Timur. Nama, alamat, fasilitas, rating, dan legalitas berasal dari dataset. Biaya, rasio pengasuh, kapasitas, usia, jam operasional, dan paket **tidak tersedia di sumber publik**, sehingga nilainya **disintesis** (`lib/daycare-synthetic.js`). Data sintetis ditandai `profile.estimated: true` dan harus ditampilkan sebagai estimasi. Pengelola menggantinya dengan data asli setelah mengklaim daycare.
+
+### Filter `GET /api/daycares`
+
+| Parameter | Nilai | Contoh |
+| --- | --- | --- |
+| `q` | Teks nama, alamat, kota, atau kecamatan | `q=tebet` |
+| `province`, `city`, `district` | Nama wilayah persis | `province=Jawa Timur` |
+| `maxFee` | Biaya bulanan maksimal: `1500000`, `2000000`, `3000000`, `4000000`, `5000000` | `maxFee=3000000` |
+| `maxRatio` | Anak per pengasuh maksimal: `3`–`6` | `maxRatio=4` |
+| `ageMonths` | Usia anak dalam bulan (0–84) | `ageMonths=18` |
+| `facilities` | Kode fasilitas dipisah koma (`lib/daycare-facilities.js`) | `facilities=cctv,meals` |
+| `legal` | `referenced`: hanya yang punya referensi izin publik | |
+| `minRating` | `4` atau `4.5` | |
+| `sort` | `recommended` (bawaan), `rating`, `fee`, `ratio`, `name` | `sort=fee` |
+
+Nilai filter yang tidak valid diabaikan, tidak menghasilkan error. Daycare yang nilainya belum diketahui tidak lolos filter biaya, rasio, atau usia.
+
+### Detail `GET /api/daycares/{id-atau-slug}`
+
+Field utama: `name`, `address`, `facilities`, `facilityLabels`, `rating`, `legalStatus`, `legalReferenceUrl`, `monthlyFee`, `ratio`, `capacity`, `ageMinMonths`, `ageMaxMonths`, `profile` (`estimated`, `dailyFee`, `registrationFee`, `hours`, `operatingDays`, `packages`), dan `gallery`.
+
+`gallery` berisi `{ "url": "/images/daycare-room.webp", "illustration": true }`. Selama daycare belum mengunggah foto, galeri memakai tiga ilustrasi AI bawaan aplikasi dengan urutan yang berbeda per daycare. `illustration: true` berarti gambar **bukan** foto daycare tersebut. Foto asli dari Storage (`illustration: false`) selalu diutamakan.
+
+Error: `400 invalid_daycare_id`, `404 daycare_not_found`.
+
+### Perbandingan `GET /api/daycares/compare?ids=a,b,c`
+
+`ids` berisi 2–3 UUID atau slug yang berbeda. Response:
+
+```json
+{
+  "daycares": [{ "id": "…", "slug": "…", "name": "…", "city": "…" }],
+  "rows": [
+    { "key": "monthly_fee", "label": "Biaya bulanan (mulai dari)", "estimated": true,
+      "values": [{ "value": 2100000, "display": "Rp 2.100.000" }, { "value": 3650000, "display": "Rp 3.650.000" }],
+      "best": [0] }
+  ],
+  "notes": ["Status legalitas dan rating berasal dari sumber publik …"]
+}
+```
+
+Baris yang dibandingkan: legalitas, rating, biaya bulanan, biaya harian, biaya pendaftaran, rasio pengasuh, kapasitas, usia, jam operasional, jumlah fasilitas, dan setiap fasilitas. `best` berisi indeks kolom dengan nilai terbaik: biaya dan rasio terkecil, rating dan fasilitas terbanyak. `best` kosong bila semua nilai sama. Error: `400 invalid_compare_ids`, `404 daycare_not_found`.
 
 ## Alur pendaftaran (contoh)
 
@@ -164,6 +259,20 @@ Gateway pembayaran belum terpasang. Admin mengonfirmasi hasilnya lewat `PATCH /a
 ```
 
 `201 Created` → `{ "id": "…" }`. Nilai `activity_type`: `play`, `learning`, `interaction`, `meal`, `sleep`, `other`. `status: "draft"` hanya terlihat oleh penulis. Catatan terkirim tidak dapat diubah atau dihapus (`409 sent_activity_is_immutable`). Catatan `is_urgent: true` wajib menyertakan `urgent_reason`.
+
+### Love dan komentar logbook
+
+`PUT /api/activities/{id}/love` (tanpa body) → `200` `{ "activity_id": "…", "loved_by_me": true, "love_count": 1 }`. `DELETE` menghapusnya. Keduanya idempoten. Hanya Orang Tua anak tersebut yang dapat memberi love (`403 reaction_not_allowed`). Pengasuh penulis menerima satu notifikasi per catatan.
+
+`POST /api/activities/{id}/comments` dengan body `{ "body": "Terima kasih, Bu!" }` → `201`:
+
+```json
+{ "id": "…", "activity_id": "…", "body": "Terima kasih, Bu!", "author_role": "parent", "author_name": "Bunda Sari", "is_mine": true, "created_at": "…" }
+```
+
+Komentar 1–1.000 karakter. Komentar Orang Tua memberi notifikasi ke pengasuh penulis; komentar Pengelola atau Pengasuh memberi notifikasi ke Orang Tua. Kirim `Idempotency-Key` agar pengiriman ulang tidak menggandakan komentar. Hanya penulis yang dapat menghapus komentar (`403 comment_delete_not_allowed`). Love dan komentar hanya berlaku untuk catatan terkirim; pihak lain mendapat `404 activity_not_found`.
+
+`GET /api/enrollments/{id}/activities` kini menyertakan `love_count`, `loved_by_me`, dan `comment_count` per catatan.
 
 ## Laporan insiden — `POST /api/incidents`
 

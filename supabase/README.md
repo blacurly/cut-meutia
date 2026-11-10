@@ -6,7 +6,7 @@ Project: `uitkyzjezowynbedjkbw`. Semua tabel memakai RLS. Penulisan data dari br
 
 | Folder | Isi |
 | --- | --- |
-| `schema/live_schema_snapshot.sql` | Snapshot skema yang berjalan: 62 tabel, constraint, index, policy, fungsi, dan hak akses. Ini dokumen referensi, **bukan** untuk dijalankan ulang. |
+| `schema/live_schema_snapshot.sql` | Snapshot skema yang berjalan: 65 tabel, constraint, index, policy, fungsi, dan hak akses. Ini dokumen referensi, **bukan** untuk dijalankan ulang. |
 | `migrations/` | Perubahan sejak 030. Migrasi 001–029 dibuat langsung di Supabase dan tidak tersimpan; snapshot di atas menggantikannya. |
 | `seed/` | Katalog 104 daycare (lihat `seed/README.md`). |
 | `audits/` | Skrip verifikasi baca-saja per migrasi. |
@@ -23,8 +23,10 @@ Project: `uitkyzjezowynbedjkbw`. Semua tabel memakai RLS. Penulisan data dari br
 | 038 | Ulasan dan moderasi manual | Diterapkan |
 | 039 + seed | Katalog daycare publik | Diterapkan |
 | 040 | Fungsi pendukung API (CRUD anak, hapus draf, fungsi baca per peran) | Diterapkan |
+| 041 + seed | Profil operasional katalog (biaya, rasio, kapasitas, usia, jam, galeri); berisi data **sintetis** | Diterapkan 2026-11-10 |
+| 042 | Love dan komentar logbook, beserta jumlahnya di daftar catatan harian | Diterapkan 2026-11-10 |
 
-Migrasi 035–040 hanya berisi `CREATE OR REPLACE FUNCTION` dan pengaturan hak akses (kecuali 039 yang membuat tabel), jadi aman dijalankan ulang setelah diubah.
+Migrasi 035–038 dan 040 hanya berisi `CREATE OR REPLACE FUNCTION` dan pengaturan hak akses, jadi aman dijalankan ulang setelah diubah. Migrasi 039, 041, dan 042 membuat tabel, jadi masing-masing dijalankan sekali.
 
 ## Hal yang perlu diingat
 

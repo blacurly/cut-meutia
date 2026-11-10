@@ -4,7 +4,7 @@
 -- A failed assertion aborts with its message; success ends with 'E2E OK'.
 --
 -- Covered: child CRUD rules, enrollment, manager decision + capacity, payment,
--- caregiver assignment, check-in, daily log, incident, completion, review +
+-- caregiver assignment, check-in, daily log + love + comments, incident, completion, review +
 -- moderation + reply, notifications, expiry job, and cross-account isolation.
 
 BEGIN;
@@ -204,6 +204,64 @@ BEGIN
   PERFORM public.app_mark_notification((v_notices -> 'items' -> 0 ->> 'id')::uuid, true);
   ASSERT (public.app_list_my_notifications(true, 50) ->> 'unread_count')::integer = v_unread - 1, 'mark read reduces unread';
 END $$;
+
+-- Logbook love + comment (042)
+DO $$
+DECLARE v_activity uuid := current_setting('e2e.activity')::uuid; v_love jsonb; v_comment jsonb;
+BEGIN
+  v_love := public.app_set_activity_reaction(v_activity, true);
+  ASSERT (v_love ->> 'love_count')::integer = 1 AND (v_love ->> 'loved_by_me')::boolean, 'parent loves activity';
+  ASSERT (public.app_set_activity_reaction(v_activity, true) ->> 'love_count')::integer = 1, 'love is idempotent';
+  ASSERT (public.app_list_daily_activities(current_setting('e2e.enrollment')::uuid) -> 0 ->> 'loved_by_me')::boolean, 'list shows loved_by_me';
+  v_comment := public.app_add_activity_comment(v_activity, 'Terima kasih, Bu. Anak saya memang suka bayam.', 'e2e-comment-0001');
+  ASSERT v_comment ->> 'author_role' = 'parent' AND (v_comment ->> 'is_mine')::boolean, 'parent comment created';
+  ASSERT public.app_add_activity_comment(v_activity, 'Terima kasih, Bu. Anak saya memang suka bayam.', 'e2e-comment-0001') ->> 'id' = v_comment ->> 'id', 'retried comment is idempotent';
+  PERFORM pg_temp.expect_error(format('SELECT public.app_add_activity_comment(%L, %L, NULL)', v_activity, '   '), 'invalid_comment_body');
+  PERFORM pg_temp.expect_error(format('SELECT public.app_set_activity_reaction(%L, NULL)', v_activity), 'invalid_reaction_state');
+  PERFORM set_config('e2e.comment', v_comment ->> 'id', true);
+END $$;
+RESET ROLE;
+
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', current_setting('e2e.caregiver'), 'role', 'authenticated')::text, true);
+SET LOCAL ROLE authenticated;
+DO $$
+DECLARE v_activity uuid := current_setting('e2e.activity')::uuid; v_notices jsonb;
+BEGIN
+  ASSERT jsonb_array_length(public.app_list_activity_comments(v_activity)) = 1, 'caregiver sees parent comment';
+  ASSERT public.app_list_activity_comments(v_activity) -> 0 ->> 'is_mine' = 'false', 'not marked as caregiver''s own';
+  ASSERT public.app_add_activity_comment(v_activity, 'Sama-sama, Bunda. Besok ada menu sup.', NULL) ->> 'author_role' = 'caregiver', 'caregiver replies';
+  PERFORM pg_temp.expect_error(format('SELECT public.app_set_activity_reaction(%L, true)', v_activity), 'reaction_not_allowed');
+  PERFORM pg_temp.expect_error(format('SELECT public.app_delete_activity_comment(%L)', current_setting('e2e.comment')), 'comment_delete_not_allowed');
+  v_notices := public.app_list_my_notifications(false, 50) -> 'items';
+  ASSERT EXISTS (SELECT 1 FROM jsonb_array_elements(v_notices) AS n WHERE n ->> 'event_type' = 'daily_activity_loved'), 'caregiver notified of love';
+  ASSERT EXISTS (SELECT 1 FROM jsonb_array_elements(v_notices) AS n WHERE n ->> 'event_type' = 'daily_activity_comment'), 'caregiver notified of comment';
+END $$;
+RESET ROLE;
+
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', current_setting('e2e.parent2'), 'role', 'authenticated')::text, true);
+SET LOCAL ROLE authenticated;
+DO $$
+BEGIN
+  PERFORM pg_temp.expect_error(format('SELECT public.app_list_activity_comments(%L)', current_setting('e2e.activity')), 'activity_not_found');
+  PERFORM pg_temp.expect_error(format('SELECT public.app_set_activity_reaction(%L, true)', current_setting('e2e.activity')), 'activity_not_found');
+  PERFORM pg_temp.expect_error(format('SELECT public.app_add_activity_comment(%L, ''Halo'', NULL)', current_setting('e2e.activity')), 'activity_not_found');
+  ASSERT (SELECT count(*) FROM public.activity_comments) = 0, 'RLS hides other families'' comments';
+END $$;
+RESET ROLE;
+
+SELECT set_config('request.jwt.claims', jsonb_build_object('sub', current_setting('e2e.parent'), 'role', 'authenticated')::text, true);
+SET LOCAL ROLE authenticated;
+DO $$
+DECLARE v_activity uuid := current_setting('e2e.activity')::uuid;
+BEGIN
+  ASSERT (SELECT count(*) FROM public.activity_comments WHERE activity_id = v_activity) = 2, 'RLS lets the parent read the thread';
+  ASSERT EXISTS (SELECT 1 FROM jsonb_array_elements(public.app_list_my_notifications(false, 50) -> 'items') AS n
+                 WHERE n ->> 'event_type' = 'daily_activity_comment'), 'parent notified of caregiver reply';
+  PERFORM public.app_delete_activity_comment(current_setting('e2e.comment')::uuid);
+  ASSERT jsonb_array_length(public.app_list_activity_comments(v_activity)) = 1, 'deleted comment hidden';
+  ASSERT (public.app_set_activity_reaction(v_activity, false) ->> 'love_count')::integer = 0, 'love removed';
+  ASSERT (public.app_list_daily_activities(current_setting('e2e.enrollment')::uuid) -> 0 ->> 'comment_count')::integer = 1, 'list shows comment_count';
+END $$;
 RESET ROLE;
 
 -- ------------------------------------------ Manager: resolve and complete
@@ -260,6 +318,9 @@ BEGIN
   ASSERT NOT (v_reviews::text LIKE '%' || current_setting('e2e.parent') || '%'), 'review author is not exposed';
   ASSERT jsonb_array_length(public.app_list_daycare_offerings(current_setting('e2e.daycare')::uuid)) = 1, 'offerings are public';
   PERFORM pg_temp.expect_error('SELECT public.app_list_enrollments()', 'permission denied for function app_list_enrollments');
+  ASSERT (SELECT count(*) FROM public.daycare_listing_profiles) = (SELECT count(*) FROM public.daycare_listings), 'catalog profiles are public';
+  PERFORM pg_temp.expect_error('SELECT count(*) FROM public.activity_comments', 'permission denied for table activity_comments');
+  PERFORM pg_temp.expect_error(format('SELECT public.app_list_activity_comments(%L)', gen_random_uuid()), 'permission denied for function app_list_activity_comments');
 END $$;
 RESET ROLE;
 

@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import Modal from "@/components/ui/Modal";
-import { ArrowLeftRight, ArrowRight, Check, CheckCircle2, FileCheck2, MapPin, Search, ShieldCheck, Star, Users } from "lucide-react";
+import { ArrowLeftRight, ArrowRight, Check, CheckCircle2, FileCheck2, MapPin, Search, ShieldCheck, Star, Users, Wallet } from "lucide-react";
 import { useParentDemo } from "./ParentDemoProvider";
 import { availableSlots, rupiah, toggleCompare } from "@/lib/parent";
 import { LEGAL_STATUS } from "@/lib/daycare-directory";
@@ -23,12 +22,13 @@ export function DemoGate({ children }) {
 export function DemoPhoto({ src, name = "ruangan daycare", priority = false }) { return <div className={p.photo}><Image src={src} alt={`Ilustrasi AI ${name}, bukan foto daycare nyata.`} fill sizes="(max-width:600px) 100vw, (max-width:1100px) 50vw, 40vw" preload={priority} /><span className={p.photoCredit}>Ilustrasi AI</span></div>; }
 export function CompareButton({ daycare }) {
   const { state, update, hydrated } = useParentDemo(); const [error, setError] = useState(""); const selected = state.compare.includes(daycare.id);
-  function toggle() { setError(""); try { update(s => toggleCompare(s, daycare.id)); } catch (error) { setError(error.message); } }
+  function toggle() { setError(""); try { update(s => toggleCompare(s, daycare.id, daycare.name)); } catch (error) { setError(error.message); } }
   return <div><button disabled={!hydrated} className={`${p.button} ${p.secondary} ${p.full}`} aria-pressed={selected} onClick={toggle}>{selected ? <Check size={15} /> : <ArrowLeftRight size={15} />} {selected ? "Dipilih" : "Bandingkan"}</button>{error && <p role="alert" className={p.error}>{error}</p>}</div>;
 }
 // Real photo when an approved cover exists, otherwise a neutral placeholder.
 // Never substitutes an illustration that could be mistaken for the daycare.
-export function DaycarePhoto({ url, name }) {
+export function DaycarePhoto({ url, name, illustration = false, priority = false }) {
+  if (url && illustration) return <DemoPhoto src={url} name={name} priority={priority} />;
   if (url) return <div className={p.photo}><Image src={url} alt={`Foto ${name}`} fill sizes="(max-width:600px) 100vw, (max-width:1100px) 50vw, 33vw" /></div>;
   const initials = name.split(/\s+/).filter(word => /^[\p{L}\p{N}]/u.test(word)).slice(0, 2).map(word => word[0]).join("").toUpperCase();
   return <div className={p.photo}><div className={p.photoPlaceholder}><span className={p.photoInitials} aria-hidden="true">{initials}</span><span className={p.small}>Foto daycare menyusul</span></div></div>;
@@ -36,59 +36,42 @@ export function DaycarePhoto({ url, name }) {
 
 const ratingLabel = rating => rating.toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
-function ListingBadge({ daycare }) {
+export function ListingBadge({ daycare }) {
   if (daycare.kind === "partner") return <span className={p.badge}><CheckCircle2 size={12} />Mitra Ayomi</span>;
   const legal = LEGAL_STATUS[daycare.legalStatus] || LEGAL_STATUS.not_available;
   const tone = { green: "", amber: p.amber, neutral: p.neutral }[legal.tone];
   return <span className={`${p.badge} ${tone}`}><FileCheck2 size={12} />{legal.label}</span>;
 }
 
-function DirectoryDetail({ daycare }) {
-  const listing = daycare.kind === "listing";
-  return <div className={p.stack}>
-    <p><MapPin size={14} style={{ display: "inline" }} /> {[daycare.address, daycare.district, daycare.city, daycare.province].filter(Boolean).join(", ")}</p>
-    <div className={p.listingMeta}><ListingBadge daycare={daycare} />{listing && <span className={`${p.badge} ${p.neutral}`}>Belum bergabung dengan Ayomi</span>}</div>
-    {listing && <p className={p.small}>
-      {daycare.rating == null ? "Belum ada rating publik." : <><Star size={13} style={{ display: "inline" }} /> {ratingLabel(daycare.rating)} / 5 · rating ulasan publik daring, bukan ulasan Ayomi.</>}
-    </p>}
-    <section><h3 className={p.filterLabel}>Fasilitas & program</h3><p>{daycare.description || "Deskripsi belum tersedia."}</p></section>
-    {daycare.facilityLabels?.length > 0 && <div className={p.chips}>{daycare.facilityLabels.map(label => <span className={p.chip} key={label}>{label}</span>)}</div>}
-    {daycare.capacity != null && <p>Kapasitas harian: {daycare.capacity} anak</p>}
-    {listing && <section><h3 className={p.filterLabel}>Legalitas</h3>
-      <p className={p.small}>{daycare.legalReference || "Nomor izin atau NPSN belum tercantum di sumber data."}</p>
-      {daycare.legalReferenceUrl && <a className={p.link} href={daycare.legalReferenceUrl} target="_blank" rel="noopener noreferrer">Cek di sumber resmi<ArrowRight size={13} /></a>}
-    </section>}
-    {listing && daycare.dataNotes.length > 0 && <section><h3 className={p.filterLabel}>Catatan data</h3><ul className={`${p.detailList} ${p.small}`}>{daycare.dataNotes.map(note => <li key={note}>{note}</li>)}</ul></section>}
-    {listing && <p className={p.notice}>Informasi berasal dari sumber publik dan belum diverifikasi tim Ayomi. Pendaftaran online tersedia setelah daycare bergabung sebagai mitra.</p>}
-  </div>;
-}
+export const detailHref = daycare => `/detail/${daycare.slug || daycare.id}`;
 
+// Catalog card. Fees, ratio and capacity of catalog entries are synthetic
+// estimates (data_origin = 'synthetic'), so they carry an "estimasi" marker.
 function DirectoryDaycareCard({ daycare }) {
-  const [detailOpen, setDetailOpen] = useState(false);
-  const closeDetail = useCallback(() => setDetailOpen(false), []);
-  const open = () => setDetailOpen(true);
-  return <>
-    <article className={p.card}>
-      <div style={{ position: "relative" }}>
-        <button type="button" onClick={open} aria-label={`Lihat detail ${daycare.name}`} style={{ display: "block", width: "100%", padding: 0, border: 0, cursor: "pointer" }}><DaycarePhoto url={daycare.coverImageUrl} name={daycare.name} /></button>
-        <div className={p.photoBadges} style={{ pointerEvents: "none" }}><ListingBadge daycare={daycare} /></div>
+  const href = detailHref(daycare);
+  const estimated = daycare.profile?.estimated;
+  return <article className={p.card}>
+    <div style={{ position: "relative" }}>
+      <Link href={href} aria-label={`Lihat detail ${daycare.name}`} style={{ display: "block" }}><DaycarePhoto url={daycare.coverImageUrl} illustration={daycare.coverIsIllustration} name={daycare.name} /></Link>
+      <div className={p.photoBadges} style={{ pointerEvents: "none" }}><ListingBadge daycare={daycare} /></div>
+    </div>
+    <div className={p.cardBody}>
+      <h2><Link href={href}>{daycare.name}</Link></h2>
+      <p className={p.small}><MapPin size={12} style={{ display: "inline", marginRight: 4 }} />{[daycare.district, daycare.city, daycare.province].filter(Boolean).join(", ")}</p>
+      <div className={p.cardMetrics}>
+        {daycare.kind === "listing" && <span><Star size={14} />{daycare.rating == null ? "Belum ada rating" : `${ratingLabel(daycare.rating)} · rating publik`}</span>}
+        {daycare.ratio != null && <span><Users size={14} />Rasio 1:{daycare.ratio}{estimated && "*"}</span>}
+        {daycare.capacity != null && <span><Check size={14} />Kapasitas {daycare.capacity} anak{estimated && "*"}</span>}
+        {daycare.facilityLabels?.slice(0, 2).map(label => <span key={label}><Check size={14} />{label}</span>)}
       </div>
-      <div className={p.cardBody}>
-        <h2><button type="button" onClick={open} style={{ font: "inherit", color: "inherit", textAlign: "left", cursor: "pointer" }}>{daycare.name}</button></h2>
-        <p className={p.small}><MapPin size={12} style={{ display: "inline", marginRight: 4 }} />{[daycare.district, daycare.city, daycare.province].filter(Boolean).join(", ")}</p>
-        <div className={p.cardMetrics}>
-          {daycare.kind === "listing" && <span><Star size={14} />{daycare.rating == null ? "Belum ada rating" : `${ratingLabel(daycare.rating)} · rating publik`}</span>}
-          {daycare.capacity != null && <span><Users size={14} />Kapasitas {daycare.capacity} anak / hari</span>}
-          {daycare.facilityLabels?.slice(0, 3).map(label => <span key={label}><Check size={14} />{label}</span>)}
-        </div>
-        <div className={p.cardActions}>
-          <button type="button" disabled className={`${p.button} ${p.secondary} ${p.full}`} title="Perbandingan untuk daycare dari katalog belum tersedia"><ArrowLeftRight size={15} />Bandingkan</button>
-          <button type="button" className={p.button} onClick={open}>Lihat detail<ArrowRight size={14} /></button>
-        </div>
+      {daycare.monthlyFee != null && <p><Wallet size={14} style={{ display: "inline", marginRight: 6 }} /><strong className={p.price}>{rupiah(daycare.monthlyFee)}</strong><span className={p.small}> / bulan{estimated && "*"}</span></p>}
+      {estimated && <p className={p.small}>*Estimasi dari data sintetis, bukan harga resmi daycare.</p>}
+      <div className={p.cardActions}>
+        <CompareButton daycare={daycare} />
+        <LinkButton href={href}>Lihat detail<ArrowRight size={14} /></LinkButton>
       </div>
-    </article>
-    <Modal open={detailOpen} onClose={closeDetail} title={daycare.name}><DirectoryDetail daycare={daycare} /></Modal>
-  </>;
+    </div>
+  </article>;
 }
 
 export function DaycareCard({ daycare }) {

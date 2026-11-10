@@ -4,12 +4,13 @@ import { Filter, Search, SlidersHorizontal, X } from "lucide-react";
 import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 import { FACILITY_TAGS } from "@/lib/daycare-facilities";
-import { RATING_OPTIONS, SORT_OPTIONS, directoryQuery, filterDirectoryDaycares, parseDirectoryFilters } from "@/lib/daycare-directory";
+import { FEE_OPTIONS, RATING_OPTIONS, RATIO_OPTIONS, SORT_OPTIONS, directoryQuery, filterDirectoryDaycares, parseDirectoryFilters, rupiah } from "@/lib/daycare-directory";
 import { requestApi } from "@/lib/api-client";
 import { DaycareCard, EmptyState, PageHeader } from "./ParentUI";
 import p from "./Parent.module.css";
 
 const PAGE_SIZE = 9;
+const AGE_OPTIONS = [["6", "6 bulan"], ["12", "1 tahun"], ["24", "2 tahun"], ["36", "3 tahun"], ["48", "4 tahun"], ["60", "5 tahun"]];
 const REGION_FIELDS = [["province", "Provinsi"], ["city", "Kota / Kabupaten"], ["district", "Kecamatan"]];
 
 // Region options come from the loaded data, narrowed by the parent selection.
@@ -50,6 +51,28 @@ function FilterFields({ filters, change, prefix, daycares, facilityKeys }) {
         <option value="">Semua rating</option>
         {RATING_OPTIONS.map(value => <option key={value} value={value}>{value.replace(".", ",")} ke atas</option>)}
       </select>
+    </div>
+    <div className={p.filterGroup}>
+      <label className={p.filterLabel} htmlFor={`${prefix}-fee`}>Biaya bulanan maksimal</label>
+      <select className={p.select} id={`${prefix}-fee`} value={filters.maxFee} onChange={event => change("maxFee", event.target.value)}>
+        <option value="">Semua biaya</option>
+        {FEE_OPTIONS.map(value => <option key={value} value={value}>{rupiah(Number(value))}</option>)}
+      </select>
+    </div>
+    <div className={p.filterGroup}>
+      <label className={p.filterLabel} htmlFor={`${prefix}-ratio`}>Rasio pengasuh : anak</label>
+      <select className={p.select} id={`${prefix}-ratio`} value={filters.maxRatio} onChange={event => change("maxRatio", event.target.value)}>
+        <option value="">Semua rasio</option>
+        {RATIO_OPTIONS.map(value => <option key={value} value={value}>Maksimal 1 : {value}</option>)}
+      </select>
+    </div>
+    <div className={p.filterGroup}>
+      <label className={p.filterLabel} htmlFor={`${prefix}-age`}>Usia anak</label>
+      <select className={p.select} id={`${prefix}-age`} value={filters.ageMonths} onChange={event => change("ageMonths", event.target.value)}>
+        <option value="">Semua usia</option>
+        {AGE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+      </select>
+      <p className={p.small}>Biaya, rasio, dan usia adalah estimasi dari data sintetis.</p>
     </div>
     {facilityKeys.length > 0 && <fieldset className={p.filterGroup}>
       <legend>Fasilitas</legend>
@@ -114,6 +137,9 @@ export default function DaycareSearch({ initialFilters }) {
     ...[filters.province, filters.city, filters.district].filter(Boolean).map(value => ({ key: value, label: value })),
     ...(filters.legal ? [{ key: "legal", label: "Ada referensi izin", remove: () => change("legal", "") }] : []),
     ...(filters.minRating ? [{ key: "rating", label: `Rating ≥ ${filters.minRating.replace(".", ",")}`, remove: () => change("minRating", "") }] : []),
+    ...(filters.maxFee ? [{ key: "fee", label: `≤ ${rupiah(Number(filters.maxFee))}/bln`, remove: () => change("maxFee", "") }] : []),
+    ...(filters.maxRatio ? [{ key: "ratio", label: `Rasio ≤ 1:${filters.maxRatio}`, remove: () => change("maxRatio", "") }] : []),
+    ...(filters.ageMonths ? [{ key: "age", label: `Usia ${AGE_OPTIONS.find(([value]) => value === filters.ageMonths)?.[1] ?? `${filters.ageMonths} bulan`}`, remove: () => change("ageMonths", "") }] : []),
     ...filters.facilities.map(key => ({ key, label: FACILITY_TAGS[key] || key, remove: () => change("facilities", filters.facilities.filter(value => value !== key)) })),
   ];
 
