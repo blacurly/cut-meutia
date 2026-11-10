@@ -1,17 +1,12 @@
+-- Disamakan dengan definisi yang berjalan di Supabase (diambil 2026-11-10).
+-- Versi repo sebelumnya tidak cocok dengan database (children.child_id).
 BEGIN;
 
-CREATE OR REPLACE FUNCTION public.app_parent_update_child_health(
-  p_child_id uuid,
-  p_allergies text,
-  p_medical_history text,
-  p_special_needs text,
-  p_medication_notes text,
-  p_reason text DEFAULT NULL
-)
-RETURNS integer
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = ''
+CREATE OR REPLACE FUNCTION public.app_parent_update_child_health(p_child_id uuid, p_allergies text, p_medical_history text, p_special_needs text, p_medication_notes text, p_reason text DEFAULT NULL::text)
+ RETURNS integer
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
 AS $function$
 DECLARE
   v_parent_id uuid := auth.uid();
@@ -40,7 +35,7 @@ BEGIN
   IF p_child_id IS NULL OR NOT EXISTS (
     SELECT 1
     FROM public.children AS c
-    WHERE c.id = p_child_id
+    WHERE c.child_id = p_child_id
       AND c.parent_id = v_parent_id
       AND c.deleted_at IS NULL
   ) THEN
@@ -55,23 +50,21 @@ BEGIN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'health_text_too_long';
   END IF;
 
-  -- Serialize edits for this child and create an empty profile if this is an
-  -- older child row that predates profile initialization.
+  -- Lock the child so simultaneous edits receive consecutive versions.
   PERFORM 1
   FROM public.children AS c
-  WHERE c.id = p_child_id
+  WHERE c.child_id = p_child_id
     AND c.parent_id = v_parent_id
     AND c.deleted_at IS NULL
   FOR UPDATE;
+
   IF NOT FOUND THEN
     RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'child_not_owned';
   END IF;
 
-  INSERT INTO public.child_health_profiles (
-    child_id, allergies, medical_history, special_needs,
-    medication_notes, updated_by
-  )
-  VALUES (p_child_id, '', '', '', '', v_parent_id)
+  -- Initialize an empty health profile if the child predates this flow.
+  INSERT INTO public.child_health_profiles (child_id, updated_by)
+  VALUES (p_child_id, v_parent_id)
   ON CONFLICT (child_id) DO NOTHING;
 
   SELECT * INTO v_profile
@@ -85,11 +78,12 @@ BEGIN
     'special_needs', v_profile.special_needs,
     'medication_notes', v_profile.medication_notes
   );
+
   v_after_data := jsonb_build_object(
-    'allergies', btrim(COALESCE(p_allergies, '')),
-    'medical_history', btrim(COALESCE(p_medical_history, '')),
-    'special_needs', btrim(COALESCE(p_special_needs, '')),
-    'medication_notes', btrim(COALESCE(p_medication_notes, ''))
+    'allergies', NULLIF(btrim(p_allergies), ''),
+    'medical_history', NULLIF(btrim(p_medical_history), ''),
+    'special_needs', NULLIF(btrim(p_special_needs), ''),
+    'medication_notes', NULLIF(btrim(p_medication_notes), '')
   );
 
   IF v_before_data = v_after_data THEN
@@ -108,22 +102,15 @@ BEGIN
       updated_at = now()
   WHERE child_id = p_child_id;
 
-  -- health_history writes the unique audit row after the profile update.
-  -- Attach the optional reason to that row instead of inserting a duplicate.
-  UPDATE public.child_health_change_logs
-  SET reason = v_reason
-  WHERE child_id = p_child_id
-    AND to_version = v_new_version
+  INSERT INTO public.child_health_change_logs (
+    child_id, from_version, to_version, before_data, after_data, changed_by, reason
+  ) VALUES (
+    p_child_id, v_profile.version, v_new_version,
+    v_before_data, v_after_data, v_parent_id, v_reason
+  )
   RETURNING id INTO v_log_id;
 
-  IF v_log_id IS NULL THEN
-    RAISE EXCEPTION USING
-      ERRCODE = '55000',
-      MESSAGE = 'health_history_not_recorded';
-  END IF;
-
-  -- Notify only currently authorized daycare staff. The notice contains no
-  -- health details; staff must re-check access before opening the profile.
+  -- Notify currently authorized staff without including health details.
   WITH approved_daycares AS (
     SELECT DISTINCT e.daycare_id
     FROM public.enrollments AS e
@@ -184,7 +171,8 @@ BEGIN
 
   RETURN v_new_version;
 END;
-$function$;
+$function$
+;
 
 REVOKE ALL ON FUNCTION public.app_parent_update_child_health(uuid, text, text, text, text, text)
   FROM PUBLIC, anon;

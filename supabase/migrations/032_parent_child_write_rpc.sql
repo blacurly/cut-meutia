@@ -1,13 +1,12 @@
+-- Disamakan dengan definisi yang berjalan di Supabase (diambil 2026-11-10).
+-- Versi repo sebelumnya tidak cocok dengan database (children.child_id).
 BEGIN;
 
-CREATE OR REPLACE FUNCTION public.app_create_parent_child(
-  p_full_name text,
-  p_birth_date date
-)
-RETURNS uuid
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = ''
+CREATE OR REPLACE FUNCTION public.app_create_parent_child(p_full_name text, p_birth_date date)
+ RETURNS uuid
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
 AS $function$
 DECLARE
   v_parent_id uuid := auth.uid();
@@ -40,14 +39,15 @@ BEGIN
 
   INSERT INTO public.children (parent_id, full_name, birth_date, status)
   VALUES (v_parent_id, btrim(p_full_name), p_birth_date, 'active')
-  RETURNING id INTO v_child_id;
+  RETURNING child_id INTO v_child_id;
 
-  -- child_health_initialize creates the one empty health profile and its
-  -- initial audit record. Do not insert a second profile here.
+  INSERT INTO public.child_health_profiles (child_id, updated_by)
+  VALUES (v_child_id, v_parent_id);
 
   RETURN v_child_id;
 END;
-$function$;
+$function$
+;
 
 REVOKE ALL ON FUNCTION public.app_create_parent_child(text, date)
   FROM PUBLIC, anon;

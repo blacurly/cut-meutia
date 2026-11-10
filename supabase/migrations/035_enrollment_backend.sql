@@ -107,16 +107,21 @@ BEGIN
   IF p_service_date IS NULL OR p_service_date < CURRENT_DATE THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'invalid_service_date';
   END IF;
+  -- Both consents are mandatory (docs/keputusan-mvp 3.1) and the live table
+  -- only accepts these two consent_type values. p_consent_scope must be
+  -- {"service_terms": true, "child_data_processing": true, ...}.
   IF char_length(btrim(COALESCE(p_policy_version, ''))) < 1
      OR char_length(btrim(COALESCE(p_wording_snapshot, ''))) < 10
      OR p_consent_scope IS NULL
-     OR jsonb_typeof(p_consent_scope) <> 'object' THEN
+     OR jsonb_typeof(p_consent_scope) <> 'object'
+     OR p_consent_scope -> 'service_terms' IS DISTINCT FROM 'true'::jsonb
+     OR p_consent_scope -> 'child_data_processing' IS DISTINCT FROM 'true'::jsonb THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'invalid_consent';
   END IF;
 
   SELECT * INTO v_child
   FROM public.children
-  WHERE id = p_child_id
+  WHERE child_id = p_child_id
     AND parent_id = v_parent_id
     AND status = 'active'
     AND deleted_at IS NULL
@@ -174,7 +179,7 @@ BEGIN
     child_id, parent_id, daycare_id, offering_id, price_version_id,
     service_date, status, manager_decision, child_snapshot, version
   ) VALUES (
-    v_child.id, v_parent_id, v_daycare.id, v_offering.id, v_price.id,
+    v_child.child_id, v_parent_id, v_daycare.id, v_offering.id, v_price.id,
     p_service_date, 'pending', 'undecided',
     jsonb_build_object(
       'full_name', v_child.full_name,
@@ -184,13 +189,15 @@ BEGIN
     1
   ) RETURNING id INTO v_enrollment_id;
 
+  -- One record per purpose, as the consent model requires.
   INSERT INTO public.enrollment_consents (
-    enrollment_id, parent_id, policy_version, scope,
+    enrollment_id, parent_id, consent_type, policy_version, scope,
     wording_snapshot, accepted_at
-  ) VALUES (
-    v_enrollment_id, v_parent_id, btrim(p_policy_version), p_consent_scope,
-    btrim(p_wording_snapshot), now()
-  );
+  )
+  SELECT v_enrollment_id, v_parent_id, kind, btrim(p_policy_version),
+         p_consent_scope || jsonb_build_object('kind', kind),
+         btrim(p_wording_snapshot), now()
+  FROM unnest(ARRAY['service_terms', 'child_data_processing']) AS kind;
 
   INSERT INTO public.enrollment_status_logs (
     enrollment_id, from_status, to_status, actor_id, actor_type, reason, request_id
@@ -282,7 +289,7 @@ BEGIN
   ELSE
     -- Serialize per child (same lock as app_create_enrollment) so two
     -- daycares cannot both open a checkout for the same child.
-    PERFORM 1 FROM public.children WHERE id = v_enrollment.child_id FOR UPDATE;
+    PERFORM 1 FROM public.children WHERE child_id = v_enrollment.child_id FOR UPDATE;
     -- Only one active enrollment per child (index enrollment_one_approved_per_child).
     -- Refuse here instead of failing later when the payment is recorded.
     IF EXISTS (
@@ -351,7 +358,7 @@ BEGIN
     INSERT INTO public.charges (
       enrollment_id, charge_type, price_version_id, commission_rule_id,
       policy_snapshot, service_amount, parent_admin_fee, total_amount,
-      daycare_commission_amount, status, due_at
+      daycare_commission_amount, currency, status, due_at
     ) VALUES (
       p_enrollment_id, 'service', v_price.id, v_rule.id,
       jsonb_build_object(
@@ -360,7 +367,7 @@ BEGIN
         'payment_window_hours', 24
       ),
       v_price.service_amount, 0, v_price.service_amount,
-      v_commission, 'open', v_deadline
+      v_commission, v_price.currency, 'open', v_deadline
     );
   END IF;
 
@@ -473,11 +480,11 @@ BEGIN
   END IF;
 
   INSERT INTO public.transactions (
-    charge_id, provider, idempotency_key, method, amount,
+    charge_id, provider, idempotency_key, method, amount, currency,
     status, reconciliation_status, expires_at
   ) VALUES (
     p_charge_id, 'unconfigured', btrim(p_idempotency_key), p_method,
-    v_charge.total_amount, 'created', 'normal', p_expires_at
+    v_charge.total_amount, v_charge.currency, 'created', 'normal', p_expires_at
   )
   ON CONFLICT (idempotency_key) DO UPDATE
     SET idempotency_key = EXCLUDED.idempotency_key
@@ -537,7 +544,7 @@ BEGIN
     RAISE EXCEPTION USING ERRCODE = '55000', MESSAGE = 'payment_state_mismatch';
   END IF;
   IF p_status = 'succeeded' THEN
-    PERFORM 1 FROM public.children WHERE id = v_enrollment.child_id FOR UPDATE;
+    PERFORM 1 FROM public.children WHERE child_id = v_enrollment.child_id FOR UPDATE;
     IF EXISTS (
       SELECT 1 FROM public.enrollments
       WHERE child_id = v_enrollment.child_id
