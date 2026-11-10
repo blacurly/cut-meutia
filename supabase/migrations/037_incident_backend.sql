@@ -94,7 +94,7 @@ DECLARE
   v_recipient_id uuid;
   v_request_id text := COALESCE(NULLIF(btrim(p_request_id), ''), gen_random_uuid()::text);
 BEGIN
-  IF p_urgency NOT IN ('low', 'medium', 'high', 'emergency')
+  IF COALESCE(p_urgency, '') NOT IN ('low', 'medium', 'high', 'emergency')
      OR p_occurred_at IS NULL OR p_occurred_at > now() + interval '5 minutes'
      OR char_length(btrim(COALESCE(p_description, ''))) NOT BETWEEN 20 AND 4000
      OR char_length(btrim(COALESCE(p_first_aid, ''))) < 2
@@ -171,7 +171,7 @@ DECLARE
   v_enrollment public.enrollments%ROWTYPE;
   v_request_id text := COALESCE(NULLIF(btrim(p_request_id), ''), gen_random_uuid()::text);
 BEGIN
-  IF p_status NOT IN ('in_progress', 'resolved')
+  IF COALESCE(p_status, '') NOT IN ('in_progress', 'resolved')
      OR char_length(btrim(COALESCE(p_reason, ''))) < 10 THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'invalid_incident_status_update';
   END IF;
@@ -180,7 +180,7 @@ BEGIN
   IF NOT FOUND THEN RAISE EXCEPTION USING ERRCODE = 'P0002', MESSAGE = 'incident_not_found'; END IF;
   SELECT * INTO v_enrollment FROM public.enrollments WHERE id = v_incident.enrollment_id;
   IF NOT public.app_is_daycare_manager(v_enrollment.daycare_id)
-     AND public.app_current_role() <> 'admin' THEN
+     AND public.app_current_role() IS DISTINCT FROM 'admin' THEN
     RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'incident_review_scope_required';
   END IF;
   IF v_incident.status = 'resolved' OR v_incident.status = p_status THEN

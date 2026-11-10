@@ -28,8 +28,8 @@ DECLARE
   v_activity_id uuid;
   v_request_id text := COALESCE(NULLIF(btrim(p_request_id), ''), gen_random_uuid()::text);
 BEGIN
-  IF p_activity_type NOT IN ('play', 'learning', 'interaction', 'meal', 'sleep', 'other')
-     OR p_status NOT IN ('draft', 'sent') THEN
+  IF COALESCE(p_activity_type, '') NOT IN ('play', 'learning', 'interaction', 'meal', 'sleep', 'other')
+     OR COALESCE(p_status, '') NOT IN ('draft', 'sent') THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'invalid_activity_type_or_status';
   END IF;
   IF p_report_date IS NULL OR p_report_date > CURRENT_DATE
@@ -147,7 +147,7 @@ DECLARE
   v_activity public.daily_report_activities%ROWTYPE;
   v_enrollment public.enrollments%ROWTYPE;
 BEGIN
-  IF p_ack_type NOT IN ('manager_review', 'parent_read') THEN
+  IF COALESCE(p_ack_type, '') NOT IN ('manager_review', 'parent_read') THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'invalid_ack_type';
   END IF;
   SELECT * INTO v_activity

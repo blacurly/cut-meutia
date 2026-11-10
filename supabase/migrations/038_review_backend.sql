@@ -11,7 +11,7 @@ DECLARE
   v_version_id uuid;
   v_request_id text := COALESCE(NULLIF(btrim(p_request_id), ''), gen_random_uuid()::text);
 BEGIN
-  IF p_rating NOT BETWEEN 1 AND 5
+  IF p_rating IS NULL OR p_rating NOT BETWEEN 1 AND 5
      OR char_length(btrim(COALESCE(p_body, ''))) NOT BETWEEN 20 AND 2000 THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'invalid_review';
   END IF;
@@ -53,7 +53,8 @@ DECLARE
   v_review public.reviews%ROWTYPE;
   v_request_id text := COALESCE(NULLIF(btrim(p_request_id), ''), gen_random_uuid()::text);
 BEGIN
-  IF public.app_current_role() <> 'admin' OR p_decision NOT IN ('approved', 'rejected')
+  IF public.app_current_role() IS DISTINCT FROM 'admin'
+     OR COALESCE(p_decision, '') NOT IN ('approved', 'rejected')
      OR char_length(btrim(COALESCE(p_reason, ''))) < 5 THEN
     RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'admin_review_decision_required';
   END IF;
@@ -132,7 +133,8 @@ DECLARE
   v_review public.reviews%ROWTYPE;
   v_request_id text := COALESCE(NULLIF(btrim(p_request_id), ''), gen_random_uuid()::text);
 BEGIN
-  IF public.app_current_role() <> 'admin' OR p_decision NOT IN ('approved', 'rejected')
+  IF public.app_current_role() IS DISTINCT FROM 'admin'
+     OR COALESCE(p_decision, '') NOT IN ('approved', 'rejected')
      OR char_length(btrim(COALESCE(p_reason, ''))) < 5 THEN
     RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'admin_reply_decision_required';
   END IF;

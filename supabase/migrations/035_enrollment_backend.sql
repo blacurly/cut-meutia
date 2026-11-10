@@ -100,7 +100,8 @@ DECLARE
   v_manager_id uuid;
   v_request_id text := COALESCE(NULLIF(btrim(p_request_id), ''), gen_random_uuid()::text);
 BEGIN
-  IF public.app_current_role() <> 'parent' THEN
+  -- IS DISTINCT FROM keeps the guard closed when the role resolves to NULL.
+  IF public.app_current_role() IS DISTINCT FROM 'parent' THEN
     RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'parent_account_not_active';
   END IF;
   IF p_service_date IS NULL OR p_service_date < CURRENT_DATE THEN
@@ -249,9 +250,11 @@ DECLARE
   v_next_status text;
   v_deadline timestamptz;
   v_commission bigint := 0;
+  v_capacity integer;
   v_request_id text := COALESCE(NULLIF(btrim(p_request_id), ''), gen_random_uuid()::text);
 BEGIN
-  IF p_decision NOT IN ('accepted', 'rejected') THEN
+  -- A NULL decision must not fall through to the "accepted" branch below.
+  IF p_decision IS NULL OR p_decision NOT IN ('accepted', 'rejected') THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'invalid_enrollment_decision';
   END IF;
   IF char_length(btrim(COALESCE(p_reason, ''))) < 5 THEN
@@ -277,17 +280,36 @@ BEGIN
         decision_reason = btrim(p_reason), version = version + 1
     WHERE id = p_enrollment_id;
   ELSE
+    -- Serialize per child (same lock as app_create_enrollment) so two
+    -- daycares cannot both open a checkout for the same child.
+    PERFORM 1 FROM public.children WHERE id = v_enrollment.child_id FOR UPDATE;
+    -- Only one active enrollment per child (index enrollment_one_approved_per_child).
+    -- Refuse here instead of failing later when the payment is recorded.
+    IF EXISTS (
+      SELECT 1
+      FROM public.enrollments
+      WHERE child_id = v_enrollment.child_id
+        AND id <> p_enrollment_id
+        AND (status = 'approved'
+             OR (status = 'pending_payment' AND payment_deadline > now()))
+    ) THEN
+      RAISE EXCEPTION USING ERRCODE = '55000', MESSAGE = 'child_has_active_enrollment';
+    END IF;
+
+    -- Lock the daycare row so concurrent approvals cannot exceed capacity.
+    -- Checkouts whose payment deadline has passed no longer hold a slot.
+    SELECT daily_capacity INTO v_capacity
+    FROM public.daycares
+    WHERE id = v_enrollment.daycare_id
+    FOR UPDATE;
     IF (
       SELECT count(*)
       FROM public.enrollments
       WHERE daycare_id = v_enrollment.daycare_id
         AND service_date = v_enrollment.service_date
-        AND status IN ('pending_payment', 'approved')
-    ) >= (
-      SELECT daily_capacity
-      FROM public.daycares
-      WHERE id = v_enrollment.daycare_id
-    ) THEN
+        AND (status = 'approved'
+             OR (status = 'pending_payment' AND payment_deadline > now()))
+    ) >= v_capacity THEN
       RAISE EXCEPTION USING ERRCODE = '55000', MESSAGE = 'daycare_capacity_full';
     END IF;
 
@@ -389,17 +411,16 @@ BEGIN
   IF NOT FOUND THEN
     RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'enrollment_not_owned';
   END IF;
-  IF v_enrollment.status NOT IN ('pending', 'pending_payment', 'approved')
-     OR v_enrollment.checked_in_at IS NOT NULL THEN
+  -- Business rule (docs/alur-bisnis-dan-database-ayomi.md 4.3): a Parent may
+  -- self-cancel only while pending. pending_payment/approved need Admin
+  -- handling because a charge or refund decision is involved.
+  IF v_enrollment.status <> 'pending' THEN
     RAISE EXCEPTION USING ERRCODE = '55000', MESSAGE = 'enrollment_cannot_be_cancelled';
   END IF;
 
   UPDATE public.enrollments
   SET status = 'cancelled', cancelled_at = now(), version = version + 1
   WHERE id = p_enrollment_id;
-  UPDATE public.charges
-  SET status = 'cancelled'
-  WHERE enrollment_id = p_enrollment_id AND status = 'open';
   INSERT INTO public.enrollment_status_logs (
     enrollment_id, from_status, to_status, actor_id, actor_type, reason, request_id
   ) VALUES (
@@ -430,7 +451,7 @@ DECLARE
   v_enrollment public.enrollments%ROWTYPE;
   v_transaction_id uuid;
 BEGIN
-  IF p_method NOT IN ('va', 'qris', 'ewallet')
+  IF COALESCE(p_method, '') NOT IN ('va', 'qris', 'ewallet')
      OR char_length(btrim(COALESCE(p_idempotency_key, ''))) < 12
      OR p_expires_at IS NULL OR p_expires_at <= now() THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'invalid_payment_request';
@@ -487,8 +508,8 @@ DECLARE
   v_enrollment public.enrollments%ROWTYPE;
   v_request_id text := COALESCE(NULLIF(btrim(p_request_id), ''), gen_random_uuid()::text);
 BEGIN
-  IF public.app_current_role() <> 'admin'
-     OR p_status NOT IN ('pending', 'succeeded', 'failed', 'expired')
+  IF public.app_current_role() IS DISTINCT FROM 'admin'
+     OR COALESCE(p_status, '') NOT IN ('pending', 'succeeded', 'failed', 'expired')
      OR char_length(btrim(COALESCE(p_provider, ''))) < 2
      OR char_length(btrim(COALESCE(p_reason, ''))) < 5
      OR COALESCE(p_provider_fee_amount, 0) < 0 THEN
@@ -514,6 +535,19 @@ BEGIN
   IF p_status = 'succeeded'
      AND (v_charge.status <> 'open' OR v_enrollment.status <> 'pending_payment') THEN
     RAISE EXCEPTION USING ERRCODE = '55000', MESSAGE = 'payment_state_mismatch';
+  END IF;
+  IF p_status = 'succeeded' THEN
+    PERFORM 1 FROM public.children WHERE id = v_enrollment.child_id FOR UPDATE;
+    IF EXISTS (
+      SELECT 1 FROM public.enrollments
+      WHERE child_id = v_enrollment.child_id
+        AND id <> v_enrollment.id
+        AND status = 'approved'
+    ) THEN
+      -- Leave the transaction for Admin reconciliation instead of hitting
+      -- the unique index enrollment_one_approved_per_child.
+      RAISE EXCEPTION USING ERRCODE = '55000', MESSAGE = 'child_has_active_enrollment';
+    END IF;
   END IF;
 
   UPDATE public.transactions
@@ -649,6 +683,68 @@ BEGIN
   RETURN v_assignment_id;
 END;
 $function$;
+
+-- Server job (pending_payment -> expired). Run with service_role, e.g. from
+-- Supabase Cron: SELECT public.app_expire_overdue_enrollments();
+-- Late payments then fail with payment_state_mismatch and go to Admin review.
+CREATE OR REPLACE FUNCTION public.app_expire_overdue_enrollments(
+  p_limit integer DEFAULT 200
+)
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_enrollment public.enrollments%ROWTYPE;
+  v_count integer := 0;
+  v_request_id text := 'expire-job:' || gen_random_uuid()::text;
+BEGIN
+  IF p_limit IS NULL OR p_limit NOT BETWEEN 1 AND 1000 THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'invalid_expire_limit';
+  END IF;
+
+  FOR v_enrollment IN
+    SELECT *
+    FROM public.enrollments
+    WHERE status = 'pending_payment'
+      AND payment_deadline <= now()
+    ORDER BY payment_deadline
+    LIMIT p_limit
+    FOR UPDATE SKIP LOCKED
+  LOOP
+    UPDATE public.enrollments
+    SET status = 'expired', version = version + 1
+    WHERE id = v_enrollment.id;
+    UPDATE public.charges
+    SET status = 'expired'
+    WHERE enrollment_id = v_enrollment.id AND status = 'open';
+    INSERT INTO public.enrollment_status_logs (
+      enrollment_id, from_status, to_status, actor_id, actor_type, reason, request_id
+    ) VALUES (
+      v_enrollment.id, 'pending_payment', 'expired', NULL, 'system',
+      'Payment deadline passed', v_request_id
+    );
+    PERFORM public.app_internal_notify(
+      v_enrollment.parent_id, 'enrollment_expired', 'Batas pembayaran terlewat',
+      'Pengajuan kedaluwarsa karena pembayaran belum diterima sampai batas waktu.',
+      'urgent', 'enrollment-expired:' || v_enrollment.id::text, v_enrollment.id
+    );
+    PERFORM public.app_internal_audit(
+      'enrollment.expire', 'enrollment', v_enrollment.id, v_enrollment.daycare_id,
+      'Payment deadline passed', jsonb_build_object('status', 'pending_payment'),
+      jsonb_build_object('status', 'expired'), v_request_id
+    );
+    v_count := v_count + 1;
+  END LOOP;
+  RETURN v_count;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.app_expire_overdue_enrollments(integer)
+  FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.app_expire_overdue_enrollments(integer)
+  TO service_role;
 
 REVOKE ALL ON FUNCTION public.app_create_enrollment(uuid, uuid, date, text, jsonb, text, text)
   FROM PUBLIC, anon;

@@ -23,6 +23,17 @@ BEGIN
     END IF;
   END LOOP;
 
+  -- The expiry job is server-only: never callable from the browser.
+  v_signature := 'public.app_expire_overdue_enrollments(integer)';
+  IF to_regprocedure(v_signature) IS NULL THEN
+    RAISE EXCEPTION 'Missing job function: %', v_signature;
+  END IF;
+  IF has_function_privilege('anon', v_signature, 'EXECUTE')
+     OR has_function_privilege('authenticated', v_signature, 'EXECUTE')
+     OR NOT has_function_privilege('service_role', v_signature, 'EXECUTE') THEN
+    RAISE EXCEPTION 'Expiry job must be executable by service_role only.';
+  END IF;
+
   IF has_table_privilege('authenticated', 'public.enrollments', 'INSERT')
      OR has_table_privilege('authenticated', 'public.enrollments', 'UPDATE')
      OR has_table_privilege('authenticated', 'public.charges', 'INSERT')
