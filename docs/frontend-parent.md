@@ -24,7 +24,7 @@ Splash tetap berada di [/welcome](../app/welcome/page.js), sedangkan halaman mas
 
 ## Navbar
 
-[UniversalNavbar](../components/layout/UniversalNavbar.js) dan [ParentShell](../components/layout/ParentShell.js) memakai header putih, tinggi 64 px, posisi sticky, logo pengguna, tautan aktif, pilihan wilayah, komparasi, indikator notifikasi, profil, dan pilihan anak aktif. Menu seluler dapat dibuka/ditutup, menutup setelah navigasi, mendukung Escape dan klik di luar, serta menghormati reduced motion.
+[UniversalNavbar](../components/layout/UniversalNavbar.js) dan [ParentShell](../components/layout/ParentShell.js) memakai header putih, tinggi 64 px, posisi sticky, logo pengguna, tautan aktif, indikator notifikasi, profil, dan pilihan anak aktif. Tombol wilayah dan komparasi tidak ada lagi di navbar (12 November 2026). Wilayah dipilih lewat filter di halaman pencarian. Komparasi lewat tombol **Bandingkan** di kartu dan detail daycare; setelah dua daycare atau lebih dipilih, muncul tautan **Lihat perbandingan**. Menu seluler dapat dibuka/ditutup, menutup setelah navigasi, mendukung Escape dan klik di luar, serta menghormati reduced motion.
 
 Mode publik dan Orang Tua demo sudah terhubung. Portal Pengelola dan Administrator kini juga tersedia dalam mode demo; lihat [panduan portal](./frontend-portals.md). Menu akun mengarah ke portal demo sesuai peran. Backend dan autentikasi produksi belum terhubung.
 

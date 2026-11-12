@@ -12,7 +12,7 @@ Legenda:
 | Area | ✅ | 🟡 | ⬜ | Keterangan |
 | --- | --- | --- | --- | --- |
 | Backend non-AI (API + RPC) | 18 | 0 | 0 | Semua modul ada, termasuk onboarding mitra, komplain, investigasi, sanksi, delegasi, dan penjemputan (migrasi 043–060, sudah aktif di database live) |
-| Frontend Orang Tua | 5 | 7 | 0 | Katalog, detail, dan akun sudah nyata. Pendaftaran, logbook, laporan, dan ulasan masih demo |
+| Frontend Orang Tua | 6 | 7 | 0 | Navbar, katalog, detail, dan akun sudah nyata. Pendaftaran, logbook, laporan, dan ulasan masih demo |
 | Frontend Pengelola/Pengasuh | 1 | 7 | 2 | Halaman `/undangan` sudah nyata. Halaman lain masih memakai data demo |
 | Frontend Admin | 0 | 4 | 3 | Seluruh halaman masih memakai data demo |
 | AI | 3 | 3 | 4 | Kerangka API siap; Foto Fokus Anak sudah bisa dicoba di aplikasi; Incident Triage memakai data sintetis |
@@ -70,6 +70,7 @@ Detail endpoint ada di [api.md](./api.md).
 
 | Halaman | Rute | Status | Yang perlu dikerjakan |
 | --- | --- | --- | --- |
+| Navbar Orang Tua | semua halaman Orang Tua | ✅ | Tombol lokasi dan bandingkan dihapus (12 Nov). Komparasi lewat tombol **Bandingkan** di kartu/detail, lalu tautan **Lihat perbandingan** |
 | Welcome, masuk, daftar, atur ulang sandi | `/welcome`, `/masuk`, `/daftar`, `/atur-ulang-sandi` | ✅ | — |
 | Katalog & pencarian | `/`, `/pencarian` | ✅ | — |
 | Detail daycare | `/detail/[id]` | ✅ | Tombol "Daftarkan anak" hanya muncul untuk mitra aktif |

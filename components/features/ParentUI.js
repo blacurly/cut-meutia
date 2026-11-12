@@ -23,7 +23,7 @@ export function DemoPhoto({ src, name = "ruangan daycare", priority = false }) {
 export function CompareButton({ daycare }) {
   const { state, update, hydrated } = useParentDemo(); const [error, setError] = useState(""); const selected = state.compare.includes(daycare.id);
   function toggle() { setError(""); try { update(s => toggleCompare(s, daycare.id, daycare.name)); } catch (error) { setError(error.message); } }
-  return <div><button disabled={!hydrated} className={`${p.button} ${p.secondary} ${p.full}`} aria-pressed={selected} onClick={toggle}>{selected ? <Check size={15} /> : <ArrowLeftRight size={15} />} {selected ? "Dipilih" : "Bandingkan"}</button>{error && <p role="alert" className={p.error}>{error}</p>}</div>;
+  return <div><button disabled={!hydrated} className={`${p.button} ${p.secondary} ${p.full}`} aria-pressed={selected} onClick={toggle}>{selected ? <Check size={15} /> : <ArrowLeftRight size={15} />} {selected ? "Dipilih" : "Bandingkan"}</button>{selected && state.compare.length > 1 && <Link href="/bandingkan" className={p.link} style={{ display: "block", marginTop: 6, textAlign: "center" }}>Lihat perbandingan ({state.compare.length})</Link>}{error && <p role="alert" className={p.error}>{error}</p>}</div>;
 }
 // Real photo when an approved cover exists, otherwise a neutral placeholder.
 // Never substitutes an illustration that could be mistaken for the daycare.
