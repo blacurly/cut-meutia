@@ -1,0 +1,165 @@
+﻿Technical Requirement
+Bootcamp Perempuan Inovasi 2026
+Final Project - AI Full Stack Web Development
+Deskripsi
+Pada final project ini, setiap kelompok membuat sebuah produk berupa aplikasi website Full-Stack yang terintegrasi dengan fitur AI. Produk dibuat sesuai rancangan yang sudah disusun pada fase Product Innovation & Development dan menjawab challenge brief yang dipilih kelompok masing-masing.
+Fitur AI adalah bagian dari produk, bukan modul yang berdiri sendiri. Karena itu, fitur AI ikut tunduk pada ketentuan Front-End, Back-End, Database, keamanan, pengujian, dan deployment di dokumen ini, selain ketentuan khusus AI pada bagian Integrasi AI.
+Ringkasan Tech Stack
+Komponen
+	Teknologi
+	Front-End dan Back-End
+	Next.js (App Router), React
+	Styling dan UI Component
+	Tailwind CSS dan shadcn/ui
+	API
+	Next.js Route Handlers dan Server Actions
+	Database
+	PostgreSQL melalui Supabase
+	Penyimpanan Data AI
+	Tabel PostgreSQL di Supabase. Gunakan pgvector (embedding untuk RAG) atau Supabase Storage (file gambar untuk Computer Vision) bila dibutuhkan use case
+	Keamanan Data
+	Row Level Security (RLS) di Supabase untuk semua project. Authentication dengan Supabase Auth (NextAuth.js diperbolehkan) jika solusi membutuhkan login
+	Fitur AI
+	Recommendation System, RAG, atau Computer Vision dengan open source pre-trained model
+	Version Control
+	Git dan GitHub
+	Deployment
+	Vercel (aplikasi dan fitur AI) dan Supabase (database)
+	Ketentuan Umum
+* Setiap kelompok harus membuat BRD/PRD, termasuk kebutuhan produk untuk fitur AI.
+* Setiap kelompok harus membuat Prototype dan High Fidelity Design (Figma), termasuk tampilan interaksi dengan fitur AI.
+* Setiap kelompok wajib membuat deck presentasi.
+* Setiap kelompok wajib membuat video presentasi dengan durasi maksimal 10 menit dan video demo produk dengan durasi maksimal 3 menit yang menampilkan fitur AI.
+* Repository GitHub dan link website harus dapat diakses secara publik.
+* Produk harus menjawab problem statement yang dirumuskan pada fase Product Innovation & Development dan konsisten sampai final project.
+* Konten dan desain bersifat fleksibel mengikuti kreativitas dan kebutuhan peserta. Konten dummy seperti Lorem Ipsum tidak diperbolehkan, termasuk pada data yang dipakai fitur AI.
+* Gunakan resource dengan free license untuk font, icon vector, dan aset lainnya.
+
+
+Front-End
+* Front-End dibuat menggunakan Next.js dengan App Router.
+* Styling menggunakan Tailwind CSS, dan komponen UI menggunakan shadcn/ui.
+* Wajib menggunakan functional component dan React Hooks (misalnya useState dan useEffect).
+* Pengelolaan state menggunakan React Hooks dan React Context. Gunakan Context untuk state yang dipakai bersama oleh banyak komponen agar tidak terjadi prop drilling.
+* Routing menggunakan App Router bawaan Next.js.
+* Minimal terdapat 4 halaman.
+* Setiap bagian UI yang dipakai di lebih dari satu halaman wajib dijadikan component. Component yang dibuat harus bervariasi, dan satu atau lebih component harus memiliki props.
+* Aplikasi harus memiliki state dan logic yang dibuat dengan JavaScript sehingga website bersifat interaktif.
+* Form harus memiliki validasi di sisi client, serta menangani kondisi loading dan error.
+* Aplikasi mengambil data dari API yang dibuat sendiri pada Route Handlers atau melalui Server Actions. Penggunaan API eksternal diperbolehkan sebagai tambahan.
+* Fitur AI memiliki antarmuka yang jelas: input dari pengguna, status loading, hasil, dan pesan error.
+* Hasil yang dihasilkan AI diberi penanda yang jelas di tampilan, sehingga pengguna tahu bahwa hasil tersebut berasal dari AI.
+* Website wajib sudah mendukung tampilan responsive, termasuk tampilan fitur AI.
+Back-End
+* Back-End dibuat di dalam project Next.js yang sama dengan Front-End, menggunakan Route Handlers untuk RESTful API dan Server Actions untuk mutasi data dari form.
+* Pisahkan logika bisnis dan akses data dari route (misalnya di folder lib atau service), dan terapkan error handling yang konsisten.
+* Setiap kelompok harus membuat ERD atau Schema Diagram.
+* Setiap kelompok harus membuat API Documentation, termasuk endpoint fitur AI beserta contoh request dan response.
+* Setiap endpoint harus memiliki validasi input, dan response error yang jelas dengan status code yang sesuai.
+* Login tidak wajib untuk semua project. Authentication dan authorization wajib diterapkan jika solusi membutuhkannya, misalnya data atau fitur yang khusus untuk tiap pengguna, atau pembatasan hak akses. Jika solusi tidak membutuhkan login, jelaskan alasannya di BRD/PRD.
+* Jika aplikasi memakai login, setiap endpoint yang membutuhkan login harus memiliki proses authentication dan authorization, dan minimal terdapat 2 role (contoh: admin dan user) dengan hak akses dan fitur yang berbeda. Gunakan middleware atau RLS pada Supabase untuk mengontrol akses pada route yang membutuhkan login.
+* Jika aplikasi tidak memakai login, endpoint yang mengubah data (Create, Update, Delete) tetap harus dilindungi, misalnya melalui validasi input yang ketat, pembatasan penggunaan, dan RLS, supaya data tidak dapat diubah secara sembarangan oleh pengguna anonim.
+* Endpoint fitur AI tunduk pada aturan yang sama: validasi input, pembatasan penggunaan, dan authentication jika aplikasi memakai login.
+* Minimal ada 3 endpoint yang mengimplementasikan full CRUD (Create, Read, Update, Delete).
+* Fitur yang dibuat harus end-to-end, yaitu tidak boleh terputus. Contohnya, pada website pembelian produk, alurnya harus sampai proses pembelian berhasil. Fitur AI harus menjadi bagian dari alur ini, bukan halaman terpisah.
+
+
+Database dan Keamanan
+* Database menggunakan PostgreSQL melalui Supabase.
+* Struktur tabel mengikuti ERD yang dibuat, termasuk primary key, foreign key, dan relasi antar tabel. Data yang dibutuhkan fitur AI (misalnya data item dan interaksi, dokumen dan embedding, atau hasil analisis gambar) ikut digambarkan di ERD.
+* Row Level Security (RLS) wajib diaktifkan pada semua tabel di semua project, termasuk tabel yang dipakai fitur AI. Policy disesuaikan dengan kebutuhan akses: misalnya data publik hanya boleh dibaca oleh pengguna anonim, dan pembatasan per pengguna atau role diterapkan jika aplikasi memakai login.
+* Jika aplikasi memakai login, gunakan Supabase Auth atau NextAuth.js.
+* Credential, API key, dan secret tidak boleh ditulis langsung di kode atau di-commit ke GitHub. Simpan dalam environment variable (file .env.local untuk development dan pengaturan Environment Variables di Vercel untuk production). Ini berlaku juga untuk kunci layanan atau model AI.
+* Data pribadi pengguna tidak dikirim ke layanan AI pihak ketiga kecuali dibutuhkan oleh fitur dan sudah dijelaskan kepada pengguna.
+* Database yang digunakan oleh aplikasi production berjalan di cloud Supabase.
+
+
+Integrasi AI
+Pemilihan Use Case
+Setiap kelompok wajib mengintegrasikan satu fitur AI utama ke dalam aplikasi, yang dipilih dari tiga use case berikut sesuai kebutuhan produk. Use case tambahan boleh dibuat jika benar-benar dibutuhkan oleh produk, tetapi satu fitur AI utama harus berfungsi penuh terlebih dahulu.
+* Recommendation System: memberikan rekomendasi yang lebih relevan berdasarkan pola dan preferensi pengguna.
+* Retrieval-Augmented Generation (RAG): mengambil informasi dari knowledge base atau dokumen eksternal sebelum menghasilkan jawaban, untuk fitur pencarian dan tanya-jawab.
+* Computer Vision: menganalisis gambar atau video dan menjadikan hasilnya sebagai fitur di website.
+* Predictive ML: menggunakan model Machine Learning dalam melakukan klasifikasi, regresi ataupun prediksi.
+Ketentuan Umum Fitur AI
+* Model AI yang digunakan merupakan open source pre-trained model yang sesuai dengan use case. Kelompok tidak diwajibkan melatih model dari awal.
+* Fitur AI harus lahir dari kebutuhan produk. Jelaskan di BRD/PRD dan presentasi mengapa AI dibutuhkan untuk menjawab problem statement, bukan sekadar menambahkan AI sebagai fitur tambahan.
+* Fitur AI terintegrasi dengan Front-End, Back-End, dan Database dalam satu aplikasi, dan menjadi bagian dari alur end-to-end.
+* Integrasi dengan model dilakukan melalui Route Handlers atau Server Actions. Kunci akses ke layanan atau model tidak boleh terekspos di sisi client.
+* Cara menjalankan model (misalnya melalui API inference publik atau library yang berjalan di server) ditentukan kelompok bersama mentor, dan harus dapat berjalan di environment production di Vercel, bukan hanya di komputer lokal.
+* Antarmuka menangani kondisi loading, hasil kosong, dan error dari proses AI.
+* Fitur AI ditampilkan dalam video demo dan presentasi.
+Ketentuan per Use Case
+Recommendation System
+* Data item dan data interaksi atau preferensi pengguna (misalnya riwayat, rating, atau pilihan) disimpan di database Supabase. Sumber data dijelaskan di dokumentasi.
+* Metode rekomendasi dijelaskan secara singkat, misalnya berbasis konten, berbasis interaksi pengguna, atau kombinasi keduanya.
+* Rekomendasi relevan bagi pengguna. Jika aplikasi memakai login, rekomendasi dipersonalisasi per akun. Jika tidak, rekomendasi dibuat berdasarkan input atau preferensi yang diberikan pengguna pada sesi tersebut.
+* Aplikasi menangani pengguna baru yang belum memiliki data interaksi, misalnya dengan rekomendasi awal atau pertanyaan preferensi.
+* Sistem rekomendasi diperkenankan menggunakan pendekatan rule-based dengan pembuatan weighted scoring.
+Retrieval-Augmented Generation (RAG)
+* Knowledge base berisi dokumen yang relevan dengan problem statement dan boleh digunakan secara hukum, misalnya dokumen publik, open data, atau dokumen buatan sendiri.
+* Alur RAG mencakup pemecahan dokumen (chunking), pembuatan embedding, pencarian dokumen yang relevan, dan pembuatan jawaban.
+* Embedding dan data dokumen disimpan di vector database yang dipilih masing-masing kelompok (misalnya menggunakan chromaDB, supabase pgvector, FAISS atau vector database pilihan masing-masing).
+* Jawaban menampilkan sumber atau rujukan dokumen yang dipakai.
+* Jika pertanyaan berada di luar isi knowledge base, aplikasi menyampaikan bahwa informasinya tidak tersedia dan tidak mengarang jawaban.
+Computer Vision
+* Pengguna mengunggah gambar atau video melalui antarmuka, dengan validasi jenis dan ukuran file.
+* File dan hasil analisis dapat disimpan di Supabase (database atau Supabase Storage), dengan akses diatur melalui RLS.
+* Hasil analisis ditampilkan dengan jelas, disertai tingkat keyakinan (confidence) jika model menyediakannya.
+* Aplikasi menangani input yang tidak valid, tidak terbaca, atau hasil dengan keyakinan rendah.
+* Gambar milik pengguna tidak ditampilkan kepada pengguna lain tanpa izin.
+Predictive Modeling
+* Terdapat target variable (variabel yang akan diprediksi), serta fitur atau input yang digunakan oleh model.
+* Gunakan minimal satu algoritma machine learning yang sesuai dengan permasalahan, misalnya:
+   * Classification: Logistic Regression, Decision Tree, Random Forest, XGBoost atau model classification lainnya.
+   * Regression: Linear Regression, Random Forest Regressor, XGBoost Regressor atau model regresi lainnya
+   * Time Series Forecasting: ARIMA atau model forecasting lainnya jika menggunakan data deret waktu.
+Penggunaan AI yang Bertanggung Jawab
+* Sampaikan batasan fitur AI kepada pengguna, termasuk bahwa hasilnya dapat keliru dan bukan pengganti nasihat profesional, terutama untuk isu kesehatan, hukum, atau keuangan.
+* Periksa kemungkinan bias atau hasil yang tidak adil pada kelompok pengguna tertentu, dan catat temuannya di dokumentasi.
+* Kumpulkan dan simpan data pengguna seperlunya saja, dan jelaskan kepada pengguna untuk apa data tersebut dipakai.
+Pengujian dan Evaluasi Fitur AI
+* Endpoint fitur AI diuji menggunakan Thunder Client, termasuk kasus gagal seperti input kosong, input terlalu besar, dan, jika aplikasi memakai login, pengguna yang belum login.
+* Lakukan evaluasi sederhana terhadap kualitas hasil AI menggunakan beberapa contoh kasus uji, lalu laporkan hasilnya di dokumentasi atau presentasi.
+Dokumentasi Fitur AI
+Setiap kelompok menyusun dokumentasi singkat yang memuat:
+* Use case AI yang dipilih dan alasan AI dibutuhkan untuk problem statement.
+* Model yang digunakan beserta alasan pemilihannya.
+* Sumber dan jenis data yang dipakai.
+* Input dan output fitur AI.
+* Hasil evaluasi, batasan, dan risiko yang sudah diidentifikasi.
+
+
+Git dan GitHub
+* Wajib menggunakan GitHub dan sistem branch, dengan satu repository per kelompok. Front-End dan Back-End berada dalam repository yang sama karena memakai Next.js.
+* Setiap kelompok wajib memiliki branch master dan development.
+* Branch master digunakan untuk production, dan branch development digunakan untuk development para developer.
+* Setiap peserta wajib membuat branch turunan dari development untuk setiap task yang dikerjakan.
+* Jangan melakukan development langsung pada branch development dan master.
+* Gunakan commit message yang jelas, dan gabungkan pekerjaan ke development melalui pull request.
+* File model berukuran besar, dataset, dan file .env tidak di-commit ke repository. Cantumkan cara memperolehnya di README.
+
+
+Deployment
+* Aplikasi di-deploy ke Vercel dan diintegrasikan dengan repository GitHub.
+* Database berjalan di Supabase (cloud).
+* Seluruh environment variable yang dibutuhkan, termasuk kunci layanan AI, sudah diatur di Vercel.
+* Link website dapat diakses secara publik melalui internet, dan seluruh fitur utama, termasuk fitur AI, berfungsi di environment production.
+
+
+Deliverables
+* BRD/PRD.
+* User Story, User Flow, Link Figma untuk prototype.
+* ERD atau Schema Diagram.
+* Script SQL dan seed data database (bersifat optional).
+* API Documentation.
+* Dokumentasi fitur AI.
+* Link GitHub Repository (publik), dengan README yang menjelaskan cara menjalankan aplikasi dan fitur AI. Link Github merupakan sistem branch dari master git yang sudah dibagikan pada Live Learning, dengan satu repository per kelompok.
+* Link website yang sudah di-deploy di Vercel.
+* Deck presentasi.
+* Video presentasi dengan durasi maksimal 10 menit.
+* Video demo produk dengan durasi maksimal 3 menit.
+
+
+Panduan Final Project  |  Program Perempuan Inovasi x IBM SkillsBuild
+	Halaman

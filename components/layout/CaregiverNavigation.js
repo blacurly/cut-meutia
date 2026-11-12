@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, BookOpen, Building2, ChevronDown, ClipboardList, FileCheck2, LayoutDashboard, Menu, MessageSquare, ShieldAlert, ShieldCheck, X } from "lucide-react";
+import { Bell, BookOpen, Building2, ChevronDown, ClipboardList, FileCheck2, LayoutDashboard, Menu, MessageSquare, ScanFace, ShieldAlert, ShieldCheck, X } from "lucide-react";
 import AyomiLogo from "@/components/ui/AyomiLogo";
 import { useParentDemo } from "@/components/features/ParentDemoProvider";
 import { managedDaycare, managedEnrollments } from "@/lib/caregiver";
@@ -14,6 +14,7 @@ const menu = [
   ["Dashboard", "/pengelola", LayoutDashboard],
   ["Kelola pendaftaran", "/pengelola/pendaftaran", ClipboardList],
   ["Logbook harian", "/pengelola/laporan-harian", BookOpen],
+  ["Uji Foto Fokus (AI)", "/pengelola/foto-fokus", ScanFace],
   ["Ulasan & balasan", "/pengelola/ulasan", MessageSquare],
   ["Dokumen legalitas", "/pengelola/dokumen", FileCheck2],
   ["Profil bisnis", "/pengelola/profil", Building2],

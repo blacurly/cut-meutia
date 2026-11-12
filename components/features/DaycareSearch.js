@@ -102,7 +102,7 @@ export default function DaycareSearch({ initialFilters }) {
     const controller = new AbortController();
     (async () => {
       try {
-        const payload = await requestApi("/api/daycare/list", { signal: controller.signal });
+        const payload = await requestApi("/api/daycares", { signal: controller.signal });
         if (!Array.isArray(payload)) throw new Error("Format data daycare dari API tidak valid.");
         setDaycares(payload);
       } catch (loadError) {

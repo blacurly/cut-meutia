@@ -5,7 +5,7 @@ export async function GET(request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const next = requestUrl.searchParams.get("next") || "/beranda";
-  const allowedDestinations = new Set(["/beranda", "/atur-ulang-sandi"]);
+  const allowedDestinations = new Set(["/beranda", "/atur-ulang-sandi", "/undangan"]);
   const safeNext = allowedDestinations.has(next) ? next : "/beranda";
   const recoveryFlow = safeNext === "/atur-ulang-sandi";
 

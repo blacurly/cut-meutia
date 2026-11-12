@@ -41,7 +41,7 @@ Daftar lengkap kode error dan pesannya ada di `lib/api/errors.js`.
 | POST | `/api/auth/register` | Publik | Daftar akun Orang Tua |
 | POST | `/api/auth/login` | Publik | Masuk; mengembalikan peran, tujuan halaman, dan `access_token` |
 | POST | `/api/auth/logout` | Publik | Keluar dan hapus cookie sesi |
-| GET | `/api/daycares` | Publik | Katalog daycare dengan filter server (lihat di bawah), termasuk mitra aktif melalui RPC dengan kolom publik yang dibatasi. Alias lama: `/api/daycare/list` |
+| GET | `/api/daycares` | Publik | Katalog daycare dengan filter server (lihat di bawah), termasuk mitra aktif melalui RPC dengan kolom publik yang dibatasi. |
 | GET | `/api/daycares/{id}` | Publik | Detail daycare berdasarkan UUID atau slug: profil, galeri, paket biaya; data mitra aktif diambil melalui RPC dengan kolom publik yang dibatasi |
 | GET | `/api/daycares/compare?ids=a,b,c` | Publik | Bandingkan 2–3 daycare berdampingan |
 | GET | `/api/daycares/{id}/offerings` | Publik | Layanan dan harga yang disetujui dari daycare mitra |
@@ -123,8 +123,14 @@ Daftar lengkap kode error dan pesannya ada di `lib/api/errors.js`.
 | GET | `/api/admin/moderation` | Admin | Antrean moderasi ulasan dan balasan |
 | PATCH | `/api/admin/moderation/{reviews\|replies}/{versionId}` | Admin | Setujui atau tolak |
 | PATCH | `/api/admin/transactions/{id}` | Admin | Catat hasil pembayaran manual |
+| GET | `/api/ai/features` | Publik | Daftar fitur AI dan contoh input (lihat [kerangka AI](./ai-api.md)) |
+| POST | `/api/ai/sandbox/{feature}` | Admin | Jalankan satu tugas AI pada data sintetis |
+| POST | `/api/ai/focus/segment` | Pengasuh, Pengelola, Admin | Foto Fokus Anak: deteksi orang di foto (uji coba) |
+| POST | `/api/ai/focus/render` | Pengasuh, Pengelola, Admin | Foto Fokus Anak: foto dengan hanya anak target yang tajam |
 
 Endpoint dengan CRUD lengkap: `/api/children`, `/api/enrollments`, `/api/enrollments/{id}/activities`, dan `/api/activities/{id}/comments`.
+
+**Tautan undangan staf.** `POST /api/admin/partners` dan `POST /api/me/daycares/{id}/staff/invitations` mengembalikan `invitation_token` satu kali. Bagikan tautan berformat `https://<domain>/undangan#<invitation_token>`. Halaman `/undangan` meminta pengguna masuk atau mendaftar dengan email undangan, lalu memanggil `POST /api/invitations/accept`. Token diletakkan di *fragment* URL, sehingga tidak ikut terkirim ke server sebagai bagian URL.
 
 ## Akun — `/api/auth/*`
 

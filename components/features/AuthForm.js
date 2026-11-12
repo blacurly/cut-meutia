@@ -8,7 +8,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 import Tabs from "@/components/ui/Tabs";
-import { AUTH_ROLES, authHref, normalizePhone, passwordCriteria, validateAuthForm } from "@/lib/auth";
+import { AUTH_ROLES, authHref, hasPendingInvite, normalizePhone, passwordCriteria, validateAuthForm } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/client";
 import { authCopy } from "./auth-copy";
 import styles from "./AuthForm.module.css";
@@ -87,7 +87,7 @@ export default function AuthForm({ mode, role, language, initialAuthMessage = nu
           email: values.email.trim(),
           password: values.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=/beranda`,
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=${hasPendingInvite() ? "/undangan" : "/beranda"}`,
             data: { full_name: values.name.trim(), phone: normalizePhone(values.phone) },
           },
         });
@@ -97,7 +97,7 @@ export default function AuthForm({ mode, role, language, initialAuthMessage = nu
           setFeedback({ kind: "info", message: copy.confirmEmail });
           return;
         }
-        startTransition(() => router.replace("/beranda"));
+        startTransition(() => router.replace(hasPendingInvite() ? "/undangan" : "/beranda"));
         return;
       }
 
@@ -124,7 +124,7 @@ export default function AuthForm({ mode, role, language, initialAuthMessage = nu
         throw new Error("role");
       }
       const destination = profile.role === "parent" ? "/beranda" : profile.role === "admin" ? "/admin" : "/pengelola";
-      startTransition(() => router.replace(destination));
+      startTransition(() => router.replace(hasPendingInvite() ? "/undangan" : destination));
     } catch (error) {
       const key = error.message === "profile"
         ? "profileUnavailable"

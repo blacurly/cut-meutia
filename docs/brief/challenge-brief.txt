@@ -1,0 +1,143 @@
+﻿Challenge Brief
+Bootcamp Perempuan Inovasi 2026
+Final Project - AI Full Stack Web Development
+Latar Belakang
+Perempuan Inovasi GENerasi AI adalah program beasiswa pelatihan digital bagi perempuan Indonesia yang diselenggarakan oleh Markoding bekerja sama dengan IBM SkillsBuild. Program ini bertujuan memperdalam keahlian peserta di bidang STEM dan Artificial Intelligence yang relevan dengan industri, agar mereka dapat mengembangkan inovasi untuk memecahkan masalah terkait gender dan ketahanan iklim di lingkungan sekitar.
+Pada tahun 2026, lebih dari 9.550 perempuan dari 38 provinsi mendaftar ke program ini. Setelah melewati basic training dan proses seleksi, 40 peserta terpilih untuk mengikuti bootcamp intensif dengan beasiswa penuh. Selama bootcamp, peserta dibagi ke dalam 10 kelompok dan didampingi mentor setiap minggu.
+Pembelajaran di bootcamp berjalan dalam tiga rangkaian. Product Innovation & Development membantu peserta menemukan dan merumuskan problem yang nyata, lalu mengembangkannya secara bertahap dari problem ke requirement, flow, dan prototype. Web Development membekali peserta dengan keterampilan Front-End, Back-End, dan database menggunakan React, Next.js, Tailwind CSS, shadcn/ui, PostgreSQL, dan Supabase. AI Fundamentals: Deep Dive memperkenalkan computer vision, recommendation system, dan RAG yang dapat diintegrasikan ke dalam aplikasi web.
+Final project menyatukan ketiga rangkaian tersebut. Setiap kelompok diminta membangun solusi digital berupa aplikasi web Full-Stack yang menjawab satu permasalahan nyata pada tema Perempuan, Isu Sosial, dan Climate Change. Jika AI dipakai dalam solusi, fiturnya harus lahir dari kebutuhan produk, bukan sekadar ditambahkan sebagai fitur tambahan. 
+Isu Utama
+Challenge ini mengangkat tema Perempuan, Isu Sosial, dan Climate Change. Peserta telah mendapatkan tema tersebut dan sudah menemukan masalah yang ingin diselesaikan dari sepuluh isu berikut.
+* Perubahan Iklim dan Kesehatan Perempuan: Fokus pada bagaimana perubahan iklim mempengaruhi kesehatan perempuan, baik secara fisik maupun mental. Cakupannya bisa meliputi kesehatan reproduksi, kehamilan, penyakit akibat panas ekstrem, bencana, hingga akses layanan kesehatan saat terjadi krisis iklim.
+* Ketahanan Pangan, Gizi Perempuan, dan Keluarga: Fokus pada bagaimana perempuan dan keluarga dapat tetap memiliki akses terhadap pangan yang cukup, aman, terjangkau, dan bergizi di tengah perubahan harga pangan, perubahan iklim, gagal panen, atau bencana.
+* Air, Sanitasi, dan Ketahanan Iklim: Fokus pada akses perempuan dan keluarga terhadap air bersih, sanitasi, dan kebersihan yang layak. Isunya dapat berkaitan dengan kekeringan, banjir, pencemaran air, keterbatasan fasilitas sanitasi, hingga dampaknya terhadap kesehatan dan keseharian perempuan.
+* Pendidikan dan Literasi Perempuan: Fokus pada kesenjangan akses dan kualitas pendidikan serta literasi bagi perempuan dan anak perempuan. Termasuk literasi digital, finansial, kesehatan, dan lingkungan, serta keterampilan yang dibutuhkan untuk menghadapi perubahan sosial dan iklim.
+* Pengasuhan, Caregiving, dan Ketahanan Keluarga: Fokus pada beban pengasuhan dan pekerjaan perawatan yang sering kali lebih banyak ditanggung perempuan. Solusi dapat membantu perempuan mengelola child care, elderly care, pekerjaan domestik, maupun kebutuhan keluarga, terutama dalam situasi krisis atau bencana.
+* Kewirausahaan dan UMKM Perempuan: Fokus pada bagaimana perempuan dapat membangun, mengembangkan, dan mempertahankan usaha. Isunya bisa berupa akses modal, pasar, teknologi, digitalisasi, dan keterampilan bisnis, hingga bagaimana UMKM perempuan menjadi lebih tahan terhadap dampak perubahan iklim.
+* Ketahanan Ekonomi dan Mata Pencaharian Perempuan: Fokus pada kemampuan perempuan untuk memiliki penghasilan yang stabil dan bertahan ketika menghadapi krisis ekonomi, bencana, atau perubahan iklim. Cakupannya bisa meliputi financial literacy, akses pekerjaan, perlindungan pendapatan, dan alternatif mata pencaharian.
+* Hak, Akses Layanan, dan Perlindungan Perempuan: Fokus pada akses perempuan terhadap hak, pelayanan publik, bantuan hukum, perlindungan, serta lingkungan yang aman. Termasuk bagaimana teknologi atau inovasi dapat membantu perempuan mendapatkan informasi, melaporkan masalah, dan memperoleh layanan yang mereka butuhkan.
+* Lapangan Pekerjaan dan Green Jobs: Fokus pada kesetaraan kesempatan perempuan dalam dunia kerja, termasuk akses terhadap pekerjaan, skill, career development, workplace safety, dan pekerjaan yang layak. Isunya bisa diperluas ke green jobs atau pekerjaan yang mendukung transisi menuju ekonomi berkelanjutan.
+* Komunitas Perempuan dan Aksi Iklim: Fokus pada pemberdayaan perempuan sebagai bagian dari komunitas untuk menghadapi dan merespons perubahan iklim. Contohnya pengelolaan sampah, energi bersih, konservasi lingkungan, kesiapsiagaan bencana, atau gerakan komunitas yang dipimpin perempuan.
+Permasalahan yang Dihadapi
+Dari sepuluh isu di atas, berikut sepuluh permasalahan yang dihadapi perempuan dan dapat menjadi titik awal riset peserta. Urutannya mengikuti urutan isu.
+1. Dampak iklim terhadap kesehatan. Perubahan iklim mempengaruhi kesehatan fisik dan mental perempuan, termasuk kesehatan reproduksi dan kehamilan, sementara akses ke pelayanan kesehatan menjadi lebih sulit ketika terjadi panas ekstrem, bencana, atau krisis iklim lainnya.
+2. Akses terhadap pangan bergizi. Perempuan dan keluarga sulit memastikan ketersediaan pangan yang cukup, aman, terjangkau, dan bergizi ketika harga pangan berubah, iklim bergeser, panen gagal, atau bencana terjadi.
+3. Akses air bersih dan sanitasi. Kekeringan, banjir, pencemaran air, dan keterbatasan fasilitas sanitasi membatasi akses perempuan dan keluarga terhadap air bersih dan kebersihan yang layak, dengan dampak pada kesehatan dan keseharian perempuan.
+4. Kesenjangan pendidikan dan literasi. Perempuan dan anak perempuan menghadapi kesenjangan akses dan kualitas pendidikan, termasuk literasi digital, finansial, kesehatan, dan lingkungan, serta keterampilan untuk menghadapi perubahan sosial dan iklim.
+5. Beban pengasuhan dan perawatan. Pekerjaan pengasuhan dan perawatan, seperti child care, elderly care, dan pekerjaan domestik, lebih sering ditanggung perempuan, dan beban ini bertambah berat dalam situasi krisis atau bencana.
+6. Hambatan dalam berusaha. Perempuan pelaku usaha menghadapi kendala dalam membangun, mengembangkan, dan mempertahankan usaha, mulai dari akses modal, pasar, teknologi, dan digitalisasi hingga keterampilan bisnis, ditambah kerentanan UMKM terhadap dampak perubahan iklim.
+7. Penghasilan yang tidak stabil. Penghasilan perempuan sulit tetap stabil saat terjadi krisis ekonomi, bencana, atau perubahan iklim, dengan keterbatasan pada financial literacy, akses pekerjaan, perlindungan pendapatan, dan alternatif mata pencaharian.
+8. Sulitnya mengakses hak dan layanan. Perempuan belum selalu mudah mendapatkan hak, pelayanan publik, bantuan hukum, dan perlindungan, serta lingkungan yang aman. Informasi, saluran pelaporan masalah, dan layanan yang dibutuhkan sering sulit dijangkau.
+9. Ketimpangan kesempatan di dunia kerja. Perempuan menghadapi keterbatasan dalam akses pekerjaan, skill, career development, workplace safety, dan pekerjaan yang layak, termasuk peluang di green jobs yang mendukung transisi ke ekonomi berkelanjutan.
+10. Peran komunitas perempuan dalam aksi iklim. Perempuan perlu lebih diberdayakan sebagai bagian dari komunitas untuk merespons perubahan iklim, misalnya dalam pengelolaan sampah, energi bersih, konservasi lingkungan, kesiapsiagaan bencana, dan gerakan komunitas yang dipimpin perempuan.
+Tugas Proyek
+Setiap peserta diminta mengerjakan hal-hal berikut.
+* Membuat solusi digital dalam bentuk website yang sudah responsive.
+* Melakukan riset terlebih dahulu atas permasalahan yang ingin diselesaikan.
+* Menyusun problem statement pada solusi digital dengan jelas dan dapat diartikulasikan dengan baik. Peserta disarankan menyertakan data riset dengan melakukan penelitian sendiri.
+* Menawarkan ide solusi yang menjawab permasalahan dengan tepat.
+* Mengintegrasikan minimal satu fitur AI ke dalam solusi, dengan memilih dari use case yang dipelajari di materi: Recommendation System, Retrieval-Augmented Generation (RAG), atau Computer Vision, atau Predictive ML. Fitur AI harus dibutuhkan untuk menjawab problem statement, dan peserta perlu bisa menjelaskan mengapa AI relevan untuk masalah tersebut.
+* Menentukan target pengguna yang jelas. Solusinya harus ramah pengguna, intuitif, dan membantu target pengguna memecahkan masalah yang terkait dengan problem statement yang diajukan. Peserta dapat menentukan sendiri target penggunanya, sesuai dengan permasalahan yang ingin diselesaikan.
+* Memastikan aplikasi website dapat diakses secara publik melalui Internet.
+* Peserta diperbolehkan bereksplorasi dan membuat asumsi sendiri di luar detail challenge yang diberikan. Sebagai contoh, jika challenge tidak menerangkan lebih detail mengenai target pengguna, peserta dapat mengasumsikan sendiri profil pengguna yang berpotensi menggunakan produk dari permasalahan yang ingin diselesaikan. Peserta juga dapat bereksplorasi untuk menghasilkan flow produk digital yang lebih baik jika dibutuhkan.
+Output yang Diharapkan
+Idea & Solusi
+* Gambaran proses penyelesaian masalah hingga menemukan solusi (Design Thinking).
+* Penjelasan mengapa AI relevan dan dibutuhkan untuk menjawab problem statement, termasuk use case AI yang dipilih (Recommendation System, RAG, Computer Vision atau Predictive ML).
+* User Story.
+* User Flow, termasuk alur interaksi pengguna dengan fitur AI.
+* Pipeline AI termasuk hasil evaluasinya
+* Prototype.
+Product Development
+* Penggunaan resource dengan free license untuk font, icon vector, dan aset lainnya.
+* Design Figma sebagai preview desain dari solusi yang dibuat.
+* GitHub Repository Project, repository yang sudah dibagikan oleh Instruktur saat kelas Live Learning, github link masing-masing kelompok dapat dilihat di sini.
+* Database Schema.
+* Fitur AI yang terintegrasi ke dalam aplikasi, menggunakan open source pre-trained model atau model AI sesuai use case yang dipilih.
+* Dokumentasi singkat fitur AI: model yang digunakan, alasan pemilihannya, serta input dan output fitur.
+Publish
+* Solusi dalam bentuk inovasi digital berupa aplikasi AI Full-Stack website yang dapat diakses melalui internet.
+* Aplikasi website merupakan integrasi dari Front-End, Back-End, Database, dan fitur AI.
+
+
+Tools dan Dokumen Pendukung
+Idea & Solusi
+* Figma (figma make/figma jam)
+Product Development
+* Design Mockup: Figma
+* Software Engineering General: Visual Studio Code, Git dan GitHub, React.js/Next.js
+* Front-End Development: HTML, CSS, JavaScript, Next.js
+* Back-End Development: Next.js
+* Database: PostgreSQL (platform cloud: Supabase)
+* AI: open source pre-trained model sesuai use case (Recommendation System, RAG, Computer Vision, atau Predictive ML)
+Publish
+* Front-End dan Back-End: Vercel
+* Database: Supabase
+* AI Model: Ultralytics/FastAPI/MediaPipe/HuggingFace Model/gemini/Free AI Model yang tidak disebutkan namun bisa membantu integrasi AI di website sebagai bagian dari solusi
+
+
+
+
+
+
+
+
+
+
+
+
+Pembagian Kelompok Challenge Brief
+
+
+No
+	Kelompok
+	Challenge Brief
+	Github Branch
+	1
+	Ratu Zaleha
+	Lapangan Pekerjaan dan Green Jobs
+	https://github.com/blacurly/ratu-zaleha.git
+	2
+	RA Kartini
+	Ketahanan Ekonomi dan Mata Pencaharian Perempuan
+	https://github.com/blacurly/ra-kartini.git
+	3
+	Martha Christina Tiahahu
+	Perubahan Iklim dan Kesehatan Perempuan
+	https://github.com/blacurly/martha-christina-tiahahu.git
+	4
+	RA Lasminingrat
+	Hak, Akses Layanan, dan Perlindungan Perempuan
+	https://github.com/blacurly/ra-lasminingrat.git
+	5
+	Cut Meutia
+	Pengasuhan, Caregiving, dan Ketahanan Keluarga
+	https://github.com/blacurly/cut-meutia.git
+	6
+	Rasuna Said
+	Air, Sanitasi, dan Ketahanan Iklim
+	https://github.com/blacurly/rasuna-said.git
+	7
+	Dewi Sartika
+	Kewirausahaan dan UMKM Perempuan
+	https://github.com/blacurly/dewi-sartika.git
+	8
+	Maria Walanda Maramis
+	Pendidikan dan Literasi Perempuan
+	https://github.com/blacurly/maria-walanda-maramis.git
+	9
+	Ruhana Kuddus
+	Komunitas Perempuan dan Aksi Iklim
+	https://github.com/blacurly/ruhana-kuddus.git
+	10
+	Malahayati
+	Ketahanan Pangan, Gizi Perempuan, dan Keluarga
+	https://github.com/blacurly/malahayati.git
+	
+
+
+
+
+
+Panduan Final Project  |  Program Perempuan Inovasi x IBM SkillsBuild
+	Halaman

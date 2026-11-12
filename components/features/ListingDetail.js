@@ -30,6 +30,7 @@ export default function ListingDetail({ daycare }) {
   const images = daycare.gallery?.length ? daycare.gallery : [{ url: null, illustration: false }];
   const place = [daycare.address, daycare.district, daycare.city, daycare.province].filter(Boolean).join(", ");
   const listing = daycare.kind === "listing";
+  const startingFee = daycare.monthlyFee ?? daycare.profile?.dailyFee ?? null;
 
   return <div className={p.page}>
     <nav className={p.breadcrumbs} aria-label="Breadcrumb"><Link href="/pencarian"><ArrowLeft size={13} style={{ display: "inline" }} /> Direktori daycare</Link><span>/</span><span>{daycare.name}</span></nav>
@@ -103,19 +104,19 @@ export default function ListingDetail({ daycare }) {
 
       <Panel className={p.sideCard}>
         <p className={p.eyebrow}>RINGKASAN BIAYA</p>
-        {daycare.monthlyFee == null ? <p className={p.muted}>Biaya belum tersedia.</p> : <>
+        {startingFee == null ? <p className={p.muted}>Biaya belum tersedia.</p> : <>
           <p className={p.small}>Mulai dari</p>
-          <strong className={p.price} style={{ fontSize: 28 }}>{rupiah(daycare.monthlyFee)}</strong><span className={p.small}> / bulan</span>
+          <strong className={p.price} style={{ fontSize: 28 }}>{rupiah(startingFee)}</strong><span className={p.small}> / {daycare.monthlyFee == null ? "hari" : "bulan"}</span>
           <div style={{ marginTop: 8 }}><Estimate show={estimated} /></div>
         </>}
         <div className={p.stack} style={{ marginBlock: 22, gap: 12 }}>
           {daycare.ratio != null && <p className={p.muted}><Users size={15} style={{ display: "inline" }} /> 1 pengasuh : {daycare.ratio} anak</p>}
           {daycare.profile?.dailyFee != null && <p className={p.muted}><Wallet size={15} style={{ display: "inline" }} /> Harian {rupiah(daycare.profile.dailyFee)}</p>}
         </div>
-        {listing
+        {listing && !daycare.acceptsEnrollment
           ? <button disabled className={`${p.button} ${p.full}`}>Belum menerima pendaftaran online</button>
-          : <LinkButton className={`${p.mint} ${p.full}`} href={`/pendaftaran-anak?daycare=${daycare.id}`}>Daftarkan anak<ArrowRight size={16} /></LinkButton>}
-        <p className={p.small} style={{ marginTop: 14 }}>{listing ? "Pendaftaran online tersedia setelah daycare bergabung sebagai mitra Ayomi." : "Pengajuan diproses oleh pengelola daycare."}</p>
+          : <LinkButton className={`${p.mint} ${p.full}`} href={`/pendaftaran-anak?daycare=${listing ? daycare.claimedDaycareId : daycare.id}`}>Daftarkan anak<ArrowRight size={16} /></LinkButton>}
+        <p className={p.small} style={{ marginTop: 14 }}>{listing && !daycare.acceptsEnrollment ? "Pendaftaran online tersedia setelah daycare bergabung sebagai mitra Ayomi." : "Pengajuan diproses oleh pengelola daycare."}</p>
         <LinkButton secondary className={p.full} href="/bandingkan" style={{ marginTop: 12 }}>Lihat perbandingan</LinkButton>
       </Panel>
     </div>

@@ -1,0 +1,217 @@
+﻿Kriteria Penilaian
+Bootcamp Perempuan Inovasi 2026
+Final Project - AI Full Stack Web Development
+Penilaian
+Penilaian dilakukan berdasarkan aspek berikut.
+Umum
+* Correctness, design, dan style.
+* Aplikasi memiliki minimal 1 fitur end-to-end dan berfungsi sesuai dengan rancangan.
+* BRD dan Prototype.
+* Kemampuan peserta menggunakan Git dan GitHub.
+* Deck presentasi.
+* Video presentasi.
+Front-End
+* UI dan UX design, serta penggunaan Tailwind CSS dan shadcn/ui.
+* Website sudah responsive.
+* Implementasi component, error handling, dan validasi input.
+* Penggunaan state, props, dan React Context.
+* Routing pada App Router dan struktur project Next.js.
+* Jumlah halaman website sesuai ketentuan.
+* Konten sesuai dengan tema website, tanpa konten dummy seperti Lorem Ipsum.
+* Antarmuka fitur AI yang jelas, dengan penanganan loading, hasil kosong, dan error.
+Back-End
+* Jumlah endpoint API sesuai spesifikasi.
+* Validasi dan error handling API.
+* Deployment dan konfigurasi production.
+* Arsitektur dan kualitas kode Back-End (Route Handlers dan Server Actions).
+* API Documentation.
+Database
+* ERD atau Schema Diagram, termasuk data untuk fitur AI.
+* Implementasi database di Supabase (schema, relasi, seed).
+* Keamanan database dengan Row Level Security (RLS).
+AI Integration
+* Kesesuaian fitur AI dengan kebutuhan produk dan problem statement.
+* Pemahaman terhadap use case AI yang dipilih dan model yang digunakan.
+* Pemenuhan ketentuan teknis sesuai use case (Recommendation System, RAG, atau Computer Vision).
+* Integrasi fitur AI ke dalam aplikasi Full-Stack secara end-to-end, dan berfungsi di environment production.
+* Keamanan integrasi AI, termasuk perlindungan kunci akses dan pembatasan input.
+* Penanganan kondisi loading, hasil kosong, dan error pada fitur AI.
+* Evaluasi sederhana terhadap hasil AI.
+* Penggunaan AI yang bertanggung jawab: batasan, bias, dan privasi data.
+* Dokumentasi model, data, input, dan output.
+
+
+
+
+
+
+
+
+NO
+	KRITERIA
+	BOBOT
+	3
+	4–6
+	7–8
+	9–10
+	PRODUCT & PROBLEM-SOLUTION FIT
+	1
+	Problem Statement & Relevansi Solusi
+	5%
+	Problem statement tidak jelas atau tidak menunjukkan permasalahan spesifik. Solusi tidak relevan dengan challenge brief.
+	Problem statement sudah diidentifikasi, tetapi belum didukung riset atau data memadai. Hubungan permasalahan dan solusi masih umum.
+	Problem statement jelas, spesifik, dan relevan dengan challenge brief. Solusi menjawab permasalahan berdasarkan riset atau data relevan.
+	Problem statement didukung riset dan bukti kuat, menunjukkan pemahaman akar permasalahan, serta menghasilkan solusi yang tepat sasaran dan relevan dengan konteks pengguna.
+	2
+	Target User, User Story & User Flow
+	5%
+	Target pengguna tidak jelas. User story dan user flow tidak tersedia atau tidak menggambarkan kebutuhan pengguna.
+	Target pengguna sudah ditentukan, tetapi karakteristik dan kebutuhannya belum spesifik. User story dan user flow tersedia tetapi belum lengkap atau belum konsisten dengan aplikasi.
+	Target pengguna terdefinisi jelas. User story dan user flow menggambarkan interaksi pengguna dengan fitur utama, termasuk fitur AI.
+	Target pengguna didefinisikan berdasarkan kebutuhan dan konteks yang kuat. User story dan user flow lengkap, intuitif, konsisten dengan produk, serta mempertimbangkan variasi skenario pengguna.
+	FRONT-END
+	3
+	UI & UX Design
+	5%
+	Perpaduan warna dan font kurang menarik dan kurang sesuai. Peserta belum memahami spacing (padding dan margin) di Tailwind. Layout tidak diatur dengan Flexbox atau Grid. Komponen shadcn/ui tidak digunakan.
+	Perpaduan warna dan font cukup menarik namun kurang sesuai. Spacing sudah tepat. Layout belum memanfaatkan Flexbox atau Grid dengan baik. Komponen shadcn/ui digunakan namun tidak konsisten.
+	Perpaduan warna dan font cukup menarik dan sesuai. Spacing tepat. Layout menggunakan Flexbox, Grid, atau Positioning. Komponen shadcn/ui digunakan secara konsisten.
+	Perpaduan warna dan font sangat menarik dan sesuai. Spacing tepat. Layout menggunakan beberapa teknik (Flexbox, Grid, Positioning) dengan baik dan sesuai konteks solusi serta desain Figma. Komponen shadcn/ui dikustomisasi sesuai identitas desain.
+	4
+	Tampilan website sudah responsive
+	4%
+	Tampilan website tidak responsive di semua halaman.
+	Tampilan website sudah responsive setidaknya di satu halaman.
+	Tampilan website sudah responsive setidaknya di tiga halaman.
+	Tampilan website sudah responsive di seluruh halaman (minimal 4 halaman).
+	5
+	Implementasi Component, Error Handling, dan Validation
+	5%
+	Peserta belum memahami pembuatan component di React. Tidak ada error handling dan validasi input.
+	Component dibuat sesuai kebutuhan (reusable dan modular), namun penerapan props dan state belum tepat. Tidak ada error handling dan validasi input.
+	Component reusable dan modular, dengan penerapan props dan state yang sesuai. Belum ada error handling dan validasi input.
+	Component reusable dan modular, dengan penerapan props dan state yang sesuai. Sudah ada error handling (loading dan error state) dan validasi input form.
+	6
+	Implementasi State, Props, dan React Context
+	4%
+	Peserta belum memahami penggunaan state pada React Hooks. Tidak menggunakan React Context.
+	Peserta hanya menggunakan React Hooks untuk state management. Tidak menggunakan React Context.
+	Peserta menggunakan React Context namun struktur dan arsitekturnya masih perlu diperbaiki (provider, pemisahan state, pemakaian hook).
+	Peserta menggunakan React Context dengan struktur dan arsitektur yang sesuai (provider, custom hook, state terpisah per kebutuhan) dan menghindari prop drilling.
+	7
+	Routing dan Struktur Next.js (App Router)
+	2%
+	Routing tidak berfungsi dengan baik dan struktur project tidak terorganisasi.
+	Routing berfungsi, namun jumlah halaman kurang dari 4 atau struktur folder belum rapi.
+	Minimal 4 halaman dengan App Router, struktur folder rapi, dan navigasi antar halaman berfungsi.
+	Memenuhi deskripsi skor 7–8 dan memanfaatkan fitur App Router dengan tepat (layout bersama, dynamic route, pemisahan server dan client component).
+	BACK-END
+	8
+	Jumlah endpoint API sesuai spesifikasi
+	5%
+	Peserta menyediakan 2 endpoint atau kurang. Seluruh endpoint tepat dan dapat digunakan.
+	Peserta menyediakan 3 endpoint dengan full CRUD, namun masih ada endpoint yang belum tepat atau belum dapat digunakan.
+	Tiga endpoint full CRUD tepat dan dapat digunakan, ditambah endpoint untuk lebih dari setengah fitur dalam rancangan.
+	Endpoint tersedia untuk seluruh fitur dalam rancangan, seluruhnya tepat dan dapat digunakan, dengan Route Handlers dan Server Actions yang digunakan sesuai kebutuhan.
+	9
+	Validasi Input dan error handling API
+	4%
+	Tidak ada validasi input pada endpoint.
+	Validasi hanya ada pada sebagian kecil endpoint, dan response error belum konsisten.
+	Validasi ada pada sebagian besar endpoint, dengan response error dan status code yang sesuai.
+	Validasi ada pada seluruh endpoint, dengan response error yang konsisten, pesan yang jelas, dan status code yang sesuai.
+	10
+	Deployment dan konfigurasi production
+	5%
+	Aplikasi tidak dapat diakses publik atau hanya berjalan di komputer lokal.
+	Aplikasi sudah di-deploy ke Vercel, namun ada fitur utama yang tidak berfungsi di production atau database belum terhubung ke Supabase cloud.
+	Aplikasi di-deploy ke Vercel, terhubung ke Supabase cloud, dan fitur utama berfungsi di production. Integrasi dengan repository GitHub atau pengaturan environment variable belum lengkap.
+	Aplikasi di-deploy dan terhubung dengan repository GitHub, terhubung ke Supabase cloud, environment variable diatur di Vercel (tidak ada secret di repository), dan seluruh fitur utama berfungsi di production.
+	11
+	Arsitektur dan kualitas kode Back-End
+	4%
+	Logika Back-End bercampur dalam satu file atau langsung di komponen, dan tidak ada error handling.
+	Route Handlers atau Server Actions sudah digunakan, tetapi logika bisnis masih bercampur di route dan struktur folder belum rapi.
+	Route Handlers dan Server Actions digunakan sesuai kebutuhan, struktur folder rapi, dan error handling ada pada sebagian besar proses, namun pemisahan logika belum konsisten.
+	Route Handlers dan Server Actions digunakan tepat, logika bisnis dan akses data dipisah dari route (misalnya di folder lib atau service), error handling konsisten, dan pengolahan data seperti filter, pencarian, atau pagination (jika fiturnya ada) dilakukan di sisi server.
+	12
+	API Documentation.
+	2%
+	Dokumentasi hanya untuk 2 endpoint atau kurang.
+	Dokumentasi untuk 3 endpoint. 
+	Dokumentasi untuk lebih dari setengah endpoint.
+	Dokumentasi untuk seluruh endpoint (request, response, status code).
+	DATABASE
+	13
+	Rancangan Database (ERD)
+	6%
+	Tidak terdapat ERD.
+	ERD dibuat lengkap, detail, dan jelas namun relasi antar tabel belum sesuai. Belum menerapkan normalisasi.
+	ERD dibuat lengkap, detail, dan jelas serta relasi antar tabel sesuai. Belum menerapkan normalisasi.
+	ERD dibuat lengkap, detail, dan jelas serta relasi antar tabel sesuai. Sudah menerapkan normalisasi.
+	14
+	Implementasi database di Supabase (schema, relasi, seed)
+	7%
+	Tabel di Supabase tidak ada atau tidak sesuai dengan ERD. 
+	Tabel sudah dibuat tetapi belum lengkap atau belum sesuai ERD (misalnya primary key, foreign key, atau tipe data masih keliru). 
+	Tabel dan relasi sesuai ERD, tetapi constraint belum lengkap (misalnya NOT NULL, UNIQUE, atau ON DELETE belum diatur) atau database berisi data yang belum cukup untuk menjalankan fitur utama. 
+	Tabel, relasi, dan constraint sesuai ERD secara lengkap, dan database berisi data awal yang cukup untuk menjalankan seluruh fitur utama. Nilai 10 diberikan jika script SQL atau seed juga disertakan di repository sehingga database dapat dibuat ulang. 
+	15
+	Keamanan database dengan Row Level Security (RLS)
+	7%
+	RLS tidak diaktifkan.
+	RLS diaktifkan pada sebagian tabel, dan policy belum sesuai kebutuhan akses project.
+	RLS aktif pada seluruh tabel, dengan policy sesuai kebutuhan akses project (misalnya publik hanya boleh membaca, atau pembatasan per pengguna dan role jika project memakai login), namun masih ada celah.
+	RLS aktif dengan policy yang tepat untuk seluruh tabel sesuai kebutuhan akses project, sudah diuji, dan tidak ada akses data yang tidak semestinya, termasuk penulisan atau perubahan data oleh pengguna anonim.
+	AI INTEGRATION
+	16
+	AI Functionality & Use Case Relevance
+	10%
+	Fitur AI tidak berhasil diimplementasikan, tidak dapat digunakan, atau tidak relevan dengan problem statement aplikasi.
+	Fitur AI sudah berhasil dibuat menggunakan model atau layanan AI, tetapi fungsi masih terbatas. Input dan output belum sepenuhnya sesuai kebutuhan pengguna atau belum konsisten.
+	Fitur AI berfungsi dengan baik dan relevan dengan problem statement. Input dan output sesuai use case. Fitur AI menjadi bagian dari alur utama aplikasi dan memberikan manfaat kepada pengguna.
+	Fitur AI berfungsi secara konsisten, relevan, dan memberikan nilai tambah signifikan. Proses AI terintegrasi dengan alur produk secara end-to-end dan mampu menangani variasi input serta skenario penggunaan relevan.
+	17
+	AI Integration & Back-End Architecture
+	7%
+	AI model atau API belum berhasil diintegrasikan ke aplikasi. Fitur AI hanya berupa tampilan prototype tanpa proses inference yang berjalan.
+	AI API atau model sudah terhubung dengan aplikasi, tetapi implementasi masih sederhana. API key belum dikelola dengan baik atau proses AI belum terintegrasi secara konsisten dengan Back-End.
+	AI terintegrasi melalui Route Handlers atau Server Actions. API key disimpan dalam environment variables dan tidak terekspos di client. Proses input dan output berjalan baik dan terhubung dengan aplikasi.
+	Integrasi AI terstruktur di sisi server. Logika AI dipisahkan dari route, input divalidasi dan dibatasi, serta kondisi loading, hasil kosong, error, dan timeout ditangani dengan baik. Fitur AI berjalan di production dan terintegrasi dengan database jika dibutuhkan.
+	18
+	Evaluasi Model AI & Kualitas Output
+	6%
+	Tidak melakukan pengujian atau evaluasi terhadap hasil AI. Tidak tersedia test cases untuk memeriksa kualitas output.
+	Melakukan pengujian menggunakan beberapa contoh input, tetapi belum memiliki indikator evaluasi yang jelas. Hasil pengujian belum dianalisis secara sistematis.
+	Memiliki test cases yang relevan dengan use case. Menggunakan indikator evaluasi sesuai jenis AI dan mampu menjelaskan kualitas output berdasarkan hasil pengujian.
+	Evaluasi dilakukan secara sistematis menggunakan test cases representatif, metrik sesuai, analisis kesalahan, dan identifikasi kelemahan model atau pipeline. Hasil evaluasi digunakan sebagai dasar perbaikan.
+	19
+	Responsible AI & Manajemen Resiko Penggunaannya
+	2%
+	Tidak mempertimbangkan risiko, bias, privasi, atau keterbatasan AI. Tidak ada penjelasan kepada pengguna mengenai hasil AI.
+	Sudah mengidentifikasi keterbatasan AI, tetapi belum diterapkan secara jelas dalam aplikasi. Aspek privasi dan potensi bias belum dianalisis secara memadai.
+	Menjelaskan keterbatasan AI, memberikan penanda bahwa hasil berasal dari AI, memperhatikan privasi pengguna, dan mengidentifikasi potensi bias atau hasil yang tidak tepat.
+	Mengidentifikasi dan menguji potensi bias pada variasi input atau kelompok pengguna relevan. Perlindungan data diterapkan, keterbatasan AI dijelaskan transparan, serta tersedia mekanisme menangani output yang tidak tepat atau berisiko.
+	DOCUMENTATION
+	20
+	Technical Documentation & GitHub Workflow
+	   5%
+	Repository GitHub tidak tersedia atau tidak memiliki dokumentasi memadai. Struktur kode tidak jelas dan cara menjalankan aplikasi tidak dijelaskan.
+	Repository GitHub tersedia, tetapi README, dokumentasi API, atau dokumentasi fitur AI belum lengkap. Penggunaan branch dan commit belum konsisten.
+	Repository memiliki README, petunjuk instalasi dan deployment, API documentation, serta dokumentasi fitur AI. Menggunakan branch development dan master, feature branch, commit message jelas, dan pull request.
+	Dokumentasi lengkap dan mudah diikuti, mencakup arsitektur sistem, ERD, API, model AI, sumber data, pipeline, hasil evaluasi, dan deployment. GitHub workflow diterapkan konsisten dengan riwayat commit dan pull request yang mencerminkan kolaborasi tim.
+	
+
+Cara Perhitungan
+* Total bobot seluruh kriteria adalah 100% dengan detail:
+   * Product & Problem-Solution Fit (10%)
+   * Front-End (20%)
+   * Back-End (20%)
+   * Database (20%)
+   * AI (25%)
+   * Documentation (5%)
+* Authentication dan authorization tidak menjadi kriteria tersendiri karena tidak semua project memerlukan login.
+
+
+Panduan Final Project  |  Program Perempuan Inovasi x IBM SkillsBuild
+	Halaman

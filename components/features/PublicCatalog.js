@@ -8,12 +8,12 @@ import { requestApi } from "@/lib/api-client";
 import { DaycareCard, DemoPhoto, LinkButton, Panel } from "./ParentUI";
 import p from "./Parent.module.css";
 
-// Public catalog from /api/daycare/list (no login needed).
+// Public catalog from /api/daycares (no login needed).
 function useDirectory() {
   const [state, setState] = useState({ daycares: [], loading: true, error: "" });
   useEffect(() => {
     const controller = new AbortController();
-    requestApi("/api/daycare/list", { signal: controller.signal })
+    requestApi("/api/daycares", { signal: controller.signal })
       .then(daycares => setState({ daycares: Array.isArray(daycares) ? daycares : [], loading: false, error: "" }))
       .catch(error => { if (error.name !== "AbortError") setState({ daycares: [], loading: false, error: error.message || "Data daycare tidak dapat dimuat." }); });
     return () => controller.abort();
