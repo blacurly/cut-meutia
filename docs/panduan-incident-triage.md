@@ -64,6 +64,13 @@ Saat rubrik berubah, naikkan versinya (misalnya `draf-1` menjadi `v1`), lalu sam
 
 ## 4. Menyiapkan data
 
+> **Keputusan tim (12 November 2026): data sintetis saja.** Notebook berjalan dengan `SYNTHETIC_ONLY = True`. File `test_manual.csv` dan `label_ganda.csv` (bagian 4.2–4.3) **tidak wajib**. Yang tetap dikerjakan:
+> - rubrik bagian 3 dibahas dan disahkan mentor;
+> - uji regresi Sel 10 lolos semua;
+> - opsional: `parafrase.csv` (bagian 4.4), untuk menambah variasi gaya bahasa.
+>
+> Konsekuensinya, angka evaluasi berasal dari variasi kalimat sintetis yang tidak dipakai training, bukan dari laporan nyata. Hal ini **wajib** ditulis sebagai batasan (bagian 7). Bagian 4.2–4.3 tetap disimpan sebagai cara meningkatkan kualitas di masa depan.
+
 Semua file diletakkan di `MyDrive/ayomi-triage/data/`, dalam format CSV UTF-8. Paling mudah membuatnya di Google Sheets, lalu memilih **File → Download → CSV**.
 
 ### 4.1 Data sintetis (otomatis)
@@ -164,11 +171,11 @@ Laporan: "<laporan>"
 
 ## 6. Kriteria lulus sebelum integrasi
 
-Semua kriteria diukur pada **test manual**. Notebook mencetak `ready_for_integration` di Sel 12.
+Semua kriteria diukur pada **test manual**. Dalam mode data sintetis saja, kriteria diukur pada **test sintetis**, yaitu variasi kalimat yang tidak dipakai training. Notebook mencetak `ready_for_integration` dan `evaluation_data` di Sel 12.
 
 | Kriteria | Target |
 | --- | --- |
-| Kappa antar-pelabel | ≥ 0,6 |
+| Kappa antar-pelabel | ≥ 0,6 (tidak berlaku dalam mode data sintetis saja) |
 | `recall_emergency` | ≥ 0,95 |
 | `under_triage` | ≤ 5% |
 | `severe_under` (emergency dinilai low atau medium) | 0 |
@@ -189,7 +196,7 @@ Semua kriteria diukur pada **test manual**. Notebook mencetak `ready_for_integra
 - **Hasil evaluasi:** tabel hasil Sel 9 (baseline vs IndoBERT, dan pelapor saja vs sistem `max`) beserta confusion matrix.
 - **Analisis bias** per gaya tulisan, panjang laporan, dan sumber data. Selisih antara hasil test sintetis dan test manual **wajib** dilaporkan.
 - **Batasan:**
-  - test berasal dari laporan rekaan, bukan insiden nyata;
+  - **training dan evaluasi hanya memakai data sintetis** dari bank skenario. Angka evaluasi mengukur generalisasi pada kalimat buatan yang belum pernah dilihat model, bukan akurasi pada laporan nyata;
   - laporan sangat singkat dinilai abstain;
   - istilah daerah yang jarang dan laporan dengan beberapa kejadian bisa salah dinilai;
   - model tidak menggantikan penilaian Pengelola maupun tenaga kesehatan.
@@ -220,11 +227,9 @@ Bagian ini masih rencana dan belum ada kodenya di project. Database live sudah m
 ## 9. Checklist
 
 - [ ] Rubrik `draf-1` dibahas tim dan dikirim ke mentor
-- [ ] Notebook Sesi A berjalan sampai Sel 10
-- [ ] `test_manual.csv` (200) selesai, ditulis manusia, tanpa identitas asli
-- [ ] `label_ganda.csv` (≥ 300) selesai, kappa ≥ 0,6
 - [ ] Rubrik disahkan (`v1`) dan `RUBRIC_VERSION` diperbarui
-- [ ] Sesi B: kriteria lulus bagian 6 terpenuhi (`ready_for_integration = True`)
-- [ ] Space berjalan, uji API lolos (200/401/422/413, hasil sama dengan notebook)
+- [ ] Notebook Sel 1–12 berjalan dengan `SYNTHETIC_ONLY = True`: kriteria lulus bagian 6 terpenuhi (`ready_for_integration = True`)
+- [ ] (Opsional) `parafrase.csv` untuk kategori yang lemah di analisis bias
+- [ ] API berjalan di VM Oracle (`triage.<ip>.sslip.io`), uji API lolos (200/401/422/413, hasil sama dengan notebook)
 - [ ] Hasil evaluasi, bias, dan batasan ditulis di dokumentasi
 - [ ] Integrasi backend dan UI (bagian 8)
