@@ -11,7 +11,7 @@ REST API dibangun dengan Next.js Route Handlers di `app/api/`. Logika bisnis dan
 
 ## Konvensi
 
-- Body request dan response berformat JSON. Request dengan body wajib memakai `Content-Type: application/json` (selain itu `415`). Field yang tidak dikenal ditolak (`400 invalid_fields`).
+- Body request dan response berformat JSON. Request dengan body wajib memakai `Content-Type: application/json` (selain itu `415`), kecuali endpoint unggah berkas yang menerima `multipart/form-data`. Field yang tidak dikenal ditolak (`400 invalid_fields`).
 - Request `POST`/`PATCH`/`DELETE` dari situs lain ditolak (`403 invalid_origin`).
 - Header opsional `Idempotency-Key` (12–100 karakter) membuat pengiriman ulang tidak menggandakan data, misalnya laporan insiden dan pembayaran.
 - Semua response memakai `Cache-Control: private, no-store`.
@@ -41,14 +41,52 @@ Daftar lengkap kode error dan pesannya ada di `lib/api/errors.js`.
 | POST | `/api/auth/register` | Publik | Daftar akun Orang Tua |
 | POST | `/api/auth/login` | Publik | Masuk; mengembalikan peran, tujuan halaman, dan `access_token` |
 | POST | `/api/auth/logout` | Publik | Keluar dan hapus cookie sesi |
-| GET | `/api/daycares` | Publik | Katalog daycare dengan filter server (lihat di bawah). Alias lama: `/api/daycare/list` |
-| GET | `/api/daycares/{id}` | Publik | Detail daycare berdasarkan UUID atau slug: profil, galeri, paket biaya |
+| GET | `/api/daycares` | Publik | Katalog daycare dengan filter server (lihat di bawah), termasuk mitra aktif melalui RPC dengan kolom publik yang dibatasi. Alias lama: `/api/daycare/list` |
+| GET | `/api/daycares/{id}` | Publik | Detail daycare berdasarkan UUID atau slug: profil, galeri, paket biaya; data mitra aktif diambil melalui RPC dengan kolom publik yang dibatasi |
 | GET | `/api/daycares/compare?ids=a,b,c` | Publik | Bandingkan 2–3 daycare berdampingan |
 | GET | `/api/daycares/{id}/offerings` | Publik | Layanan dan harga yang disetujui dari daycare mitra |
 | GET | `/api/daycares/{id}/reviews` | Publik | Ulasan yang lolos moderasi (tanpa identitas penulis) |
 | GET | `/api/me` | Login | Profil Orang Tua dan daftar anak |
 | PATCH | `/api/me` | Orang Tua | Ubah nama dan nomor WhatsApp |
 | GET | `/api/me/daycares` | Login | Daycare tempat pengguna menjadi Pengelola/Pengasuh |
+| GET | `/api/admin/partners` | Admin | Daftar daycare mitra, status, dan Manager aktif |
+| POST | `/api/admin/partners` | Admin | Buat daycare nonaktif dan undangan Manager; token undangan dikembalikan satu kali |
+| PATCH | `/api/admin/partners/{id}` | Admin | Ubah status mitra dengan alasan dan catatan audit |
+| GET | `/api/me/daycares/{id}/onboarding` | Manager daycare | Muat profil, layanan/harga, dan status dokumen untuk onboarding |
+| PATCH | `/api/me/daycares/{id}/profile` | Manager daycare | Perbarui profil, fasilitas, jam buka, dan kapasitas |
+| GET | `/api/me/daycares/{id}/offerings` | Manager daycare | Daftar layanan dan riwayat harga |
+| POST/PATCH | `/api/me/daycares/{id}/offerings` | Manager daycare | Buat/perbarui layanan dan ajukan versi harga baru |
+| GET/POST | `/api/me/daycares/{id}/documents` | Manager daycare | Daftar dokumen atau unggah dokumen legal privat (PDF/JPG/PNG, maks. 15 MB) |
+| GET/POST | `/api/me/daycares/{id}/photos` | Manager daycare | Lihat foto sendiri atau ajukan foto fasilitas (JPG/PNG/WEBP, maks. 8 MB); foto pending tidak publik |
+| GET | `/api/daycares/{id}/photos` | Publik | Foto yang disetujui untuk daycare aktif; tautan foto berlaku 5 menit |
+| GET | `/api/admin/photos` | Admin | Antrean moderasi foto fasilitas |
+| PATCH | `/api/admin/photos/{id}` | Admin | Setujui atau tolak foto dengan alasan |
+| GET | `/api/admin/daycare-documents?daycare_id={id}` | Admin | Daftar berkas legal untuk verifikasi |
+| PATCH | `/api/admin/daycare-documents/{id}` | Admin | Setujui, tolak, atau minta revisi dokumen dengan alasan |
+| GET | `/api/daycare-documents/{id}/file` | Manager daycare terkait / Admin | Dapatkan URL bertanda tangan yang berlaku 5 menit |
+| GET | `/api/admin/prices` | Admin | Antrean harga baru yang menunggu keputusan |
+| PATCH | `/api/admin/prices/{id}` | Admin | Setujui atau tolak harga yang diajukan Manager |
+| GET | `/api/me/daycares/{id}/staff` | Manager daycare | Daftar Pengasuh daycare |
+| POST | `/api/me/daycares/{id}/staff/invitations` | Manager daycare | Buat undangan Pengasuh; token dikembalikan satu kali untuk dibagikan |
+| DELETE | `/api/me/daycares/{id}/staff/{memberId}` | Manager daycare | Nonaktifkan keanggotaan Pengasuh dengan alasan |
+| GET/POST | `/api/me/daycares/{id}/delegations` | Manager daycare | Daftar delegasi aktif/riwayat atau delegasikan izin terbatas ke Pengasuh |
+| DELETE | `/api/me/daycares/{id}/delegations/{delegationId}` | Manager daycare | Cabut delegasi dengan alasan |
+| GET/POST | `/api/children/{id}/pickup-authorizations` | Orang Tua anak | Daftar atau beri izin penjemput tetap/sekali pakai |
+| DELETE | `/api/pickup-authorizations/{authorizationId}` | Orang Tua pemberi izin | Cabut izin penjemput yang belum digunakan |
+| GET/POST | `/api/enrollments/{id}/pickup` | GET Parent/Manager/Admin; POST Manager atau Pengasuh dengan delegasi `confirm_pickup` | Riwayat pickup dengan URL bukti 5 menit atau catat verifikasi/serah-terima dengan foto privat |
+| GET/POST | `/api/complaints` | Pengaju terautentikasi; pembuatan untuk Orang Tua | Daftar laporan sendiri atau buat laporan terkait pengajuan/insiden |
+| PATCH | `/api/complaints/{id}` | Orang Tua pengaju | Balas permintaan informasi, terima penyelesaian, atau tolak dengan alasan |
+| GET | `/api/admin/complaints?status={status}&priority={priority}` | Admin | Antrean komplain dengan prioritas emergency lebih dahulu |
+| PATCH | `/api/admin/complaints/{id}` | Admin | Mulai, minta informasi, usulkan penyelesaian, atau alihkan penanggung jawab |
+| GET/POST | `/api/admin/investigations` | Admin | Daftar investigasi atau mulai investigasi dari komplain/insiden |
+| PATCH | `/api/admin/investigations/{id}` | Admin | Perbarui status, temuan, dan rekomendasi; penyelesaian wajib berisi temuan |
+| GET/POST | `/api/complaints/{id}/attachments` | Pengaju laporan; GET juga Manager terkait/Admin | Daftar tautan bukti atau unggah bukti PDF/JPG/PNG/WEBP (maks. 10 MB) |
+| GET/POST | `/api/admin/investigations/{id}/attachments` | Admin | Baca atau unggah bukti internal investigasi |
+| GET/POST | `/api/admin/sanctions` | Admin | Daftar sanksi atau buat sanksi dengan bukti; sanksi aktif membatasi akses akun/daycare |
+| PATCH | `/api/admin/sanctions/{id}` | Admin | Cabut sanksi dengan alasan dan catatan audit |
+| GET | `/api/admin/staff` | Admin | Daftar Pengasuh yang menunggu verifikasi |
+| PATCH | `/api/admin/staff/{id}` | Admin | Setujui atau tolak Pengasuh dengan alasan |
+| POST | `/api/invitations/accept` | Login dengan email undangan | Terima undangan Manager/Pengasuh setelah token dan email diverifikasi |
 | GET | `/api/children` | Orang Tua | Daftar anak |
 | POST | `/api/children` | Orang Tua | Tambah anak |
 | GET | `/api/children/{id}` | Orang Tua | Detail anak |
@@ -288,6 +326,20 @@ Komentar 1–1.000 karakter. Komentar Orang Tua memberi notifikasi ke pengasuh p
 ```
 
 `201 Created` → `{ "id": "…" }`. Nilai `urgency`: `low`, `medium`, `high`, `emergency`, dipilih manual oleh pelapor. Orang Tua, Pengelola, dan Admin menerima notifikasi. Kirim `Idempotency-Key` agar pengiriman ulang tidak membuat laporan ganda.
+
+## Penjemputan dan delegasi
+
+Manager dapat mendelegasikan izin terbatas kepada Pengasuh aktif untuk periode tertentu. Pengasuh yang memiliki `confirm_pickup` dapat mencatat penjemputan, tetapi tidak dapat membaca riwayat. Orang Tua dapat mendaftarkan penjemput tetap atau izin satu kali untuk enrollment tertentu. Pencatatan `verification_status: "verified"` memerlukan foto JPG/PNG/WEBP maksimal 8 MB, izin yang cocok (atau identitas Parent yang cocok), check-in pada tanggal layanan, dan enrollment berstatus approved. Keberhasilan pencatatan foto, konsumsi izin satu kali, dan penyelesaian enrollment terjadi dalam satu transaksi. Catatan gagal tidak menyelesaikan enrollment. `late_minutes` disimpan `null` sampai jam layanan dan masa toleransi ditetapkan.
+
+`POST /api/enrollments/{id}/pickup` menerima `multipart/form-data`: `verification_status`, `verification_note`, `collector_name`, `collector_phone`, `relationship`, `source` (`parent`, `authorized`, atau `unknown`), `authorization_id` bila ada, dan `file` wajib untuk status `verified`. GET mengembalikan URL bertanda tangan 5 menit untuk foto yang boleh dilihat.
+
+## Komplain dan investigasi
+
+Parent dapat mengirim komplain umum atau yang terkait enrollment/insiden miliknya. Admin memulai penanganan, meminta informasi, mengusulkan penyelesaian, dan mengalihkan penanggung jawab. Pengaju mendapat 72 jam untuk menerima atau menolak usulan; penolakan harus menyertakan alasan dan mengembalikan kasus ke `in_progress`. Supabase Cron menjalankan penutupan kasus yang melewati tenggat setiap 15 menit.
+
+## Sanksi Admin
+
+`POST /api/admin/sanctions` menerima `multipart/form-data` dengan tepat satu target (`target_user_id` atau `target_daycare_id`), `sanction_type` (`freeze` atau `block`), `reason`, `starts_at`, `ends_at` opsional, `investigation_id` opsional, dan `file` bukti wajib. Bukti privat dibatasi PDF/JPG/PNG/WEBP maksimal 10 MB. Sanksi akun aktif membuat fungsi akses mengembalikan role tidak aktif; sanksi daycare membatasi operasi untuk daycare tersebut. `block` tanpa waktu akhir tetap aktif sampai Admin mencabutnya.
 
 ## Ulasan — `POST /api/reviews`
 
