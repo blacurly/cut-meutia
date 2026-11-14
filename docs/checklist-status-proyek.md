@@ -11,7 +11,7 @@ Legenda:
 
 | Area | ✅ | 🟡 | ⬜ | Keterangan |
 | --- | --- | --- | --- | --- |
-| Backend non-AI (API + RPC) | 18 | 0 | 0 | Semua modul ada, termasuk onboarding mitra, komplain, investigasi, sanksi, delegasi, dan penjemputan (migrasi 043–060, sudah aktif di database live) |
+| Backend non-AI (API + RPC) | 19 | 0 | 0 | Termasuk lampiran foto logbook dan bukti insiden (migrasi 20261114, aktif di database live) |
 | Frontend Orang Tua | 6 | 7 | 0 | Navbar, katalog, detail, dan akun sudah nyata. Pendaftaran, logbook, laporan, dan ulasan masih demo |
 | Frontend Pengelola/Pengasuh | 1 | 7 | 2 | Halaman `/undangan` sudah nyata. Halaman lain masih memakai data demo |
 | Frontend Admin | 0 | 4 | 3 | Seluruh halaman masih memakai data demo |
@@ -49,8 +49,8 @@ Detail endpoint ada di [api.md](./api.md).
 | Katalog publik | `/api/daycares`, `/{id}`, `/compare`, `/{id}/photos`. Mitra aktif dibaca lewat RPC publik (`app_list_public_daycares`) | ✅ |
 | Anak, kesehatan, izin penjemput | `/api/children/*`, `/api/children/{id}/pickup-authorizations` | ✅ |
 | Pendaftaran & pembayaran manual | `/api/enrollments/*`, `/payments`, `/pickup`, `/api/admin/transactions/{id}` | ✅ |
-| Logbook, love, komentar | `/api/enrollments/{id}/activities`, `/api/activities/{id}/*` | ✅ |
-| Insiden | `/api/incidents/*` | ✅ |
+| Logbook, love, komentar, foto | `/api/enrollments/{id}/activities`, `/api/activities/{id}/*` termasuk `/photos` | ✅ |
+| Insiden dan lampiran bukti | `/api/incidents/*` termasuk `/api/incidents/{id}/evidence` | ✅ |
 | Ulasan & moderasi manual | `/api/reviews/*`, `/api/admin/moderation` | ✅ |
 | Notifikasi | `/api/notifications/*` | ✅ |
 | Onboarding mitra (Annisa) | `/api/admin/partners`, `/api/me/daycares/{id}/{onboarding,profile,offerings,documents,photos,staff,delegations}`, `/api/admin/{prices,documents,daycare-documents,photos,staff}` | ✅ |
@@ -62,7 +62,7 @@ Detail endpoint ada di [api.md](./api.md).
 | # | Masalah | Tindakan |
 | --- | --- | --- |
 | B1 | Snapshot skema (`supabase/schema/live_schema_snapshot.sql`) belum memuat migrasi 043–060 | Dump ulang snapshot dari database live |
-| B2 | Policy `daycares_specific_user_read` di database live | Katalog sekarang memakai RPC publik. Cek apakah policy ini masih dibutuhkan; kalau tidak, hapus lewat migrasi |
+| B2 | Policy `daycares_specific_user_read` di database live | ✅ Sudah tidak ada saat dicek 14 November; katalog memakai RPC publik |
 | B3 | Password database pernah dibagikan | Ganti password database di dashboard Supabase |
 | B4 | Rate limit AI disimpan per instance server | Pindahkan ke tabel database atau KV saat AI dipakai di produksi |
 
@@ -129,3 +129,14 @@ Prioritas bisnis: **(1) Laporan Harian Instan** (Foto Fokus Anak + Logbook Draft
 | A2 | CHECK `ai_jobs` untuk `review_summary` tidak sesuai kontrak | Selaraskan lewat migrasi sebelum dipakai |
 | A3 | Hugging Face Space Docker kini butuh PRO | API CV di-host di Oracle Cloud (Always Free) |
 | A4 | Triage hanya diuji dengan data sintetis | Laporkan sebagai batasan; angka evaluasi bukan akurasi di dunia nyata |
+
+## Status database per 14 November 2026
+
+| Item | Status saat ini | Tindak lanjut |
+| --- | --- | --- |
+| D1 — lampiran foto logbook dan bukti insiden | ✅ API dan migration `20261114093328_logbook_incident_media` serta `20261114101228_delete_reviewed_logbook_originals` aktif di Supabase. Upload memakai bucket privat; foto asli dihapus setelah varian disetujui. | Audit struktur baca-saja `supabase/audits/verify_logbook_incident_media.sql` lulus pada 14 November. Pengujian upload dengan akun Parent/Pengelola/Pengasuh belum dilakukan. |
+| D2 — email/WhatsApp | ⬜ Belum ada pilihan provider; in-app cukup untuk MVP. | Putuskan provider hanya jika notifikasi eksternal masuk scope. |
+| D3/B1 — snapshot skema | ⬜ Snapshot masih tertinggal dari database live. | Buat ulang dengan Supabase CLI dan akses database; jangan edit snapshot manual. |
+| D4 — migration 058 | ⬜ Tidak ada file lokal dan belum jelas apakah nomor itu dilewati. | Konfirmasi ke Annisa sebelum membuat atau mengubah migration. |
+| B3 — password database | ⬜ Perlu rotasi di dashboard Supabase karena pernah dibagikan. | Pemilik proyek mengganti password dari dashboard; jangan taruh password di repo/chat. |
+| B4 — rate limit AI | 🟡 Masih per instance dan belum dipakai untuk AI produksi. | Tunda sampai endpoint AI dipakai di produksi, lalu pindahkan ke penyimpanan bersama. |
