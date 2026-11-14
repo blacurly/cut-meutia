@@ -34,3 +34,7 @@ Migrasi 035–038 dan 040 hanya berisi `CREATE OR REPLACE FUNCTION` dan pengatur
 - PL/pgSQL tidak memeriksa nama kolom saat fungsi dibuat. Jalankan `node --test lib/supabase-schema.test.mjs` sebelum menerapkan migrasi baru; test ini membandingkan setiap `INSERT`/`UPDATE` dengan snapshot.
 - Jadwalkan `SELECT public.app_expire_overdue_enrollments();` di Supabase Cron (misalnya setiap 10 menit) agar checkout yang lewat batas bayar berubah menjadi `expired`.
 - Setelah mengubah skema, buat ulang snapshot agar tetap menjadi sumber kebenaran.
+
+## Update 2026-11-14
+
+Migrasi `20261114093328_logbook_incident_media.sql` menambah upload foto logbook dan bukti insiden, aturan Storage privat, metadata lampiran, tinjauan varian Foto Fokus Anak, dan syarat 1–3 varian `ready` sebelum catatan normal dikirim. Migrasi `20261114101228_delete_reviewed_logbook_originals.sql` menghapus foto asli setelah review berhasil. Keduanya diterapkan ke database live pada 2026-11-14. Snapshot `schema/live_schema_snapshot.sql` belum diperbarui; buat ulang dari database live sebelum merilis perubahan terkait schema, jangan edit snapshot secara manual.

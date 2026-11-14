@@ -106,6 +106,8 @@ Daftar lengkap kode error dan pesannya ada di `lib/api/errors.js`.
 | PATCH | `/api/enrollments/{id}/activities/{activityId}` | Pengasuh penulis | Ubah draf (wajib alasan perubahan) |
 | DELETE | `/api/enrollments/{id}/activities/{activityId}` | Pengasuh penulis | Hapus draf yang belum terkirim |
 | POST | `/api/activities/{id}/acknowledgements` | Orang Tua / Pengelola | Tandai dibaca (`parent_read`) atau ditinjau (`manager_review`) |
+| GET, POST | `/api/activities/{id}/photos` | Pengasuh bertugas | Daftar foto; unggah foto asli dan varian Foto Fokus Anak untuk ditinjau |
+| PATCH | `/api/activities/{id}/photos/{variantId}` | Pengasuh bertugas, Pengelola | Tandai varian foto `ready` atau `failed` setelah tinjauan |
 | PUT | `/api/activities/{id}/love` | Orang Tua | Beri tanda love (favorit) pada catatan |
 | DELETE | `/api/activities/{id}/love` | Orang Tua | Hapus tanda love |
 | GET | `/api/activities/{id}/comments` | Orang Tua, Pengelola, Pengasuh bertugas | Daftar komentar catatan |
@@ -114,6 +116,7 @@ Daftar lengkap kode error dan pesannya ada di `lib/api/errors.js`.
 | GET | `/api/incidents` | Orang Tua, Pengelola, Admin | Laporan insiden sesuai cakupan |
 | POST | `/api/incidents` | Orang Tua, Pengelola, Pengasuh bertugas | Laporkan insiden |
 | PATCH | `/api/incidents/{id}` | Pengelola, Admin | Ubah status (`in_progress`, `resolved`) |
+| GET, POST | `/api/incidents/{id}/evidence` | Orang Tua, Pengelola, Admin | Daftar atau unggah foto bukti insiden |
 | POST | `/api/incidents/{id}/acknowledgement` | Orang Tua | Konfirmasi sudah membaca laporan |
 | POST | `/api/reviews` | Orang Tua | Tulis ulasan setelah pengasuhan selesai |
 | DELETE | `/api/reviews/{id}` | Orang Tua | Tarik ulasan |
@@ -129,6 +132,9 @@ Daftar lengkap kode error dan pesannya ada di `lib/api/errors.js`.
 | POST | `/api/ai/focus/render` | Pengasuh, Pengelola, Admin | Foto Fokus Anak: foto dengan hanya anak target yang tajam |
 
 Endpoint dengan CRUD lengkap: `/api/children`, `/api/enrollments`, `/api/enrollments/{id}/activities`, dan `/api/activities/{id}/comments`.
+
+**Foto logbook.** `POST /api/activities/{id}/photos` menerima multipart `file`, `child_id`, dan `target_polygon` (JSON poligon hasil `/api/ai/focus/segment`). Server menghasilkan varian lewat layanan Foto Fokus Anak, menyimpan original di bucket privat tanpa akses baca, lalu menyimpan varian sebagai `processing`. Pengasuh bertugas atau Pengelola harus meninjau varian sebelum status `ready`; Orang Tua hanya mendapat tautan bertanda tangan untuk varian `ready` pada catatan yang sudah dikirim. Saat disetujui, foto asli langsung dihapus dari Storage; bila penghapusan gagal, respons memuat `cleanup_pending: true` dan reviewer yang sama dapat mengulang PATCH. Catatan normal perlu 1–3 foto `ready`; catatan urgent boleh tanpa foto.
+**Bukti insiden.** `POST /api/incidents/{id}/evidence` menerima satu foto JPG, PNG, atau WebP maksimal 10 MB. Bukti disimpan privat dan tautan bertanda tangan berlaku lima menit.
 
 **Tautan undangan staf.** `POST /api/admin/partners` dan `POST /api/me/daycares/{id}/staff/invitations` mengembalikan `invitation_token` satu kali. Bagikan tautan berformat `https://<domain>/undangan#<invitation_token>`. Halaman `/undangan` meminta pengguna masuk atau mendaftar dengan email undangan, lalu memanggil `POST /api/invitations/accept`. Token diletakkan di *fragment* URL, sehingga tidak ikut terkirim ke server sebagai bagian URL.
 
@@ -362,3 +368,4 @@ Parent dapat mengirim komplain umum atau yang terkait enrollment/insiden milikny
 | Unit test API dan validasi | `node --test lib/*.test.mjs lib/api/*.test.mjs` |
 | Kecocokan migrasi dengan skema yang berjalan | `node --test lib/supabase-schema.test.mjs` |
 | Alur end-to-end di database (otomatis ROLLBACK) | Jalankan `supabase/tests/e2e_non_ai_flow.sql` di SQL Editor; hasil akhir `E2E OK` |
+
