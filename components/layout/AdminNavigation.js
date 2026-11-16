@@ -11,7 +11,7 @@ const MENU = [
 ];
 
 export function AdminNavbar() {
-  return <StaffNavbar home="/admin" badge="Administrator" />;
+  return <StaffNavbar home="/admin" badge="Administrator" menu={MENU} />;
 }
 
 export default function AdminSidebar() {

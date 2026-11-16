@@ -4,7 +4,7 @@
 // Pick a photo, let the CV service find the people (POST /api/ai/focus/segment),
 // and choose the child to keep in focus. Calls onReady({ blob, polygon }).
 import { useEffect, useState } from "react";
-import { Camera } from "lucide-react";
+import { Camera, Image as ImageIcon } from "lucide-react";
 import { apiSend } from "@/lib/client-api";
 import { ErrorNote, Loading } from "./ui";
 import p from "@/components/features/Parent.module.css";
@@ -45,17 +45,25 @@ export default function PhotoTargetPicker({ onReady, disabled }) {
       setSegment(data); setTarget(data.suggested_target_id);
       setState({ busy: false, error: null });
     } catch (error) {
-      setState({ busy: false, error: error.message === "encode" ? "Foto tidak dapat dibaca. Gunakan JPG, PNG, atau WebP." : error });
+      setState({ busy: false, error: error.message === "encode" || error.name === "InvalidStateError" || error.name === "EncodingError" ? "Foto tidak dapat dibaca. Gunakan JPG, PNG, atau WebP (foto HEIC iPhone: atur Kamera ke Paling Kompatibel)." : error });
     }
   }
 
   const people = segment?.people ?? [];
   const chosen = people.find(person => person.id === target);
   return <div className={p.stack} style={{ gap: 10 }}>
-    <label className={`${p.button} ${p.secondary}`} style={{ width: "fit-content", cursor: "pointer" }}>
-      <Camera size={16} />{photo ? "Ganti foto" : "Pilih foto"}
-      <input type="file" accept="image/jpeg,image/png,image/webp" onChange={choose} hidden disabled={disabled} />
-    </label>
+    <div className={p.row}>
+      {/* capture="environment" opens the phone's rear camera directly. */}
+      <label className={p.button} style={{ cursor: "pointer" }}>
+        <Camera size={16} />{photo ? "Ambil foto lagi" : "Ambil foto"}
+        <input type="file" accept="image/*" capture="environment" onChange={choose} hidden disabled={disabled} />
+      </label>
+      <label className={`${p.button} ${p.secondary}`} style={{ cursor: "pointer" }}>
+        <ImageIcon size={16} />Pilih dari galeri
+        <input type="file" accept="image/*" onChange={choose} hidden disabled={disabled} />
+      </label>
+    </div>
+    <p className={p.small}>Foto dikecilkan ke {MAX_SIDE} px dan data lokasi (EXIF) dibuang sebelum dikirim. AI lalu menandai setiap orang di foto.</p>
     {state.busy && <Loading label="AI mencari anak di foto…" />}
     <ErrorNote error={state.error} />
     {photo && segment && <>

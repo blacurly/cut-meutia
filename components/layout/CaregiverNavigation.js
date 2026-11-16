@@ -2,6 +2,7 @@
 
 import { BookOpen, Building2, ClipboardList, FileCheck2, LayoutDashboard, MessageSquare, ScanFace, ShieldAlert, Users } from "lucide-react";
 import { useDaycare } from "@/components/live/DaycareContext";
+import { useSession } from "@/components/session/SessionProvider";
 import { StaffNavbar, StaffSidebar } from "./StaffNavigation";
 
 const MANAGER_MENU = [
@@ -22,8 +23,11 @@ const CAREGIVER_MENU = [
   ["Uji Foto Fokus (AI)", "/pengelola/foto-fokus", ScanFace],
 ];
 
+// The navbar sits outside DaycareProvider, so the mobile menu follows the
+// account role (users.role); the sidebar follows the daycare membership.
 export function CaregiverNavbar() {
-  return <StaffNavbar home="/pengelola" badge="Portal daycare" />;
+  const session = useSession();
+  return <StaffNavbar home="/pengelola" badge="Portal daycare" menu={session.role === "manager" ? MANAGER_MENU : session.role === "caregiver" ? CAREGIVER_MENU : []} />;
 }
 
 // Rendered inside DaycareProvider (components/layout/CaregiverShell.js).
