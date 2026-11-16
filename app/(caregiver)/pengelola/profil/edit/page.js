@@ -1,5 +1,4 @@
-import { CaregiverBusinessEdit } from "@/components/features/CaregiverBusiness";
+import { ManagerProfile } from "@/components/live/StaffPages";
 
-export const metadata = { title: "Edit Profil Bisnis Ayomi" };
-export default function Page() { return <CaregiverBusinessEdit/>; }
-
+export const metadata = { title: "Ubah Profil Bisnis | Ayomi" };
+export default function Page() { return <ManagerProfile editing />; }

@@ -1,5 +1,4 @@
-import CaregiverDashboard from "@/components/features/CaregiverDashboard";
+import { StaffDashboard } from "@/components/live/StaffPages";
 
 export const metadata = { title: "Dashboard Pengelola Ayomi" };
-export default function Page() { return <CaregiverDashboard/>; }
-
+export default function Page() { return <StaffDashboard />; }

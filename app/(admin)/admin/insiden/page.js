@@ -1,4 +1,4 @@
-import AdminIncidents from "@/components/features/AdminIncidents";
+import { AdminIncidents } from "@/components/live/AdminPages";
 
-export const metadata = { title: "Pusat Eskalasi Insiden | Ayomi" };
-export default function Page() { return <AdminIncidents/>; }
+export const metadata = { title: "Insiden & Komplain | Ayomi" };
+export default function Page() { return <AdminIncidents />; }

@@ -284,25 +284,7 @@
     background: #f1f5f9;
 }
 
-.demoBar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    padding: 8px 20px;
-    border-bottom: 1px solid #e9c46a45;
-    background: #fffaf0;
-    color: #79622f;
-    font-size: 10px;
-    line-height: 1.8;
-}
 
-.demoBar a {
-    font-weight: 700;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-}
 
 .footer {
     border-top: 1px solid #e2e8f0;
@@ -467,11 +449,6 @@
 
     .tray strong {
         font-size: 11px;
-    }
-
-    .demoBar {
-        font-size: 9px;
-        gap: 6px;
     }
 
     .dropdown {

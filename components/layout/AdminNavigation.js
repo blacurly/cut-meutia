@@ -1,21 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Bell, Building2, ChevronDown, FileCheck2, LayoutDashboard, Menu, ShieldAlert, ShieldCheck, X } from "lucide-react";
-import AyomiLogo from "@/components/ui/AyomiLogo";
-import { useParentDemo } from "@/components/features/ParentDemoProvider";
-import { adminDocuments, adminIncidents, verificationFor } from "@/lib/admin";
-import c from "@/components/features/Caregiver.module.css";
-import p from "@/components/features/Parent.module.css";
+import { Building2, FileCheck2, LayoutDashboard, ShieldAlert } from "lucide-react";
+import { StaffNavbar, StaffSidebar } from "./StaffNavigation";
 
-const menu=[["Overview platform","/admin",LayoutDashboard],["Verifikasi legalitas","/admin/verifikasi-legal",FileCheck2],["Pusat eskalasi insiden","/admin/insiden",ShieldAlert],["Manajemen daycare","/admin/daycare",Building2]];
-function Links(){const pathname=usePathname();return menu.map(([label,href,Icon])=><Link key={href} className={c.navLink} href={href} aria-current={pathname===href?"page":undefined}><Icon size={17}/>{label}</Link>);}
-export function AdminNavbar(){const {state,update}=useParentDemo();const [open,setOpen]=useState(null);const root=useRef(null);const trigger=useRef(null);const router=useRouter();const pending=adminDocuments(state).filter(d=>!verificationFor(state,d.id)).length;const urgent=adminIncidents(state).filter(r=>r.status!=="closed"&&["high","critical"].includes(r.urgency)).length;
-  useEffect(()=>{const click=e=>{if(!root.current?.contains(e.target)||e.target instanceof Element&&e.target.closest("a"))setOpen(null);};const key=e=>{if(e.key==="Escape"){setOpen(null);trigger.current?.focus();}};document.addEventListener("click",click);document.addEventListener("keydown",key);return()=>{document.removeEventListener("click",click);document.removeEventListener("keydown",key);};},[]);
-  function toggle(e,value){trigger.current=e.currentTarget;setOpen(v=>v===value?null:value);}
-  function exit(){update(s=>({...s,admin:{...s.admin,enabled:false}}));router.push("/welcome");}
-  return <header className={c.navbar} ref={root}><div className={c.navInner}><AyomiLogo href="/admin"/><span className={`${p.badge} ${c.verified}`}><ShieldCheck size={13}/>Administrator · demo lokal</span><div className={c.actions}>{state.admin.enabled&&<><button className={c.iconButton} aria-label={`Antrean admin: ${pending} dokumen dan ${urgent} insiden prioritas`} aria-expanded={open==="alerts"} aria-controls="admin-alerts" onClick={e=>toggle(e,"alerts")}><Bell size={18}/>{pending+urgent>0&&<span className={c.count}>{pending+urgent}</span>}</button><button className={c.profileButton} aria-label="Menu akun administrator" aria-expanded={open==="profile"} aria-controls="admin-profile" onClick={e=>toggle(e,"profile")}><span className={c.avatar}>AD</span><span className={c.profileLabel}>Admin Ayomi</span><ChevronDown size={14}/></button></>}<button className={`${c.iconButton} ${c.mobileToggle}`} aria-label={open==="mobile"?"Tutup navigasi admin":"Buka navigasi admin"} aria-expanded={open==="mobile"} aria-controls="admin-mobile" onClick={e=>toggle(e,"mobile")}>{open==="mobile"?<X size={19}/>:<Menu size={19}/>}</button></div>{open==="alerts"&&<div id="admin-alerts" className={c.dropdown}><strong>Antrean demo yang perlu ditinjau</strong><Link href="/admin/verifikasi-legal">{pending} dokumen tanpa keputusan</Link><Link href="/admin/insiden">{urgent} insiden prioritas tinggi / darurat</Link></div>}{open==="profile"&&<div id="admin-profile" className={c.dropdown}><strong>Administrator · akses simulasi</strong><Link href="/pengelola">Buka demo Pengelola</Link><Link href="/beranda" onClick={()=>update(s=>({...s,member:true}))}>Buka demo Orang Tua</Link><Link href="/">Katalog publik</Link><button onClick={exit}>Keluar demo administrator</button></div>}</div><div id="admin-mobile" className={`${c.mobileMenu} ${open==="mobile"?c.mobileOpen:""}`} inert={open!=="mobile"}><div><nav aria-label="Navigasi seluler administrator"><Links/><Link className={c.navLink} href="/pengelola">Portal Pengelola</Link>{state.admin.enabled&&<button className={c.navLink} onClick={exit}>Keluar demo administrator</button>}</nav></div></div></header>;
+const MENU = [
+  ["Overview platform", "/admin", LayoutDashboard],
+  ["Verifikasi legalitas", "/admin/verifikasi-legal", FileCheck2],
+  ["Insiden & komplain", "/admin/insiden", ShieldAlert],
+  ["Manajemen daycare", "/admin/daycare", Building2],
+];
+
+export function AdminNavbar() {
+  return <StaffNavbar home="/admin" badge="Administrator" />;
 }
-export default function AdminSidebar(){return <aside className={c.sidebar}><div><p className={c.sidebarLabel}>Pusat kendali Ayomi</p><div className={c.daycareWidget}><ShieldCheck size={25} color="#e9c46a"/><strong style={{marginTop:12}}>Kepercayaan dimulai<br/>dari pengawasan.</strong><p style={{fontSize:11,color:"#b7d1d4"}}>Verifikasi & keselamatan · demo</p></div></div><nav aria-label="Navigasi samping administrator"><Links/></nav><div className={c.sidebarFooter}><strong>Administrator Ayomi</strong><br/><small>Seluruh tindakan adalah simulasi lokal.</small></div></aside>;}
+
+export default function AdminSidebar() {
+  return <StaffSidebar label="Pusat kendali Ayomi" root="/admin" title="Kepercayaan dimulai dari pengawasan." subtitle="Verifikasi, moderasi, dan keselamatan" menu={MENU} />;
+}

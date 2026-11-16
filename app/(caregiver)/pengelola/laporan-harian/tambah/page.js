@@ -1,8 +1,4 @@
-import { CaregiverLogbookForm } from "@/components/features/CaregiverLogbook";
+import { StaffLogbookForm } from "@/components/live/StaffPages";
 
 export const metadata = { title: "Buat Logbook Harian Ayomi" };
-export default async function Page({ searchParams }) {
-  const params = await searchParams;
-  const draftId = typeof params.draft === "string" ? params.draft : "";
-  return <CaregiverLogbookForm key={draftId} draftId={draftId} />;
-}
+export default function Page() { return <StaffLogbookForm />; }

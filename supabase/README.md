@@ -28,6 +28,12 @@ Project: `uitkyzjezowynbedjkbw`. Semua tabel memakai RLS. Penulisan data dari br
 
 Migrasi 035–038 dan 040 hanya berisi `CREATE OR REPLACE FUNCTION` dan pengaturan hak akses, jadi aman dijalankan ulang setelah diubah. Migrasi 039, 041, dan 042 membuat tabel, jadi masing-masing dijalankan sekali.
 
+## Migrasi yang harus dijalankan (16 November 2026)
+
+| File | Isi | Status |
+| --- | --- | --- |
+| `migrations/20261116100000_caregiver_assignments_payment_queue.sql` | Dua fungsi baca: `app_caregiver_list_assignments` (daftar anak yang ditugaskan ke Pengasuh) dan `app_admin_list_payments` (antrean konfirmasi pembayaran Admin). Tidak mengubah tabel maupun policy | **Belum diterapkan.** Jalankan di SQL Editor. Tanpa migrasi ini, logbook Pengasuh dan antrean pembayaran Admin menampilkan error |
+
 ## Hal yang perlu diingat
 
 - Kunci tabel `children` adalah **`child_id`** (bukan `id`), dan `child_health_profiles` juga memakai `child_id`. Spesifikasi lama di `database/001_create_tables.sql` tidak sesuai di bagian ini.
