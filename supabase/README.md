@@ -28,11 +28,12 @@ Project: `uitkyzjezowynbedjkbw`. Semua tabel memakai RLS. Penulisan data dari br
 
 Migrasi 035–038 dan 040 hanya berisi `CREATE OR REPLACE FUNCTION` dan pengaturan hak akses, jadi aman dijalankan ulang setelah diubah. Migrasi 039, 041, dan 042 membuat tabel, jadi masing-masing dijalankan sekali.
 
-## Migrasi yang harus dijalankan (16 November 2026)
+## Migrasi terbaru (17 November 2026)
 
 | File | Isi | Status |
 | --- | --- | --- |
-| `migrations/20261116100000_caregiver_assignments_payment_queue.sql` | Dua fungsi baca: `app_caregiver_list_assignments` (daftar anak yang ditugaskan ke Pengasuh) dan `app_admin_list_payments` (antrean konfirmasi pembayaran Admin). Tidak mengubah tabel maupun policy | **Belum diterapkan.** Jalankan di SQL Editor. Tanpa migrasi ini, logbook Pengasuh dan antrean pembayaran Admin menampilkan error |
+| `migrations/20261116100000_caregiver_assignments_payment_queue.sql` | Dua fungsi baca: `app_caregiver_list_assignments` (daftar anak yang ditugaskan ke Pengasuh) dan `app_admin_list_payments` (antrean konfirmasi pembayaran Admin). Tidak mengubah tabel maupun policy | ✅ Diterapkan 17 November 2026 |
+| `migrations/20261117100000_logbook_ai_draft_jobs.sql` | Fungsi `app_record_logbook_draft_job`: mencatat draf AI logbook (berhasil/gagal) di `ai_jobs` dan menautkannya di `daily_report_activities.draft_ai_job_id`. Hanya Pengasuh pemilik draf yang sedang ditugaskan. Tidak mengubah tabel maupun policy | **Belum diterapkan.** Jalankan di SQL Editor. Tanpa migrasi ini, draf AI tetap berjalan tetapi tidak dicatat di `ai_jobs` |
 
 ## Hal yang perlu diingat
 

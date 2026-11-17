@@ -104,8 +104,9 @@ Daftar lengkap kode error dan pesannya ada di `lib/api/errors.js`.
 | POST | `/api/enrollments/{id}/payments` | Orang Tua | Catat permintaan pembayaran tagihan |
 | GET | `/api/enrollments/{id}/activities` | Orang Tua, Pengelola, Pengasuh bertugas | Catatan harian |
 | POST | `/api/enrollments/{id}/activities` | Pengasuh bertugas | Tulis catatan (draf atau kirim) |
-| PATCH | `/api/enrollments/{id}/activities/{activityId}` | Pengasuh penulis | Ubah draf (wajib alasan perubahan) |
+| PATCH | `/api/enrollments/{id}/activities/{activityId}` | Pengasuh penulis | Ubah draf (wajib alasan perubahan). Body boleh memuat `details` `{ meal }` atau `{ sleep }`; tanpa `details`, detail lama dipertahankan |
 | DELETE | `/api/enrollments/{id}/activities/{activityId}` | Pengasuh penulis | Hapus draf yang belum terkirim |
+| POST | `/api/enrollments/{id}/activities/{activityId}/ai-draft` | Pengasuh penulis | **Logbook Drafter:** draf AI dari catatan draf sendiri (usulan saja, tidak menyimpan). Lihat [ai-api.md](./ai-api.md) |
 | POST | `/api/activities/{id}/acknowledgements` | Orang Tua / Pengelola | Tandai dibaca (`parent_read`) atau ditinjau (`manager_review`) |
 | GET, POST | `/api/activities/{id}/photos` | Pengasuh bertugas | Daftar foto; unggah foto asli dan varian Foto Fokus Anak untuk ditinjau |
 | PATCH | `/api/activities/{id}/photos/{variantId}` | Pengasuh bertugas, Pengelola | Tandai varian foto `ready` atau `failed` setelah tinjauan |

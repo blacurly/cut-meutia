@@ -6,7 +6,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, ClipboardList, Copy, FileText, Plus, ShieldAlert, Users } from "lucide-react";
+import { CheckCircle2, ClipboardList, Copy, FileText, Plus, ShieldAlert, Sparkles, Users } from "lucide-react";
 import { useSession } from "@/components/session/SessionProvider";
 import { apiSend, useApi } from "@/lib/client-api";
 import { invitationUrl } from "@/lib/auth";
@@ -248,45 +248,129 @@ export function StaffLogbook() {
   </>;
 }
 
+const toIso = local => (local ? new Date(local).toISOString() : null);
+
+// Meal/sleep facts for the AI draft (stored in the activity's details).
+function activityDetails(type, meal, sleep) {
+  if (type === "meal" && (meal.food || meal.portion_consumed || meal.observed_condition)) return { meal };
+  if (type === "sleep" && sleep.started_at) {
+    return { sleep: { started_at: toIso(sleep.started_at), ended_at: toIso(sleep.ended_at), condition_after: sleep.condition_after || null } };
+  }
+  return {};
+}
+
+function DetailFields({ type, meal, sleep, setMeal, setSleep }) {
+  if (type === "meal") return <div className={p.row}>
+    <input className={p.select} placeholder="Menu (mis. nasi, sup sayur)" value={meal.food} onChange={e => setMeal("food", e.target.value)} aria-label="Menu makanan" style={{ flex: 2, minWidth: 180 }} />
+    <input className={p.select} placeholder="Porsi habis (mis. 1/2 porsi)" value={meal.portion_consumed} onChange={e => setMeal("portion_consumed", e.target.value)} aria-label="Porsi yang dimakan" style={{ flex: 1, minWidth: 150 }} />
+    <input className={p.select} placeholder="Kondisi saat makan" value={meal.observed_condition} onChange={e => setMeal("observed_condition", e.target.value)} aria-label="Kondisi saat makan" style={{ flex: 2, minWidth: 180 }} />
+  </div>;
+  if (type === "sleep") return <div className={p.row}>
+    <label className={p.small}>Mulai tidur<input type="datetime-local" className={p.select} value={sleep.started_at} max={nowLocalInput()} onChange={e => setSleep("started_at", e.target.value)} /></label>
+    <label className={p.small}>Bangun<input type="datetime-local" className={p.select} value={sleep.ended_at} max={nowLocalInput()} onChange={e => setSleep("ended_at", e.target.value)} /></label>
+    <input className={p.select} placeholder="Kondisi setelah bangun" value={sleep.condition_after} onChange={e => setSleep("condition_after", e.target.value)} aria-label="Kondisi setelah bangun" style={{ flex: 1, minWidth: 180, alignSelf: "flex-end" }} />
+  </div>;
+  return null;
+}
+
+function AiSuggestion({ draft, onUse, onDiscard, busy }) {
+  const { result, meta } = draft;
+  return <div className={p.notice} style={{ display: "block", marginTop: 4 }} aria-live="polite">
+    <p className={p.small}><Sparkles size={13} /> <strong>Draf AI</strong> · hanya dari catatan Anda · periksa sebelum dikirim</p>
+    <h3 className={p.sectionTitle} style={{ marginTop: 6 }}>{result.title}</h3>
+    <p style={{ whiteSpace: "pre-wrap", marginTop: 4 }}>{result.body}</p>
+    {result.missing_fields?.length > 0 && <p className={p.small} style={{ marginTop: 6 }}>Bisa ditambahkan: {result.missing_fields.join(", ")}.</p>}
+    <div className={p.row} style={{ marginTop: 10 }}>
+      <button type="button" className={`${p.button} ${p.mint}`} disabled={busy} onClick={onUse}>Pakai draf ini</button>
+      <button type="button" className={p.link} disabled={busy} onClick={onDiscard}>Buang</button>
+    </div>
+    {meta?.provider === "fixture" && <p className={p.small}>Mode uji: contoh tetap dari kontrak, bukan model AI.</p>}
+  </div>;
+}
+
 export function StaffLogbookForm() {
   const router = useRouter();
   const { isManager } = useDaycare();
   const writable = useWritableEnrollments();
   const [form, setForm] = useState({ enrollment_id: "", activity_type: "play", title: "", body: "", occurred_at: nowLocalInput(), is_urgent: false, urgent_reason: "" });
+  const [meal, setMealState] = useState({ food: "", portion_consumed: "", observed_condition: "" });
+  const [sleep, setSleepState] = useState({ started_at: "", ended_at: "", condition_after: "" });
+  const [activityId, setActivityId] = useState(null);
+  const [draft, setDraft] = useState(null);
+  const [aiUsed, setAiUsed] = useState(false);
   const [action, run] = useAction();
   const set = (key, value) => setForm(f => ({ ...f, [key]: value }));
+  const setMeal = (key, value) => setMealState(m => ({ ...m, [key]: value }));
+  const setSleep = (key, value) => setSleepState(m => ({ ...m, [key]: value }));
   if (isManager) return <Empty title="Catatan ditulis oleh Pengasuh">Pengelola meninjau catatan dari halaman Logbook harian.</Empty>;
-  async function save(status) {
-    const body = {
-      report_date: todayJakarta(), activity_type: form.activity_type, title: form.title, body: form.body,
+
+  // Creates the draft activity the first time, then updates it.
+  async function persist(status, { title = form.title, body = form.body, reason } = {}) {
+    const payload = {
+      report_date: todayJakarta(), activity_type: form.activity_type, title, body,
       occurred_at: new Date(form.occurred_at).toISOString(), status, is_urgent: form.is_urgent, urgent_reason: form.is_urgent ? form.urgent_reason : null,
+      details: activityDetails(form.activity_type, meal, sleep),
     };
-    const ok = await run(() => apiSend(`/api/enrollments/${form.enrollment_id}/activities`, { body }));
-    if (ok) router.push("/pengelola/laporan-harian");
+    if (!activityId) {
+      const { id } = await apiSend(`/api/enrollments/${form.enrollment_id}/activities`, { body: payload });
+      setActivityId(id);
+      return id;
+    }
+    await apiSend(`/api/enrollments/${form.enrollment_id}/activities/${activityId}`, {
+      method: "PATCH",
+      body: { ...payload, change_reason: reason ?? (aiUsed ? "Menerapkan draf AI yang sudah ditinjau Pengasuh" : "Diperbarui oleh Pengasuh sebelum dikirim") },
+    });
+    return activityId;
   }
+  async function save(status) {
+    if (await run(() => persist(status))) router.push("/pengelola/laporan-harian");
+  }
+  // Saves the notes as a draft, then asks for the AI draft of that activity.
+  async function makeDraft() {
+    const result = await run(async () => {
+      const title = form.title.trim().length >= 3 ? form.title : ACTIVITY_TYPES[form.activity_type];
+      const id = await persist("draft", { title, reason: "Catatan pengamatan diperbarui sebelum draf AI" });
+      if (title !== form.title) set("title", title);
+      return apiSend(`/api/enrollments/${form.enrollment_id}/activities/${id}/ai-draft`);
+    });
+    if (result?.result) setDraft(result);
+  }
+  function applyDraft() {
+    setForm(f => ({ ...f, title: draft.result.title.slice(0, 100), body: draft.result.body }));
+    setAiUsed(true);
+    setDraft(null);
+  }
+  const blocked = action.busy || !form.enrollment_id;
   return <>
-    <PageHeader eyebrow="CATATAN BARU" title="Abadikan cerita kecil hari ini." description="Simpan sebagai draf, tambahkan 1–3 foto, tinjau versi fokusnya, lalu kirim ke Orang Tua.">
+    <PageHeader eyebrow="CATATAN BARU" title="Abadikan cerita kecil hari ini." description="Tulis pengamatan singkat, minta draf AI bila perlu, tinjau, lalu tambahkan 1–3 foto sebelum dikirim ke Orang Tua.">
       <LinkButton secondary href="/pengelola/laporan-harian">Kembali ke daftar</LinkButton>
     </PageHeader>
     {writable.loading ? <Loading /> : <ErrorNote error={writable.error} />}
     <Panel><form className={p.form} onSubmit={event => { event.preventDefault(); save("draft"); }}>
-      <EnrollmentSelect items={writable.items} value={form.enrollment_id} onChange={v => set("enrollment_id", v)} />
+      <EnrollmentSelect items={writable.items} value={form.enrollment_id} onChange={v => { if (!activityId) set("enrollment_id", v); }} />
       <div className={p.row}>
         <select className={p.select} value={form.activity_type} onChange={e => set("activity_type", e.target.value)} aria-label="Jenis kegiatan" style={{ maxWidth: 220 }}>
           {Object.entries(ACTIVITY_TYPES).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
         <input type="datetime-local" className={p.select} value={form.occurred_at} max={nowLocalInput()} onChange={e => set("occurred_at", e.target.value)} aria-label="Waktu kegiatan" style={{ maxWidth: 240 }} />
       </div>
-      <input className={p.select} required minLength={3} maxLength={100} placeholder="Judul kegiatan" value={form.title} onChange={e => set("title", e.target.value)} aria-label="Judul" />
-      <textarea className={p.select} rows={6} required minLength={20} maxLength={2000} placeholder="Tuliskan pengamatan faktual (minimal 20 karakter)" value={form.body} onChange={e => set("body", e.target.value)} aria-label="Isi catatan" />
+      <DetailFields type={form.activity_type} meal={meal} sleep={sleep} setMeal={setMeal} setSleep={setSleep} />
+      <input className={p.select} required minLength={3} maxLength={100} placeholder="Judul kegiatan (boleh kosong bila memakai draf AI)" value={form.title} onChange={e => set("title", e.target.value)} aria-label="Judul" />
+      <textarea className={p.select} rows={6} required minLength={20} maxLength={2000}
+        placeholder={"Tulis pengamatan faktual, satu per baris, misalnya:\n- Menyusun balok jadi menara\n- Bergantian mainan dengan teman"}
+        value={form.body} onChange={e => set("body", e.target.value)} aria-label="Isi catatan" />
+      {draft && <AiSuggestion draft={draft} busy={action.busy} onUse={applyDraft} onDiscard={() => setDraft(null)} />}
       <label className={p.check}><input type="checkbox" checked={form.is_urgent} onChange={e => set("is_urgent", e.target.checked)} />Catatan penting (boleh dikirim tanpa foto)</label>
       {form.is_urgent && <input className={p.select} required minLength={5} placeholder="Alasan catatan penting" value={form.urgent_reason} onChange={e => set("urgent_reason", e.target.value)} aria-label="Alasan penting" />}
       <ErrorNote error={action.error} />
       <div className={p.row}>
-        <button className={`${p.button} ${p.secondary}`} type="submit" disabled={action.busy || !form.enrollment_id}>Simpan draf</button>
-        {form.is_urgent && <button className={`${p.button} ${p.mint}`} type="button" disabled={action.busy || !form.enrollment_id} onClick={() => save("sent")}>Kirim sekarang</button>}
+        <button className={`${p.button} ${p.secondary}`} type="button" disabled={blocked || form.body.trim().length < 20} onClick={makeDraft}>
+          <Sparkles size={15} />{action.busy ? "Memproses…" : "Buat draf AI"}
+        </button>
+        <button className={`${p.button} ${p.secondary}`} type="submit" disabled={blocked}>Simpan draf</button>
+        {form.is_urgent && <button className={`${p.button} ${p.mint}`} type="button" disabled={blocked} onClick={() => save("sent")}>Kirim sekarang</button>}
       </div>
-      <p className={p.small}>Setelah draf tersimpan, buka catatan di daftar logbook lalu tekan <strong>Foto</strong> untuk menambahkan foto dengan Foto Fokus Anak.</p>
+      <p className={p.small}>Draf AI hanya menyusun ulang catatan Anda tanpa menambah fakta. Setelah draf tersimpan, buka catatan di daftar logbook lalu tekan <strong>Foto</strong> untuk menambahkan foto dengan Foto Fokus Anak.</p>
     </form></Panel>
   </>;
 }

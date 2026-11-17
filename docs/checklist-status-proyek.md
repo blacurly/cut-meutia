@@ -11,16 +11,16 @@ Legenda:
 
 | Area | ✅ | 🟡 | ⬜ | Keterangan |
 | --- | --- | --- | --- | --- |
-| Backend non-AI (API + RPC) | 21 | 0 | 0 | Ditambah 17 Nov: daftar tugas Pengasuh (`/api/me/assignments`), antrean pembayaran Admin (`/api/admin/transactions`), QR pembayaran QRIS. **Migrasi `20261116100000` belum diterapkan** |
+| Backend non-AI (API + RPC) | 21 | 0 | 0 | Ditambah 17 Nov: daftar tugas Pengasuh (`/api/me/assignments`), antrean pembayaran Admin (`/api/admin/transactions`), QR pembayaran QRIS. Migrasi `20261116100000` sudah diterapkan |
 | Frontend Orang Tua | 13 | 0 | 0 | Semua halaman memakai API (17 Nov): dashboard, pendaftaran, status + pembayaran QR, logbook (foto, love, komentar), laporan + komplain, notifikasi, ulasan, profil |
 | Frontend Pengelola/Pengasuh | 11 | 0 | 0 | Semua halaman memakai API (17 Nov): dashboard, pendaftaran, logbook + foto & tinjauan, insiden, ulasan, staf & undangan, dokumen, profil & layanan |
 | Frontend Admin | 4 | 0 | 0 | Semua halaman memakai API (17 Nov): overview + konfirmasi pembayaran + moderasi, mitra, verifikasi, insiden & komplain |
-| AI | 3 | 3 | 4 | Kerangka API siap; Foto Fokus Anak sudah bisa dicoba di aplikasi; Incident Triage memakai data sintetis |
+| AI | 5 | 4 | 1 | Kerangka API siap; Foto Fokus Anak bisa dicoba di aplikasi; **Logbook Drafter tersambung ke form Pengasuh (17 Nov)**; Incident Triage memakai data sintetis |
 
 **Kesimpulan (17 Nov):** mode demo sudah dihapus. Semua portal (Orang Tua, Pengelola, Pengasuh, Admin) membaca dan menulis data lewat API dan Supabase, dengan akses berdasarkan peran akun. Yang perlu dilakukan sebelum dipakai:
-1. Jalankan migrasi `20261116100000_caregiver_assignments_payment_queue.sql` di Supabase SQL Editor.
+1. Jalankan migrasi `20261117100000_logbook_ai_draft_jobs.sql` di Supabase SQL Editor (pencatatan draf AI), lalu isi variabel `AI_*` di Vercel.
 2. Uji alur lengkap dengan akun sungguhan (bagian "Uji sebelum deadline").
-3. Lanjutkan fitur AI utama (Logbook Drafter) dan perbaikan model Foto Fokus Anak.
+3. Lanjutkan fitur AI tanpa training (Smart Reply, ringkasan ulasan) dan perbaikan model Foto Fokus Anak.
 
 ## 2. Status branch
 
@@ -140,11 +140,11 @@ Prioritas bisnis: **(1) Laporan Harian Instan** (Foto Fokus Anak + Logbook Draft
 | Foto Fokus Anak: route & halaman uji coba | ✅ | `/api/ai/focus/{segment,render}`, `/pengelola/foto-fokus` |
 | Foto Fokus Anak: kualitas model | 🟡 | Kelas dewasa lemah dan ada label kembar di data; notebook sudah diperbaiki, perlu training ulang |
 | Foto Fokus Anak di logbook: backend | ✅ | Unggah foto memanggil `/render`, menyimpan varian per anak, dan menunggu tinjauan staf (Annisa, 14 Nov) |
-| Foto Fokus Anak di logbook: form Pengasuh | ⬜ | Form `/pengelola/laporan-harian/tambah` masih demo; sambungkan ke `/api/activities/{id}/photos` |
-| Logbook Drafter | ⬜ | Model bahasa open source lewat adapter `openai-compatible` |
+| Foto Fokus Anak di logbook: form Pengasuh | ✅ | Tombol **Foto** di daftar logbook: kamera HP atau galeri, pilih anak target, tinjau varian |
+| Logbook Drafter | ✅ | `POST .../activities/{activityId}/ai-draft` + tombol **Buat draf AI** di `/pengelola/laporan-harian/tambah`. Model `qwen/qwen3.8-27b` via Groq, prompt `logbook-draft-v2`. Pencatatan `ai_jobs` butuh migrasi `20261117100000`. Uji dengan akun Pengasuh sungguhan belum |
 | Incident Urgency Triage | 🟡 | **Keputusan: data sintetis saja.** Notebook dan [panduan](./panduan-incident-triage.md) siap; integrasi ke alur insiden belum |
 | Safety Score & Legal Verification | 🟡 | Notebook eksperimen ada; belum tersambung ke dokumen di onboarding Annisa |
-| Persistensi `ai_jobs` dan endpoint produksi | ⬜ | Saat ini hanya sandbox Admin dan route Foto Fokus |
+| Persistensi `ai_jobs` dan endpoint produksi | 🟡 | Logbook Drafter sudah mencatat ke `ai_jobs`; fitur lain belum |
 | Smart Reply, ringkasan ulasan, moderasi AI | ⬜ | Belakangan |
 
 ### Perlu perbaikan di AI

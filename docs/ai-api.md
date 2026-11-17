@@ -65,8 +65,18 @@ Aturan yang sudah ditegakkan kode, sesuai kontrak:
 | --- | --- | --- | --- |
 | GET | `/api/ai/features` | Publik | Daftar 8 fitur, use case, pemroses, peran, ketersediaan, dan contoh input |
 | POST | `/api/ai/sandbox/{feature}` | Admin | Menjalankan satu tugas pada input kontrak (data sintetis), mengembalikan envelope job |
+| POST | `/api/enrollments/{id}/activities/{activityId}/ai-draft` | Pengasuh penulis | **Logbook Drafter (produksi).** Tanpa body. Server membaca catatan draf milik Pengasuh dari database, menjalankan model, mencatat job di `ai_jobs`, lalu mengembalikan envelope + `job_id` |
 | POST | `/api/ai/focus/segment` | Pengasuh, Pengelola, Admin | **Foto Fokus Anak (uji coba).** Multipart `file` (JPG/PNG/WebP ≤ 4 MB) → daftar orang (`id`, `class` anak/dewasa, `confidence`, `polygon`) + `suggested_target_id` |
 | POST | `/api/ai/focus/render` | Pengasuh, Pengelola, Admin | Multipart `file` + `target_polygon` (JSON `[[x,y],…]`) → JPEG base64 dengan hanya anak target yang tajam |
+
+**Logbook Drafter.** Pengasuh menulis pengamatan singkat (satu per baris) di form catatan baru, lalu menekan **Buat draf AI**. Alurnya:
+1. Form menyimpan catatan sebagai draf (`POST`/`PATCH .../activities`). Untuk kegiatan makan dan tidur, form juga menyimpan `details` (`meal`: menu, porsi, kondisi; `sleep`: mulai, bangun, kondisi setelah).
+2. `POST .../ai-draft` membaca draf itu sebagai pemanggil: `app_list_daily_activities` hanya mengembalikan draf milik Pengasuh yang sedang ditugaskan, dan `details` dibaca lewat RLS. Data milik orang lain tidak bisa dipakai sebagai sumber.
+3. Baris catatan menjadi `observed_facts` (maks. 30). Model menulis judul dan isi dengan prompt `logbook-draft-v2`: nada hangat untuk Orang Tua, menyebut anak "Ananda", tanpa tanggal/jam, tanpa menambah perasaan, penilaian perkembangan, diagnosis, durasi, atau jumlah.
+4. Server memeriksa hasil (skema kontrak dan indeks fakta), mencatatnya lewat `app_record_logbook_draft_job` (migrasi `20261117100000`), lalu mengembalikan usulan. Sebelum migrasi diterapkan, draf tetap dibuat tetapi tidak dicatat (`job_id: null`, peringatan di log server).
+5. Pengasuh menekan **Pakai draf ini**, mengedit bila perlu, lalu **Simpan draf**. Perubahan teks tercatat di `report_change_logs`. Catatan tetap perlu foto dan dikirim manual.
+
+Batas: 10 draf per menit per Pengasuh. Model yang dipakai saat ini: `qwen/qwen3.8-27b` lewat Groq (gratis dengan batas harian), dipilih setelah dibandingkan dengan `openai/gpt-oss-120b` pada catatan makan, tidur, bermain, dan percobaan *prompt injection*: semua fakta terpakai, ±0,5–1,5 detik, dan instruksi di dalam catatan diabaikan.
 
 **Foto Fokus Anak.** Route di atas meneruskan foto ke layanan CV dari notebook `foto-fokus-anak-yolo11n-seg.ipynb`, dengan pengaturan `CV_API_URL` dan `CV_API_TOKEN` di server.
 
@@ -123,7 +133,7 @@ Endpoint sandbox hanya untuk eksperimen dan evaluasi. Endpoint produksi akan men
   },
   "error": null,
   "meta": { "provider": "fixture", "model": "contract-v1-example", "model_version": "not_reported", "usage": null,
-            "prompt_version": "logbook-draft-v1", "latency_ms": 3, "ai_generated": true }
+            "prompt_version": "logbook-draft-v2", "latency_ms": 3, "ai_generated": true }
 }
 ```
 
@@ -150,11 +160,13 @@ Isi variabel server di `.env.local` (lokal) atau Vercel Environment Variables (p
 
 ```text
 AI_PROVIDER=openai-compatible
-AI_BASE_URL=https://router.huggingface.co/v1
-AI_API_KEY=<token provider>
-AI_TEXT_MODEL=<id model open source, mis. model instruksi multibahasa>
+AI_BASE_URL=https://api.groq.com/openai/v1
+AI_API_KEY=<key Groq, gsk_...>
+AI_TEXT_MODEL=qwen/qwen3.8-27b
 AI_JSON_MODE=true   # hanya jika provider/model mendukung response_format json_object
 ```
+
+Router Hugging Face (`https://router.huggingface.co/v1`) juga bisa dipakai, tetapi per November 2026 akun gratis tidak lagi mendapat kredit Inference Providers. Groq memberi akses gratis (dengan batas per menit dan per hari) ke model open source seperti Qwen dan GPT-OSS. Daftar model Groq berubah; cek di console Groq sebelum mengganti `AI_TEXT_MODEL`.
 
 Di produksi, `AI_PROVIDER` yang kosong berarti AI nonaktif (`503 MODEL_UNAVAILABLE`), bukan otomatis memakai fixture. Fitur gambar dan dokumen (`privacy_masking`, `legal_verification`) membutuhkan adapter detektor wajah atau OCR tersendiri. Sampai adapter itu dibuat, keduanya hanya berjalan dengan fixture di luar produksi.
 
@@ -163,8 +175,8 @@ Adapter baru cukup mengekspor `{ id, configured(), generate({ feature, instructi
 ## 5. Langkah berikutnya (belum dibuat)
 
 1. **Pilih fitur utama dan model** bersama mentor (lihat bagian 1).
-2. **Endpoint produksi per fitur**, misalnya `POST /api/ai/logbook-draft` dengan `{ activity_id, input_version }`: server membaca fakta aktivitas dari DB setelah memastikan Pengasuh sedang ditugaskan, lalu membentuk input kontrak.
-3. **Persistensi `ai_jobs`:** migrasi kolom antrean (`available_at`, `lease_*`, `applied_at`; kontrak bagian 9), RPC pencatatan job yang hanya dapat dipanggil `service_role`, `GET /api/ai/jobs/{id}`, dan eksekusi dengan `after()` dari `next/server` agar respons `202` tidak menunggu model.
+2. **Endpoint produksi per fitur.** Logbook Drafter sudah dibuat (`.../activities/{activityId}/ai-draft`). Berikutnya: Smart Reply dan ringkasan ulasan dengan pola yang sama.
+3. **Persistensi `ai_jobs`:** Logbook Drafter mencatat job secara sinkron lewat `app_record_logbook_draft_job`. Untuk fitur lain dan proses latar belakang: migrasi kolom antrean (`available_at`, `lease_*`, `applied_at`; kontrak bagian 9), RPC pencatatan job yang hanya dapat dipanggil `service_role`, `GET /api/ai/jobs/{id}`, dan eksekusi dengan `after()` dari `next/server` agar respons `202` tidak menunggu model.
 4. **UI:** loading, hasil dengan penanda AI, kosong/abstain, error, serta aksi tinjau/terapkan.
 5. **Evaluasi:** set uji berlabel per fitur dan laporan metrik (pipeline AI bagian 7).
 
