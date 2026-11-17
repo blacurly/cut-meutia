@@ -53,7 +53,7 @@ function DirectoryDaycareCard({ daycare }) {
       <h2><Link href={href}>{daycare.name}</Link></h2>
       <p className={p.small}><MapPin size={12} style={{ display: "inline", marginRight: 4 }} />{[daycare.district, daycare.city, daycare.province].filter(Boolean).join(", ")}</p>
       <div className={p.cardMetrics}>
-        {daycare.kind === "listing" && <span><Star size={14} />{daycare.rating == null ? "Belum ada rating" : `${ratingLabel(daycare.rating)} · rating publik`}</span>}
+        {(daycare.kind === "listing" || daycare.rating != null) && <span><Star size={14} />{daycare.rating == null ? "Belum ada rating" : `${ratingLabel(daycare.rating)} · rating publik`}</span>}
         {daycare.ratio != null && <span><Users size={14} />Rasio 1:{daycare.ratio}{estimated && "*"}</span>}
         {daycare.capacity != null && <span><Check size={14} />Kapasitas {daycare.capacity} anak{estimated && "*"}</span>}
         {daycare.facilityLabels?.slice(0, 2).map(label => <span key={label}><Check size={14} />{label}</span>)}

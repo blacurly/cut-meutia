@@ -12,8 +12,8 @@ export default function CaregiverShell({ children }) {
   return <div className={c.shell}>
     <a className={c.skip} href="#konten-pengelola">Langsung ke konten</a>
     <UniversalNavbar role="caregiver" />
-    <RequireRole roles={["manager", "caregiver"]}>
-      <DaycareProvider>
+    <RequireRole roles={["manager", "caregiver"]} frame={c.page}>
+      <DaycareProvider frame={c.page}>
         <CaregiverSidebar />
         <div className={c.workspace}><main id="konten-pengelola" tabIndex={-1} className={c.page}>{children}</main></div>
       </DaycareProvider>

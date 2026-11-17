@@ -13,7 +13,7 @@ function savedId() {
   try { return window.localStorage.getItem(STORAGE_KEY); } catch { return null; }
 }
 
-export function DaycareProvider({ children }) {
+export function DaycareProvider({ children, frame }) {
   const { data, error, loading, reload } = useApi("/api/me/daycares");
   const [chosen, setChosen] = useState(null);
   const daycares = useMemo(() => (Array.isArray(data) ? data : []), [data]);
@@ -24,12 +24,13 @@ export function DaycareProvider({ children }) {
     select(id) { setChosen(id); try { window.localStorage.setItem(STORAGE_KEY, id); } catch { /* optional */ } },
   }), [daycares, daycare, reload]);
 
-  if (loading) return <Loading label="Memuat daycare Anda…" />;
-  if (error) return <ErrorNote error={error} onRetry={reload} />;
+  const wrap = node => (frame ? <div className={frame}>{node}</div> : node);
+  if (loading) return wrap(<Loading label="Memuat daycare Anda…" />);
+  if (error) return wrap(<ErrorNote error={error} onRetry={reload} />);
   if (!daycare) {
-    return <Empty title="Akun Anda belum terhubung ke daycare">
+    return wrap(<Empty title="Akun Anda belum terhubung ke daycare">
       Pengelola terhubung lewat undangan Admin. Pengasuh terhubung lewat undangan Pengelola, lalu menunggu verifikasi.
-    </Empty>;
+    </Empty>);
   }
   return <DaycareContext.Provider value={value}>{children}</DaycareContext.Provider>;
 }

@@ -46,9 +46,16 @@ export function Empty({ title, children }) {
   return <div className={p.empty}><strong>{title}</strong>{children && <div className={p.small} style={{ marginTop: 6 }}>{children}</div>}</div>;
 }
 
-// Shows children only to signed-in users with one of `roles`.
-export function RequireRole({ roles, children }) {
+// Shows children only to signed-in users with one of `roles`. `frame` is a
+// class for the wrapper of the messages (e.g. the staff page padding).
+export function RequireRole({ roles, children, frame }) {
   const session = useSession();
+  const block = blocked(session, roles);
+  if (!block) return children;
+  return frame ? <div className={frame}>{block}</div> : block;
+}
+
+function blocked(session, roles) {
   if (session.status === "loading") return <Loading label="Memeriksa sesi…" />;
   if (session.status === "signed-out") {
     return <Empty title="Masuk untuk melanjutkan">
@@ -61,5 +68,5 @@ export function RequireRole({ roles, children }) {
       Halaman ini khusus {roles.map(role => ROLE_LABEL[role]).join(" / ")}.
     </Empty>;
   }
-  return children;
+  return null;
 }

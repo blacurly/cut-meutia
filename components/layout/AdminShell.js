@@ -10,7 +10,7 @@ export default function AdminShell({ children }) {
   return <div className={c.shell}>
     <a className={c.skip} href="#konten-admin">Langsung ke konten</a>
     <UniversalNavbar role="admin" />
-    <RequireRole roles={["admin"]}>
+    <RequireRole roles={["admin"]} frame={c.page}>
       <AdminSidebar />
       <div className={c.workspace}><main className={c.page} id="konten-admin" tabIndex={-1}>{children}</main></div>
     </RequireRole>

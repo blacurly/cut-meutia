@@ -14,7 +14,7 @@ const jakartaSans = localFont({
 
 export const metadata = {
   title: "Ayomi — Pengasuhan Transparan. Orang Tua Tenang.",
-  description: "Direktori daycare terverifikasi di 34+ provinsi dengan AI Safety Score, logbook aktivitas real-time, dan proteksi privasi otomatis.",
+  description: "Direktori daycare di DKI Jakarta, Jawa Barat, dan Jawa Timur dengan pendaftaran online, logbook harian, dan Foto Fokus Anak untuk privasi.",
 };
 
 export default function RootLayout({ children }) {

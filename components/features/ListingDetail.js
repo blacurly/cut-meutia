@@ -41,7 +41,7 @@ export default function ListingDetail({ daycare }) {
 
     <div className={p.header}>
       <div>
-        <div className={p.row} style={{ marginBottom: 12 }}><ListingBadge daycare={daycare} />{listing && <span className={`${p.badge} ${p.neutral}`}>Belum bergabung dengan Ayomi</span>}</div>
+        <div className={p.row} style={{ marginBottom: 12 }}>{daycare.acceptsEnrollment && <span className={p.badge}><CheckCircle2 size={12} />Mitra Ayomi</span>}<ListingBadge daycare={daycare} />{listing && !daycare.acceptsEnrollment && <span className={`${p.badge} ${p.neutral}`}>Belum bergabung dengan Ayomi</span>}</div>
         <h1 className={p.title}>{daycare.name}</h1>
         <p className={p.subtitle}><MapPin size={15} style={{ display: "inline" }} /> {place}</p>
       </div>
