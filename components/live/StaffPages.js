@@ -10,6 +10,7 @@ import { CheckCircle2, ClipboardList, Copy, FileText, ImagePlus, Plus, ShieldAle
 import { useSession } from "@/components/session/SessionProvider";
 import { apiSend, useApi } from "@/lib/client-api";
 import { invitationUrl } from "@/lib/auth";
+import { DAYCARE_DOCUMENT_TYPES, documentTypeLabel } from "@/lib/document-types";
 import { LinkButton, PageHeader, Panel } from "@/components/features/ParentUI";
 import { useDaycare } from "./DaycareContext";
 import PhotoTargetPicker from "./PhotoTargetPicker";
@@ -503,7 +504,6 @@ export function ManagerStaff() {
 
 // ---------------------------------------------------------------- documents
 
-const DOCUMENT_TYPES = [["operational_license", "Izin operasional"], ["business_license", "Izin usaha (NIB)"], ["tax_document", "Dokumen pajak"], ["insurance", "Asuransi"], ["other", "Lainnya"]];
 
 export function ManagerDocuments() {
   const { daycare } = useDaycare();
@@ -521,7 +521,7 @@ export function ManagerDocuments() {
   return <ManagerOnly>
     <PageHeader eyebrow="DOKUMEN LEGALITAS" title="Dokumen untuk verifikasi." description="Berkas disimpan privat; hanya Anda dan Admin yang dapat membukanya." />
     <Panel><form className={p.form} onSubmit={upload}>
-      <select name="document_type" className={p.select} required aria-label="Jenis dokumen">{DOCUMENT_TYPES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
+      <select name="document_type" className={p.select} required aria-label="Jenis dokumen">{DAYCARE_DOCUMENT_TYPES.map(type => <option key={type.value} value={type.value}>{type.label}</option>)}</select>
       <div className={p.row}>
         <input name="document_number" className={p.select} placeholder="Nomor dokumen" aria-label="Nomor dokumen" />
         <input name="issuer" className={p.select} placeholder="Penerbit" aria-label="Penerbit" />
@@ -537,7 +537,7 @@ export function ManagerDocuments() {
     <div className={p.stack} style={{ marginTop: 20 }}>
       {documents.loading ? <Loading /> : <ErrorNote error={documents.error} onRetry={documents.reload} />}
       {list(documents.data).map(d => <Panel key={d.id}><div className={p.between}>
-        <div><strong>{DOCUMENT_TYPES.find(([v]) => v === d.document_type)?.[1] ?? d.document_type} · v{d.version}</strong>
+        <div><strong>{documentTypeLabel(d.document_type)} · v{d.version}</strong>
           <p className={p.small}>{d.document_number ?? "—"} · {d.issuer ?? "—"} · berlaku sampai {dateText(d.expires_on)}</p>
           {d.reason && <p className={p.small}>Catatan Admin: {d.reason}</p>}</div>
         <div className={p.row}><span className={p.badge}>{d.status}</span><button type="button" className={p.link} onClick={() => view(d.id)}>Lihat berkas</button></div>

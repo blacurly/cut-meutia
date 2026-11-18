@@ -46,3 +46,7 @@ supabase/.temp/
 
 # raw team/daycare photos (processed into public/images by npm run foto)
 /foto-mentah/
+
+# specimen document generator (scripts/specimen-documents)
+.venv-specimen/
+__pycache__/
