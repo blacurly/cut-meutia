@@ -6,7 +6,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, ClipboardList, Copy, FileText, Plus, ShieldAlert, Sparkles, Users } from "lucide-react";
+import { CheckCircle2, ClipboardList, Copy, FileText, ImagePlus, Plus, ShieldAlert, Sparkles, Users } from "lucide-react";
 import { useSession } from "@/components/session/SessionProvider";
 import { apiSend, useApi } from "@/lib/client-api";
 import { invitationUrl } from "@/lib/auth";
@@ -542,6 +542,72 @@ export function ManagerDocuments() {
           {d.reason && <p className={p.small}>Catatan Admin: {d.reason}</p>}</div>
         <div className={p.row}><span className={p.badge}>{d.status}</span><button type="button" className={p.link} onClick={() => view(d.id)}>Lihat berkas</button></div>
       </div></Panel>)}
+    </div>
+  </ManagerOnly>;
+}
+
+// ------------------------------------------------------------------ photos
+
+const PHOTO_STATUS = {
+  pending: ["Menunggu tinjauan Admin", p.amber],
+  approved: ["Tampil di halaman publik", ""],
+  rejected: ["Ditolak", p.neutral],
+};
+const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
+const MAX_PHOTOS = 20;
+
+// Public gallery photos: uploaded to the private bucket "daycare-gallery",
+// shown on the public page only after Admin approval (048/049).
+export function ManagerPhotos() {
+  const { daycare } = useDaycare();
+  const photos = useApi(`/api/me/daycares/${daycare.id}/photos`);
+  const [action, run] = useAction();
+  const items = list(photos.data);
+  const used = items.filter(photo => photo.status === "pending" || photo.status === "approved").length;
+  async function upload(event) {
+    event.preventDefault();
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
+    const file = form.get("file");
+    if (!(file instanceof File) || !file.size) return;
+    if (file.size > MAX_PHOTO_BYTES) { await run(() => Promise.reject(new Error("Ukuran foto maksimal 8 MB."))); return; }
+    if (!form.get("caption")) form.delete("caption");
+    if (await run(() => apiSend(`/api/me/daycares/${daycare.id}/photos`, { form }), "Foto terkirim. Foto tampil di halaman publik setelah disetujui Admin.")) { formElement.reset(); photos.reload(); }
+  }
+  return <ManagerOnly>
+    <PageHeader eyebrow="FOTO DAYCARE" title="Foto untuk halaman publik." description="Foto ditinjau Admin dulu, lalu tampil di halaman daycare menggantikan gambar ilustrasi." />
+    <Panel>
+      <ul className={p.small} style={{ margin: "0 0 14px", paddingLeft: 18, lineHeight: 1.8 }}>
+        <li>Foto ruangan, fasilitas, atau tampak depan. <strong>Jangan ada wajah anak yang terlihat.</strong></li>
+        <li>Tidak ada data pribadi yang terbaca, misalnya nama anak di loker atau nomor telepon.</li>
+        <li>JPG, PNG, atau WEBP, maksimal 8 MB. Foto mendatar (landscape) paling pas.</li>
+      </ul>
+      {daycare.status !== "active" && <p className={p.small} style={{ marginBottom: 12 }}>Status daycare Anda {daycare.status}. Foto yang disetujui baru tampil setelah daycare aktif.</p>}
+      <form className={p.form} onSubmit={upload}>
+        <input name="file" type="file" required accept="image/jpeg,image/png,image/webp" aria-label="Foto daycare" />
+        <input name="caption" className={p.select} maxLength={160} placeholder="Keterangan (opsional), mis. Ruang bermain" aria-label="Keterangan foto" />
+        <ErrorNote error={action.error} /><Notice text={action.notice} />
+        <button className={p.button} type="submit" disabled={action.busy || used >= MAX_PHOTOS}><ImagePlus size={16} />{action.busy ? "Mengunggah..." : "Unggah foto"}</button>
+        <p className={p.small}>{used} dari {MAX_PHOTOS} foto terpakai (menunggu + tampil).</p>
+      </form>
+    </Panel>
+    <div style={{ marginTop: 20 }}>
+      {photos.loading ? <Loading /> : <ErrorNote error={photos.error} onRetry={photos.reload} />}
+      {!photos.loading && !photos.error && items.length === 0 && <Empty title="Belum ada foto">Unggah foto pertama daycare Anda di atas.</Empty>}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 14 }}>
+        {items.map(photo => {
+          const [label, tone] = PHOTO_STATUS[photo.status] ?? [photo.status, p.neutral];
+          return <Panel key={photo.id}>
+            <img src={photo.url} alt={photo.caption || `Foto ${daycare.name}`} style={{ width: "100%", aspectRatio: "16 / 10", objectFit: "cover", borderRadius: 10, display: "block" }} />
+            <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 4 }}>
+              <span className={`${p.badge} ${tone}`} style={{ alignSelf: "flex-start" }}>{label}</span>
+              {photo.caption && <p className={p.small}>{photo.caption}</p>}
+              {photo.status === "rejected" && photo.decision_reason && <p className={p.small}>Alasan: {photo.decision_reason}</p>}
+              <p className={p.small}>{dateText(photo.created_at)}</p>
+            </div>
+          </Panel>;
+        })}
+      </div>
     </div>
   </ManagerOnly>;
 }

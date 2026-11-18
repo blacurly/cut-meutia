@@ -1,0 +1,121 @@
+.team {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid #e3e8e4;
+}
+
+.title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #264653;
+    margin-bottom: 14px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding: 12px 10px 14px;
+    border: 1px solid #dfe6e2;
+    border-radius: 14px;
+    background: #fff;
+    color: #1f3a44;
+    font: inherit;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+
+.card:hover {
+    border-color: #2a9d8f80;
+    transform: translateY(-2px);
+}
+
+.card:focus-visible {
+    outline: 3px solid #2a9d8f;
+    outline-offset: 2px;
+}
+
+.card strong {
+    font-size: 14px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.active {
+    border-color: #2a9d8f;
+    box-shadow: 0 6px 18px #2a9d8f26;
+}
+
+.photo {
+    position: relative;
+    width: 100%;
+    max-width: 160px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #e7f3f1;
+    display: grid;
+    place-items: center;
+}
+
+.photo img {
+    object-fit: cover;
+}
+
+.initials {
+    font-size: 30px;
+    font-weight: 700;
+    color: #2a9d8f;
+}
+
+.role {
+    font-size: 12px;
+    color: #5f7a80;
+    line-height: 1.5;
+}
+
+.detail {
+    margin-top: 14px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #f4f8f6;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.detail p {
+    font-size: 13px;
+    line-height: 1.8;
+    color: #44606a;
+    margin-top: 4px;
+}
+
+.links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+.links a {
+    font-size: 13px;
+    color: #237e73;
+    text-decoration: underline;
+}
+
+@media (max-width: 700px) {
+    .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+}

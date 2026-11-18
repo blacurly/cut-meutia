@@ -13,7 +13,7 @@ export function PageHeader({ eyebrow, title, description, children }) { return <
 export function Panel({ children, className = "", ...props }) { return <section className={`${p.panel} ${className}`} {...props}>{children}</section>; }
 export function LinkButton({ href, children, secondary = false, className = "", ...props }) { return <Link href={href} className={`${p.button} ${secondary ? p.secondary : ""} ${className}`} {...props}>{children}</Link>; }
 export function EmptyState({ title, description, href = "/pencarian", action = "Cari daycare", children }) { return <div className={p.empty}><Search size={32} aria-hidden="true" /><h2>{title}</h2><p>{description}</p>{children || <LinkButton href={href}>{action}<ArrowRight size={16} aria-hidden="true" /></LinkButton>}</div>; }
-export function IllustrationPhoto({ src, name = "ruangan daycare", priority = false }) { return <div className={p.photo}><Image src={src} alt={`Ilustrasi AI ${name}, bukan foto daycare nyata.`} fill sizes="(max-width:600px) 100vw, (max-width:1100px) 50vw, 40vw" preload={priority} /><span className={p.photoCredit}>Ilustrasi AI</span></div>; }
+export function IllustrationPhoto({ src, name = "ruangan daycare", priority = false, label = "Ilustrasi AI" }) { return <div className={p.photo}><Image src={src} alt={`${label} ${name}, bukan foto daycare nyata.`} fill sizes="(max-width:600px) 100vw, (max-width:1100px) 50vw, 40vw" preload={priority} /><span className={p.photoCredit}>{label}</span></div>; }
 export function CompareButton({ daycare }) {
   const { state, update, hydrated } = useParentDemo(); const [error, setError] = useState(""); const selected = state.compare.includes(daycare.id);
   function toggle() { setError(""); try { update(s => toggleCompare(s, daycare.id, daycare.name)); } catch (error) { setError(error.message); } }
@@ -22,7 +22,7 @@ export function CompareButton({ daycare }) {
 // Real photo when an approved cover exists, otherwise a neutral placeholder.
 // Never substitutes an illustration that could be mistaken for the daycare.
 export function DaycarePhoto({ url, name, illustration = false, priority = false }) {
-  if (url && illustration) return <IllustrationPhoto src={url} name={name} priority={priority} />;
+  if (url && illustration) return <IllustrationPhoto src={url} name={name} priority={priority} label="Ilustrasi" />;
   if (url) return <div className={p.photo}><Image src={url} alt={`Foto ${name}`} fill sizes="(max-width:600px) 100vw, (max-width:1100px) 50vw, 33vw" /></div>;
   const initials = name.split(/\s+/).filter(word => /^[\p{L}\p{N}]/u.test(word)).slice(0, 2).map(word => word[0]).join("").toUpperCase();
   return <div className={p.photo}><div className={p.photoPlaceholder}><span className={p.photoInitials} aria-hidden="true">{initials}</span><span className={p.small}>Foto daycare menyusul</span></div></div>;

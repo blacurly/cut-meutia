@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Building2, ClipboardList, FileCheck2, LayoutDashboard, MessageSquare, ScanFace, ShieldAlert, Users } from "lucide-react";
+import { BookOpen, Building2, ClipboardList, FileCheck2, Images, LayoutDashboard, MessageSquare, ScanFace, ShieldAlert, Users } from "lucide-react";
 import { useDaycare } from "@/components/live/DaycareContext";
 import { useSession } from "@/components/session/SessionProvider";
 import { StaffNavbar, StaffSidebar } from "./StaffNavigation";
@@ -14,6 +14,7 @@ const MANAGER_MENU = [
   ["Staf & undangan", "/pengelola/staf", Users],
   ["Dokumen legalitas", "/pengelola/dokumen", FileCheck2],
   ["Profil bisnis", "/pengelola/profil", Building2],
+  ["Foto daycare", "/pengelola/foto", Images],
   ["Uji Foto Fokus (AI)", "/pengelola/foto-fokus", ScanFace],
 ];
 const CAREGIVER_MENU = [

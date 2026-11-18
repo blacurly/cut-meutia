@@ -1,0 +1,17 @@
+{
+  "team": {
+    "1": "/images/tim/anggota-1.webp",
+    "2": "/images/tim/anggota-2.webp",
+    "3": "/images/tim/anggota-3.webp",
+    "4": "/images/tim/anggota-4.webp"
+  },
+  "daycares": {},
+  "illustrations": [
+    "/images/daycares/ilustrasi/1.webp",
+    "/images/daycares/ilustrasi/2.webp",
+    "/images/daycares/ilustrasi/3.webp",
+    "/images/daycares/ilustrasi/4.webp",
+    "/images/daycares/ilustrasi/5.webp",
+    "/images/daycares/ilustrasi/6.webp"
+  ]
+}
