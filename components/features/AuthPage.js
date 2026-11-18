@@ -8,6 +8,7 @@ export default async function AuthPage({ mode, searchParams }) {
   const initialAuthMessage = {
     "recovery-expired": "recoveryLinkExpired",
     "confirmation-error": "confirmationError",
+    "email-confirmed": "emailConfirmed",
   }[params?.auth] || null;
   return (
     <AuthLayout language={language} role={role} mode={mode}>

@@ -15,8 +15,12 @@ export async function GET(request) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       if (!error) return NextResponse.redirect(new URL(safeNext, requestUrl.origin));
     } catch {
-      // Missing configuration or a temporary Auth failure uses the safe error redirect below.
+      // Missing configuration or a temporary Auth failure uses the redirects below.
     }
+    // Supabase only adds `code` after it has verified the email link, so the
+    // email is confirmed even when the session cannot start here (link opened
+    // on another device or browser, or clicked twice). Ask the user to sign in.
+    if (!recoveryFlow) return NextResponse.redirect(new URL("/masuk?auth=email-confirmed", requestUrl.origin));
   }
 
   return NextResponse.redirect(new URL(

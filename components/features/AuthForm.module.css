@@ -41,6 +41,20 @@
 .adminCard p { margin-top: 12px; color: #556670; font-size: 12px; line-height: 1.9; }
 .adminLink { display: inline-flex; align-items: center; gap: 12px; min-height: 46px; margin-top: 22px; padding: 12px 18px; border-radius: 10px; background: #264653; color: #fff; font-size: 12px; font-weight: 600; }
 .adminLink:hover { background: #1f3944; }
+.sentCard { padding: 24px; border: 1px solid #2a9d8f55; border-radius: 12px; background: #2a9d8f0d; }
+.sentIcon { display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 16px; border-radius: 12px; background: #2a9d8f22; color: #1f7a6f; }
+.sentCard h2 { font-size: 18px; font-weight: 700; line-height: 1.5; letter-spacing: -0.4px; }
+.sentCard > p { margin-top: 10px; color: #3f535c; font-size: 12px; line-height: 1.9; }
+.sentEmail { color: #1a2e35; overflow-wrap: anywhere; }
+.sentSteps { margin-top: 14px; padding-left: 20px; list-style: decimal; color: #3f535c; font-size: 12px; line-height: 1.9; }
+.sentSteps li + li { margin-top: 4px; }
+.sentCard > .sentNote { color: #637680; font-size: 11px; }
+.resendRow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: 16px; }
+.fields > .resendRow { margin-top: -6px; }
+.resendButton { display: inline-flex; align-items: center; gap: 7px; min-height: 38px; padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 9px; background: #fff; color: #264653; font-size: 11px; font-weight: 600; cursor: pointer; }
+.resendButton:hover:not(:disabled) { border-color: #2a9d8f; color: #1f7a6f; }
+.resendButton:disabled { opacity: .6; cursor: not-allowed; }
+.resendNote { margin-top: 8px; color: #248274; font-size: 11px; line-height: 1.7; }
 .recoveryForm { display: grid; gap: 14px; }
 .recoveryForm > p, .legalContent > p { color: #556670; font-size: 13px; line-height: 1.9; }
 .recoveryForm > label { margin-bottom: -7px; color: #1a2e35; font-size: 12px; font-weight: 600; }
