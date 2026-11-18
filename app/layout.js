@@ -2,6 +2,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import ParentDemoProvider from "@/components/features/ParentDemoProvider";
 import ParentShell from "@/components/layout/ParentShell";
+import SessionProvider from "@/components/session/SessionProvider";
 
 const jakartaSans = localFont({
   src: "../public/fonts/PlusJakartaSans-Variable.ttf",
@@ -13,7 +14,7 @@ const jakartaSans = localFont({
 
 export const metadata = {
   title: "Ayomi — Pengasuhan Transparan. Orang Tua Tenang.",
-  description: "Direktori daycare terverifikasi di 34+ provinsi dengan AI Safety Score, logbook aktivitas real-time, dan proteksi privasi otomatis.",
+  description: "Direktori daycare di DKI Jakarta, Jawa Barat, dan Jawa Timur dengan pendaftaran online, logbook harian, dan Foto Fokus Anak untuk privasi.",
 };
 
 export default function RootLayout({ children }) {
@@ -22,7 +23,7 @@ export default function RootLayout({ children }) {
       lang="id"
       className={`${jakartaSans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col"><ParentDemoProvider><ParentShell>{children}</ParentShell></ParentDemoProvider></body>
+      <body className="min-h-full flex flex-col"><ParentDemoProvider><SessionProvider><ParentShell>{children}</ParentShell></SessionProvider></ParentDemoProvider></body>
     </html>
   );
 }

@@ -63,6 +63,7 @@ export default function FocusPhotoTrial() {
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const input = useRef(null);
+  const camera = useRef(null);
 
   useEffect(() => () => { if (photo) URL.revokeObjectURL(photo.url); }, [photo]);
 
@@ -136,12 +137,16 @@ export default function FocusPhotoTrial() {
 
         <Panel>
           <h2 className={p.sectionTitle}>1. Pilih foto</h2>
-          <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" onChange={choose} hidden />
+          <input ref={input} type="file" accept="image/*" onChange={choose} hidden />
+          <input ref={camera} type="file" accept="image/*" capture="environment" onChange={choose} hidden />
           <div className={p.row} style={{ marginTop: 12 }}>
-            <button type="button" className={p.button} onClick={() => input.current?.click()} disabled={Boolean(busy)}>
-              <Camera size={16} />{photo ? "Ganti foto" : "Pilih foto"}
+            <button type="button" className={p.button} onClick={() => camera.current?.click()} disabled={Boolean(busy)}>
+              <Camera size={16} />Ambil foto
             </button>
-            <span className={p.small}>JPG, PNG, atau WebP. Foto otomatis dikecilkan ke {MAX_SIDE} px dan data lokasi (EXIF) dibuang.</span>
+            <button type="button" className={`${p.button} ${p.secondary}`} onClick={() => input.current?.click()} disabled={Boolean(busy)}>
+              {photo ? "Ganti dari galeri" : "Pilih dari galeri"}
+            </button>
+            <span className={p.small}>Foto otomatis dikecilkan ke {MAX_SIDE} px dan data lokasi (EXIF) dibuang.</span>
           </div>
         </Panel>
 

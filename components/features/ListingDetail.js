@@ -21,7 +21,8 @@ function Estimate({ show }) {
 }
 
 // Detail page for public catalog entries (daycare_listings) and partner
-// daycares. Photos fall back to the shared AI illustrations, always labelled.
+// daycares. Without approved photos the gallery shows shared example
+// pictures, always labelled as illustrations.
 export default function ListingDetail({ daycare }) {
   const [tab, setTab] = useState("summary");
   const [gallery, setGallery] = useState(null);
@@ -37,11 +38,11 @@ export default function ListingDetail({ daycare }) {
     <div className={p.gallery}>{images.slice(0, 2).map((image, index) => image.url
       ? <button key={image.url} onClick={() => setGallery(index)} aria-label={`Buka gambar ${index + 1} ${daycare.name}`}><DaycarePhoto url={image.url} illustration={image.illustration} name={daycare.name} priority={index === 0} /></button>
       : <DaycarePhoto key="placeholder" url={null} name={daycare.name} />)}</div>
-    {images[0]?.illustration && <p className={p.small} style={{ marginTop: 8 }}><Info size={12} style={{ display: "inline", marginRight: 4 }} />Gambar adalah ilustrasi AI, bukan foto {daycare.name}. Foto asli ditampilkan setelah pengelola mengunggah dan disetujui.</p>}
+    {images[0]?.illustration && <p className={p.small} style={{ marginTop: 8 }}><Info size={12} style={{ display: "inline", marginRight: 4 }} />Gambar adalah ilustrasi, bukan foto {daycare.name}. Foto asli ditampilkan setelah pengelola mengunggah dan disetujui Admin.</p>}
 
     <div className={p.header}>
       <div>
-        <div className={p.row} style={{ marginBottom: 12 }}><ListingBadge daycare={daycare} />{listing && <span className={`${p.badge} ${p.neutral}`}>Belum bergabung dengan Ayomi</span>}</div>
+        <div className={p.row} style={{ marginBottom: 12 }}>{daycare.acceptsEnrollment && <span className={p.badge}><CheckCircle2 size={12} />Mitra Ayomi</span>}<ListingBadge daycare={daycare} />{listing && !daycare.acceptsEnrollment && <span className={`${p.badge} ${p.neutral}`}>Belum bergabung dengan Ayomi</span>}</div>
         <h1 className={p.title}>{daycare.name}</h1>
         <p className={p.subtitle}><MapPin size={15} style={{ display: "inline" }} /> {place}</p>
       </div>

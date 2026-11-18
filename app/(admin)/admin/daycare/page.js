@@ -1,4 +1,4 @@
-import AdminDaycares from "@/components/features/AdminDaycares";
+import { AdminDaycares } from "@/components/live/AdminPages";
 
 export const metadata = { title: "Manajemen Daycare | Ayomi" };
-export default function Page() { return <AdminDaycares/>; }
+export default function Page() { return <AdminDaycares />; }

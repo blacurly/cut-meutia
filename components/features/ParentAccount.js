@@ -1,25 +1,18 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Bell, CheckCheck, Mail, Phone, Plus, ShieldCheck, UserRound } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Mail, Phone, Plus, ShieldCheck, UserRound } from "lucide-react";
 import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
-import StarRating from "@/components/ui/StarRating";
 import { normalizePhone } from "@/lib/auth";
 import { ApiRequestError, requestApi } from "@/lib/api-client";
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
-import { activeEnrollments, dateLabel, emptyDemo, getDaycare, todayISO, validISODate, validateChild } from "@/lib/parent";
-import { useParentDemo } from "./ParentDemoProvider";
-import { DemoGate, EmptyState, LinkButton, PageHeader, Panel } from "./ParentUI";
+import { dateLabel, todayISO, validISODate, validateChild } from "@/lib/parent";
+import { useSession } from "@/components/session/SessionProvider";
+import { RequireRole } from "@/components/live/ui";
+import { EmptyState, LinkButton, PageHeader, Panel } from "./ParentUI";
 import p from "./Parent.module.css";
 
-function Profile() {
-  const { state, update } = useParentDemo(); const router = useRouter(); const [profile, setProfile] = useState(state.profile); const [child, setChild] = useState({ name: "", dob: "" }); const [errors, setErrors] = useState({}); const [notice, setNotice] = useState(""); const [childError, setChildError] = useState(""); const [reset, setReset] = useState(false); const close = useCallback(() => setReset(false), []);
-  function save(event) { event.preventDefault(); const next = {}; if (profile.name.trim().length < 2) next.name = "Isi nama, minimal 2 karakter."; if (profile.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email.trim())) next.email = "Masukkan alamat email yang valid."; if (profile.phone && !/^8\d{8,11}$/.test(normalizePhone(profile.phone))) next.phone = "Masukkan nomor WhatsApp Indonesia yang valid."; setErrors(next); if (Object.keys(next).length) { event.currentTarget.elements.namedItem(Object.keys(next)[0])?.focus(); return; } const cleaned = { name: profile.name.trim(), email: profile.email.trim(), phone: normalizePhone(profile.phone) }; update(s => ({ ...s, profile: cleaned })); setProfile(cleaned); setNotice("Profil demo disimpan di browser ini."); }
-  function addChild(event) { event.preventDefault(); const invalid = validateChild(child); if (Object.keys(invalid).length) { setChildError(Object.values(invalid)[0]); return; } if (state.children.some(c => c.name.toLowerCase() === child.name.trim().toLowerCase() && c.dob === child.dob)) { setChildError("Profil anak dengan nama dan tanggal lahir tersebut sudah tersedia."); return; } const newChild = { id: crypto.randomUUID(), name: child.name.trim(), dob: child.dob }; update(s => ({ ...s, children: [...s.children, newChild], selectedChild: newChild.id })); setChild({ name: "", dob: "" }); setChildError(""); }
-  return <div className={p.stack}><div className={p.notice}>Gunakan identitas contoh. Informasi di halaman ini hanya disimpan di browser dan bukan akun Ayomi sungguhan.</div><div className={p.twoColumns}><Panel><h2 className={p.sectionTitle}>Profil Orang Tua</h2><form className={p.form} method="post" onSubmit={save} noValidate>{[["name", "Nama lengkap", UserRound, "text"], ["email", "Email contoh (opsional)", Mail, "email"], ["phone", "WhatsApp contoh (opsional)", Phone, "tel"]].map(([name, label, Icon, type]) => <div className={p.field} key={name}><label htmlFor={`profile-${name}`}>{label}</label><Input id={`profile-${name}`} name={name} type={type} value={profile[name]} onChange={e => { setProfile(v => ({ ...v, [name]: e.target.value })); setNotice(""); }} error={errors[name]} icon={<Icon size={17} />} prefix={name === "phone" ? "+62" : undefined} maxLength={name === "email" ? 254 : name === "phone" ? 24 : 80} required={name === "name"} /></div>)}{notice && <p className={p.feedback} role="status">{notice}</p>}<button className={p.button} type="submit">Simpan profil demo</button></form></Panel><Panel><h2 className={p.sectionTitle}>Pengaturan demo</h2><p className={p.muted}>Status, komentar, laporan, dan profil hanya tersedia di browser ini. Anda dapat menghapus semuanya untuk mengulang alur dari awal.</p><div className={p.stack} style={{ marginTop: 20, gap: 10 }}><LinkButton secondary href="/status-pendaftaran">Status pendaftaran</LinkButton><LinkButton secondary href="/notifikasi">Notifikasi</LinkButton><button className={`${p.button} ${p.danger}`} onClick={() => setReset(true)}>Hapus semua data demo</button></div></Panel></div><section id="anak" className={p.section}><h2 className={p.sectionTitle}>Anak saya ({state.children.length})</h2><div className={p.twoColumns}><div className={p.stack}>{state.children.length ? state.children.map(c => { const linked = state.enrollments.some(e => e.childId === c.id); const active = activeEnrollments(state).find(e => e.childId === c.id); return <Panel key={c.id}><div className={p.childCard} style={{ border: 0, padding: 0 }}><span className={p.avatar}>{c.name.slice(0, 1)}</span><div><h3 style={{ fontWeight: 700 }}>{c.name}</h3><p className={p.small}>Lahir {dateLabel(c.dob)}</p><p className={p.small}>{active ? getDaycare(active.daycareId)?.name : "Belum ada pengasuhan aktif"}</p></div></div><div className={p.row} style={{ marginTop: 15 }}><button className={`${p.button} ${p.secondary}`} aria-pressed={state.selectedChild === c.id} onClick={() => update(s => ({ ...s, selectedChild: c.id }))}>{state.selectedChild === c.id ? "Anak dipilih" : "Pilih anak"}</button><button className={p.link} disabled={linked} title={linked ? "Profil digunakan dalam riwayat pendaftaran" : "Hapus profil anak yang belum memiliki pengajuan"} onClick={() => update(s => ({ ...s, children: s.children.filter(v => v.id !== c.id), selectedChild: s.selectedChild === c.id ? "" : s.selectedChild }))}>Hapus</button></div>{linked && <p className={p.small} style={{ marginTop: 8 }}>Profil disimpan bersama riwayat pendaftaran. Gunakan reset demo untuk menghapus seluruh riwayat.</p>}</Panel>; }) : <EmptyState title="Belum ada profil anak" description="Tambahkan profil contoh di formulir atau saat melakukan pendaftaran daycare."><span className={p.small}>Data anak hanya tersimpan lokal.</span></EmptyState>}</div><Panel><h3 className={p.sectionTitle}>Tambahkan anak contoh</h3><form className={p.form} method="post" onSubmit={addChild} noValidate><div className={p.field}><label htmlFor="new-child-name">Nama anak</label><Input id="new-child-name" value={child.name} onChange={e => setChild(v => ({ ...v, name: e.target.value }))} placeholder="Contoh: Arka Pratama" maxLength={80} required /></div><div className={p.field}><label htmlFor="new-child-dob">Tanggal lahir</label><Input id="new-child-dob" type="date" max={todayISO()} value={child.dob} onChange={e => setChild(v => ({ ...v, dob: e.target.value }))} required /><p className={p.small}>Usia contoh yang didukung: 6 bulan–6 tahun.</p></div>{childError && <p role="alert" className={p.error}>{childError}</p>}<button type="submit" className={p.button}><Plus size={16} />Tambahkan anak</button></form></Panel></div></section><Modal open={reset} onClose={close} title="Hapus semua data demo?" size="sm"><p className={p.muted}>Profil, anak, pilihan komparasi, pengajuan, laporan, komentar, ulasan, dan notifikasi demo pada browser ini akan dihapus. Tindakan ini tidak memengaruhi akun nyata.</p><div className={p.row} style={{ marginTop: 20 }}><button className={`${p.button} ${p.danger}`} onClick={() => { update(() => emptyDemo); router.push("/"); }}>Hapus data demo</button><button className={`${p.button} ${p.secondary}`} onClick={close}>Batal</button></div></Modal></div>;
-}
+// Parent profile, children, and health data (GET/PATCH /api/me,
+// /api/children, /api/children/{id}/health).
 function HealthProfileEditor({ child, onClose }) {
   const [health, setHealth] = useState({ allergies: "", medical_history: "", special_needs: "", medication_notes: "" });
   const [version, setVersion] = useState(1);
@@ -232,40 +225,15 @@ function AuthenticatedParentProfile({ user }) {
   </div>;
 }
 
-function ParentProfileContent() {
-  const supabaseConfigured = isSupabaseConfigured();
-  const supabase = useMemo(() => isSupabaseConfigured() ? createClient() : null, []);
-  const [authUser, setAuthUser] = useState(supabaseConfigured ? undefined : null);
 
-  useEffect(() => {
-    if (!supabase) return undefined;
-    let active = true;
-    supabase.auth.getUser().then(({ data, error }) => {
-      if (active) setAuthUser(error ? null : data.user || null);
-    }).catch(() => { if (active) setAuthUser(null); });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setAuthUser(session?.user || null);
-    });
-    return () => { active = false; subscription.unsubscribe(); };
-  }, [supabase]);
-
-  if (authUser === undefined) return <p className={p.notice} role="status">Memeriksa sesi akun…</p>;
-  if (authUser) return <AuthenticatedParentProfile key={authUser.id} user={authUser} />;
-  return <DemoGate><Profile /></DemoGate>;
+function ProfileForSession() {
+  const session = useSession();
+  return <AuthenticatedParentProfile key={session.user.id} user={session.user} />;
 }
 
-export function ParentProfile() { return <div className={p.page}><PageHeader eyebrow="AKUN & KELUARGA" title="Ruang kecil untuk keluarga Anda." description="Kelola profil anak yang terhubung ke akun Ayomi." /><ParentProfileContent /></div>; }
-
-function Notifications() {
-  const { state, update } = useParentDemo(); const [onlyUnread, setOnlyUnread] = useState(false); const unread = state.notifications.filter(n => !n.read); const items = onlyUnread ? unread : state.notifications;
-  return <><div className={p.between} style={{ marginBottom: 20 }}><label className={p.check}><input type="checkbox" checked={onlyUnread} onChange={e => setOnlyUnread(e.target.checked)} />Hanya belum dibaca ({unread.length})</label><button className={`${p.button} ${p.secondary}`} disabled={!unread.length} onClick={() => update(s => ({ ...s, notifications: s.notifications.map(n => ({ ...n, read: true })) }))}><CheckCheck size={15} />Tandai semua dibaca</button></div>{items.length ? <div className={p.card}>{items.map(n => <article key={n.id} className={`${p.notification} ${n.read ? "" : p.unread}`}><Bell size={19} color={n.urgent ? "#e76f51" : "#2a9d8f"} style={{ flexShrink: 0, marginTop: 4 }} /><div style={{ flex: 1 }}><Link href={n.href} onClick={() => update(s => ({ ...s, notifications: s.notifications.map(item => item.id === n.id ? { ...item, read: true } : item) }))} style={{ fontSize: 13, fontWeight: n.read ? 500 : 700 }}>{n.title}</Link><p className={p.small}>{dateLabel(n.createdAt)} · notifikasi lokal</p>{n.urgent && <span className={`${p.badge} ${p.red}`}>Prioritas demo</span>}</div>{!n.read && <button className={p.link} onClick={() => update(s => ({ ...s, notifications: s.notifications.map(item => item.id === n.id ? { ...item, read: true } : item) }))}>Tandai dibaca</button>}</article>)}</div> : <EmptyState title={onlyUnread ? "Semua notifikasi sudah dibaca" : "Belum ada notifikasi"} description="Pembaruan pengajuan dan laporan demo akan muncul di sini." href="/beranda" action="Buka dashboard" />}</>;
+export function ParentProfile() {
+  return <div className={p.page}>
+    <PageHeader eyebrow="AKUN & KELUARGA" title="Ruang kecil untuk keluarga Anda." description="Kelola profil Anda, data anak, dan informasi kesehatannya." />
+    <RequireRole roles={["parent"]}><ProfileForSession /></RequireRole>
+  </div>;
 }
-export function ParentNotifications() { return <div className={p.page}><PageHeader eyebrow="KABAR UNTUK ANDA" title="Notifikasi" description="Ikuti pembaruan pada alur demo. Tidak ada pesan yang berasal dari layanan eksternal." /><DemoGate><Notifications /></DemoGate></div>; }
-
-function ReviewEditor({ daycareId }) {
-  const { state, update } = useParentDemo(); const existing = state.reviews.find(r => r.daycareId === daycareId); const [rating, setRating] = useState(existing?.rating || 0); const [text, setText] = useState(existing?.text || ""); const [notice, setNotice] = useState(""); const [error, setError] = useState(""); const daycare = getDaycare(daycareId); const reply = state.caregiver.replies.find(r => r.reviewId === existing?.id);
-  function submit(event) { event.preventDefault(); setNotice(""); if (!activeEnrollments(state).some(e => e.daycareId === daycareId)) { setError("Ulasan hanya tersedia untuk daycare yang terhubung dengan anak aktif."); return; } if (!rating || text.trim().length < 20) { setError("Pilih rating dan tulis minimal 20 karakter ulasan."); return; } const review = { id: existing?.id || crypto.randomUUID(), daycareId, rating, text: text.trim(), createdAt: new Date().toISOString() }; update(s => ({ ...s, reviews: [review, ...s.reviews.filter(r => r.daycareId !== daycareId)] })); setError(""); setNotice("Ulasan demo disimpan lokal dan tampil pada tab ulasan daycare. Belum dipublikasikan ke layanan nyata."); }
-  return <Panel><div className={p.between}><div><h2 className={p.sectionTitle}>{daycare?.name}</h2><span className={p.badge}><ShieldCheck size={13} />Anak terhubung · demo</span></div><LinkButton secondary href={`/detail/${daycareId}`}>Detail daycare</LinkButton></div><form className={p.form} style={{ marginTop: 24 }} method="post" onSubmit={submit} noValidate><fieldset><legend className={p.fieldLabel} style={{ marginBottom: 12 }}>Penilaian pengasuhan</legend><StarRating rating={rating} onChange={setRating} /></fieldset><div className={p.field}><label htmlFor="review-text">Ceritakan pengalaman contoh Anda</label><Input id="review-text" type="textarea" value={text} onChange={e => setText(e.target.value)} maxLength={1000} minLength={20} placeholder="Apa yang berjalan baik dan apa yang dapat ditingkatkan?" required /><p className={p.small}>{text.length}/1000 karakter</p></div>{error && <p role="alert" className={p.error}>{error}</p>}{notice && <p role="status" className={p.feedback}>{notice}</p>}<button className={p.button} type="submit">{existing ? "Perbarui ulasan demo" : "Simpan ulasan demo"}</button></form>{reply && <div className={p.notice} style={{ marginTop: 20 }}><div><strong>Balasan pengelola · demo</strong><p style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{reply.text}</p></div></div>}</Panel>;
-}
-function Reviews({ daycareId }) { const { state } = useParentDemo(); const options = [...new Set(activeEnrollments(state).map(e => e.daycareId))]; const [selected, setSelected] = useState(options.includes(daycareId) ? daycareId : options[0] || ""); if (!options.length) return <EmptyState title="Ulasan untuk pengasuhan yang Anda kenali" description="Aktifkan pendaftaran anak terlebih dahulu. Ulasan demo hanya dapat dibuat untuk daycare yang terhubung dengan anak aktif." href="/status-pendaftaran" action="Lihat pendaftaran" />; const current = options.includes(selected) ? selected : options[0]; return <div className={p.stack}><div className={p.field} style={{ maxWidth: 420 }}><label htmlFor="review-daycare">Daycare yang ingin diulas</label><select id="review-daycare" className={p.select} value={current} onChange={e => setSelected(e.target.value)}>{options.map(id => <option key={id} value={id}>{getDaycare(id)?.name}</option>)}</select></div><ReviewEditor key={current} daycareId={current} /></div>; }
-export function ParentReviews({ daycareId }) { return <div className={p.page}><PageHeader eyebrow="ULASAN ORANG TUA" title="Pengalaman Anda membantu keluarga lain." description="Coba alur ulasan untuk daycare yang terhubung dengan anak Anda. Semua ulasan pada demo ini tersimpan lokal." /><DemoGate><Reviews daycareId={daycareId} /></DemoGate></div>; }

@@ -42,13 +42,14 @@ Daftar lengkap kode error dan pesannya ada di `lib/api/errors.js`.
 | POST | `/api/auth/login` | Publik | Masuk; mengembalikan peran, tujuan halaman, dan `access_token` |
 | POST | `/api/auth/logout` | Publik | Keluar dan hapus cookie sesi |
 | GET | `/api/daycares` | Publik | Katalog daycare dengan filter server (lihat di bawah), termasuk mitra aktif melalui RPC dengan kolom publik yang dibatasi. |
-| GET | `/api/daycares/{id}` | Publik | Detail daycare berdasarkan UUID atau slug: profil, galeri, paket biaya; data mitra aktif diambil melalui RPC dengan kolom publik yang dibatasi |
+| GET | `/api/daycares/{id}` | Publik | Detail daycare berdasarkan UUID atau slug: profil, galeri, paket biaya; data mitra aktif diambil melalui RPC dengan kolom publik yang dibatasi. Galeri memakai foto Pengelola yang disetujui Admin (tautan bertanda tangan 1 jam); tanpa foto, `gallery` berisi gambar contoh dengan `illustration: true` |
 | GET | `/api/daycares/compare?ids=a,b,c` | Publik | Bandingkan 2–3 daycare berdampingan |
 | GET | `/api/daycares/{id}/offerings` | Publik | Layanan dan harga yang disetujui dari daycare mitra |
 | GET | `/api/daycares/{id}/reviews` | Publik | Ulasan yang lolos moderasi (tanpa identitas penulis) |
 | GET | `/api/me` | Login | Profil Orang Tua dan daftar anak |
 | PATCH | `/api/me` | Orang Tua | Ubah nama dan nomor WhatsApp |
 | GET | `/api/me/daycares` | Login | Daycare tempat pengguna menjadi Pengelola/Pengasuh |
+| GET | `/api/me/assignments` | Pengasuh | Pengajuan anak yang sedang ditugaskan kepada Pengasuh (titik masuk logbook). Butuh migrasi `20261116100000` |
 | GET | `/api/admin/partners` | Admin | Daftar daycare mitra, status, dan Manager aktif |
 | POST | `/api/admin/partners` | Admin | Buat daycare nonaktif dan undangan Manager; token undangan dikembalikan satu kali |
 | PATCH | `/api/admin/partners/{id}` | Admin | Ubah status mitra dengan alasan dan catatan audit |
@@ -103,8 +104,9 @@ Daftar lengkap kode error dan pesannya ada di `lib/api/errors.js`.
 | POST | `/api/enrollments/{id}/payments` | Orang Tua | Catat permintaan pembayaran tagihan |
 | GET | `/api/enrollments/{id}/activities` | Orang Tua, Pengelola, Pengasuh bertugas | Catatan harian |
 | POST | `/api/enrollments/{id}/activities` | Pengasuh bertugas | Tulis catatan (draf atau kirim) |
-| PATCH | `/api/enrollments/{id}/activities/{activityId}` | Pengasuh penulis | Ubah draf (wajib alasan perubahan) |
+| PATCH | `/api/enrollments/{id}/activities/{activityId}` | Pengasuh penulis | Ubah draf (wajib alasan perubahan). Body boleh memuat `details` `{ meal }` atau `{ sleep }`; tanpa `details`, detail lama dipertahankan |
 | DELETE | `/api/enrollments/{id}/activities/{activityId}` | Pengasuh penulis | Hapus draf yang belum terkirim |
+| POST | `/api/enrollments/{id}/activities/{activityId}/ai-draft` | Pengasuh penulis | **Logbook Drafter:** draf AI dari catatan draf sendiri (usulan saja, tidak menyimpan). Lihat [ai-api.md](./ai-api.md) |
 | POST | `/api/activities/{id}/acknowledgements` | Orang Tua / Pengelola | Tandai dibaca (`parent_read`) atau ditinjau (`manager_review`) |
 | GET, POST | `/api/activities/{id}/photos` | Pengasuh bertugas | Daftar foto; unggah foto asli dan varian Foto Fokus Anak untuk ditinjau |
 | PATCH | `/api/activities/{id}/photos/{variantId}` | Pengasuh bertugas, Pengelola | Tandai varian foto `ready` atau `failed` setelah tinjauan |
@@ -125,6 +127,7 @@ Daftar lengkap kode error dan pesannya ada di `lib/api/errors.js`.
 | PATCH | `/api/notifications/{id}` | Login | Tandai dibaca |
 | GET | `/api/admin/moderation` | Admin | Antrean moderasi ulasan dan balasan |
 | PATCH | `/api/admin/moderation/{reviews\|replies}/{versionId}` | Admin | Setujui atau tolak |
+| GET | `/api/admin/transactions` | Admin | Antrean pembayaran yang menunggu konfirmasi (`created`/`pending`; `?status=` untuk status lain). Butuh migrasi `20261116100000` |
 | PATCH | `/api/admin/transactions/{id}` | Admin | Catat hasil pembayaran manual |
 | GET | `/api/ai/features` | Publik | Daftar fitur AI dan contoh input (lihat [kerangka AI](./ai-api.md)) |
 | POST | `/api/ai/sandbox/{feature}` | Admin | Jalankan satu tugas AI pada data sintetis |
@@ -289,8 +292,15 @@ Aksi lain:
 `201 Created`:
 
 ```json
-{ "transaction_id": "…", "amount": 150000, "currency": "IDR", "method": "qris", "expires_at": "2026-11-12T03:00:00.000Z", "status": "created" }
+{ "transaction_id": "…", "amount": 150000, "currency": "IDR", "method": "qris", "expires_at": "2026-11-12T03:00:00.000Z", "status": "created",
+  "qr": { "mode": "qris_dynamic", "payload": "000201010212…6304ABCD", "image_data_url": "data:image/png;base64,…", "confirmation": "manual_admin" } }
 ```
+
+**QR code (khusus `method: "qris"`):**
+- **`qris_dynamic`:** dipakai kalau server punya `QRIS_STATIC_PAYLOAD`, yaitu string QRIS statis milik merchant (hasil memindai QRIS statis). QR diubah menjadi QRIS dinamis berisi **nominal tagihan**, sehingga bisa dipindai aplikasi bank atau e-wallet.
+- **`demo`:** dipakai kalau variabel itu kosong. Isinya kode transaksi dan nominal dengan penanda `AYOMI-DEMO-BUKAN-PEMBAYARAN`, dan **tidak bisa dipakai untuk membayar**.
+- `image_data_url` berupa PNG yang bisa langsung dipakai di `<img src>`.
+- Kalau `QRIS_STATIC_PAYLOAD` tidak valid (CRC salah, atau bukan mata uang Rupiah), server mengembalikan `503 qris_not_configured`.
 
 Gateway pembayaran belum terpasang. Admin mengonfirmasi hasilnya lewat `PATCH /api/admin/transactions/{id}` dengan body `{ "status": "succeeded", "provider": "manual", "reason": "Transfer diverifikasi" }`, dan pengajuan menjadi `approved`. Checkout yang lewat batas bayar diubah menjadi `expired` oleh fungsi server `app_expire_overdue_enrollments()`.
 

@@ -625,6 +625,13 @@
     text-align: left;
 }
 
+/* Grid children default to min-width:auto, so a wide row (tabs, photos)
+   would push a single-column grid past the screen on phones. */
+.gallery > *,
+.twoColumns > * {
+    min-width: 0;
+}
+
 .gallery .photo {
     height: 100%;
     min-height: 260px;

@@ -1,6 +1,6 @@
 # Checklist status proyek Ayomi
 
-Status per **12 November 2026**, dari branch `feature/non-ai-api-routes` setelah disinkronkan dengan commit Annisa `6e305e1` (*add non-AI backend APIs and workflows*).
+Status per **16 November 2026**. `main` = `feature/non-ai-api-routes` = `cb29b56`, berisi semua commit Annisa sampai `35cce50` (*seed active demo daycare accounts*) ditambah perbaikan pemetaan error.
 
 Legenda:
 - ✅ **Selesai**: berjalan dengan data nyata (Supabase/API) dan sudah diuji.
@@ -11,33 +11,41 @@ Legenda:
 
 | Area | ✅ | 🟡 | ⬜ | Keterangan |
 | --- | --- | --- | --- | --- |
-| Backend non-AI (API + RPC) | 19 | 0 | 0 | Termasuk lampiran foto logbook dan bukti insiden (migrasi 20261114, aktif di database live) |
-| Frontend Orang Tua | 6 | 7 | 0 | Navbar, katalog, detail, dan akun sudah nyata. Pendaftaran, logbook, laporan, dan ulasan masih demo |
-| Frontend Pengelola/Pengasuh | 1 | 7 | 2 | Halaman `/undangan` sudah nyata. Halaman lain masih memakai data demo |
-| Frontend Admin | 0 | 4 | 3 | Seluruh halaman masih memakai data demo |
-| AI | 3 | 3 | 4 | Kerangka API siap; Foto Fokus Anak sudah bisa dicoba di aplikasi; Incident Triage memakai data sintetis |
+| Backend non-AI (API + RPC) | 21 | 0 | 0 | Ditambah 17 Nov: daftar tugas Pengasuh (`/api/me/assignments`), antrean pembayaran Admin (`/api/admin/transactions`), QR pembayaran QRIS. Migrasi `20261116100000` sudah diterapkan |
+| Frontend Orang Tua | 13 | 0 | 0 | Semua halaman memakai API (17 Nov): dashboard, pendaftaran, status + pembayaran QR, logbook (foto, love, komentar), laporan + komplain, notifikasi, ulasan, profil |
+| Frontend Pengelola/Pengasuh | 11 | 0 | 0 | Semua halaman memakai API (17 Nov): dashboard, pendaftaran, logbook + foto & tinjauan, insiden, ulasan, staf & undangan, dokumen, profil & layanan |
+| Frontend Admin | 4 | 0 | 0 | Semua halaman memakai API (17 Nov): overview + konfirmasi pembayaran + moderasi, mitra, verifikasi, insiden & komplain |
+| AI | 5 | 4 | 1 | Kerangka API siap; Foto Fokus Anak bisa dicoba di aplikasi; **Logbook Drafter tersambung ke form Pengasuh (17 Nov)**; Incident Triage memakai data sintetis |
 
-**Kesimpulan:** backend non-AI sudah lengkap. Pekerjaan terbesar yang tersisa adalah **menyambungkan frontend ke API yang sudah ada** dan **menyelesaikan fitur AI utama (Laporan Harian Instan)**.
+**Kesimpulan (17 Nov):** mode demo sudah dihapus. Semua portal (Orang Tua, Pengelola, Pengasuh, Admin) membaca dan menulis data lewat API dan Supabase, dengan akses berdasarkan peran akun. Yang perlu dilakukan sebelum dipakai:
+1. Jalankan migrasi `20261117100000_logbook_ai_draft_jobs.sql` di Supabase SQL Editor (pencatatan draf AI), lalu isi variabel `AI_*` di Vercel.
+2. Uji alur lengkap dengan akun sungguhan (bagian "Uji sebelum deadline").
+3. Lanjutkan fitur AI tanpa training (Smart Reply, ringkasan ulasan) dan perbaikan model Foto Fokus Anak.
 
 ## 2. Status branch
 
-Semua branch remote sudah tercakup di `feature/non-ai-api-routes`.
+Dicek 16 November 2026. Semua branch remote sudah tercakup di `main`.
 
-| Branch (remote) | Isi | Masuk `feature/non-ai-api-routes`? | Masuk `main`? |
-| --- | --- | --- | --- |
-| `main` / `development` | UI awal (demo) + PR #1 (auth dan profil Orang Tua ke Supabase) | ✅ | — |
-| `ayomi-db-backend`, `…-review-fix` | Data Orang Tua lewat API route, pencarian lewat API direktori | ✅ | Sebagian |
-| `fix/parent-api-children-id` | Perbaikan primary key `children.id` | ✅ | ⬜ |
-| `feature/daycare-dataset-3-provinsi` | Katalog publik DKI Jakarta, Jawa Barat, Jawa Timur | ✅ | ⬜ |
-| `fix/non-ai-enrollment-guards` | RPC pendaftaran, logbook, insiden, moderasi + perbaikan guard | ✅ | ⬜ |
-| `feature/non-ai-api-routes` | Semua di atas, REST API non-AI, katalog, love/komentar, **commit Annisa 6e305e1** (onboarding mitra, kasus, penjemputan), kerangka AI, Foto Fokus Anak | (branch ini) | ⬜ |
+| Branch (remote) | Commit terakhir | Status |
+| --- | --- | --- |
+| `main` | `cb29b56` (16 Nov) | ✅ Sama dengan `feature/non-ai-api-routes`. Vercel men-deploy dari sini |
+| `feature/non-ai-api-routes` | `cb29b56` (16 Nov) | ✅ Branch kerja bersama (Annisa + taworld-star) |
+| `development`, `ayomi-db-backend`, `ayomi-db-backend-review-fix`, `fix/parent-api-children-id`, `fix/non-ai-enrollment-guards`, `feature/daycare-dataset-3-provinsi` | 7–10 Nov | Sudah tercakup di `main`; boleh dihapus setelah tim setuju |
 
-**Keputusan 12 November:** onboarding mitra memakai **versi Annisa**, karena sudah aktif di database live. Versi kita (`043_partner_onboarding.sql`, yang belum pernah diterapkan) tidak dipakai. Versi kita tetap tersimpan di branch lokal `backup/wip-20261112`.
+**Riwayat keputusan:**
+- **12 Nov:** onboarding mitra memakai versi Annisa (migrasi 043–060, aktif di live). Versi lama kita ada di branch lokal `backup/wip-20261112`.
+- **16 Nov:** lampiran foto logbook dan bukti insiden memakai versi Annisa (`20261114093328_logbook_incident_media`, aktif di live). Draf kita (migrasi 061) ada di branch lokal `feature/laporan-harian-instan`. **Migrasi 061 jangan dijalankan**, karena menimpa fungsi dengan nama yang sama.
+
+**Commit 16 Nov (`cb29b56`):**
+- 7 kode error dari migrasi yang sebelumnya keluar sebagai 500 umum kini dipetakan (`delegation_not_found`, `admin_action_audit_missing`, `invalid_activity_photo`, `invalid_photo_review`, `photo_variant_not_found`, `photo_review_scope_required`, `invalid_incident_evidence`).
+- Test pemetaan error kini juga membaca penulisan `MESSAGE='...'` tanpa spasi.
+- `supabase/.temp/` (state lokal Supabase CLI) tidak lagi ikut di git.
+
+**Verifikasi 16 Nov:** `node --test` 124/124 lulus, lint `app`/`components`/`lib` bersih, `next build` berhasil.
 
 **Yang perlu dilakukan:**
-- Push `feature/non-ai-api-routes`, lalu buka satu PR ke `main`.
-- Jalankan `git pull` di `main` lokal (tertinggal dari `origin/main`) sebelum merge.
-- Setelah PR digabung, bersihkan worktree sementara (`AppData/Local/Temp/vscode-agent-codex-sandbox-*`) dengan `git worktree prune`, lalu hapus branch lokal lama.
+- Annisa: jalankan `git pull` di `main` dan `feature/non-ai-api-routes`.
+- Bersihkan worktree sementara (`AppData/Local/Temp/vscode-agent-codex-sandbox-*`) dengan `git worktree prune`, lalu hapus branch lokal lama yang tidak dipakai.
 
 ## 3. Backend non-AI
 
@@ -49,8 +57,8 @@ Detail endpoint ada di [api.md](./api.md).
 | Katalog publik | `/api/daycares`, `/{id}`, `/compare`, `/{id}/photos`. Mitra aktif dibaca lewat RPC publik (`app_list_public_daycares`) | ✅ |
 | Anak, kesehatan, izin penjemput | `/api/children/*`, `/api/children/{id}/pickup-authorizations` | ✅ |
 | Pendaftaran & pembayaran manual | `/api/enrollments/*`, `/payments`, `/pickup`, `/api/admin/transactions/{id}` | ✅ |
-| Logbook, love, komentar, foto | `/api/enrollments/{id}/activities`, `/api/activities/{id}/*` termasuk `/photos` | ✅ |
-| Insiden dan lampiran bukti | `/api/incidents/*` termasuk `/api/incidents/{id}/evidence` | ✅ |
+| Logbook, love, komentar, foto | `/api/enrollments/{id}/activities`, `/api/activities/{id}/*`, `/api/activities/{id}/photos` (unggah + Foto Fokus Anak), `/photos/{variantId}` (tinjau) | ✅ (uji akun sungguhan belum) |
+| Insiden dan lampiran bukti | `/api/incidents/*`, `/api/incidents/{id}/evidence` | ✅ (uji akun sungguhan belum) |
 | Ulasan & moderasi manual | `/api/reviews/*`, `/api/admin/moderation` | ✅ |
 | Notifikasi | `/api/notifications/*` | ✅ |
 | Onboarding mitra (Annisa) | `/api/admin/partners`, `/api/me/daycares/{id}/{onboarding,profile,offerings,documents,photos,staff,delegations}`, `/api/admin/{prices,documents,daycare-documents,photos,staff}` | ✅ |
@@ -61,48 +69,65 @@ Detail endpoint ada di [api.md](./api.md).
 
 | # | Masalah | Tindakan |
 | --- | --- | --- |
-| B1 | Snapshot skema (`supabase/schema/live_schema_snapshot.sql`) belum memuat migrasi 043–060 | Dump ulang snapshot dari database live |
+| B1 | Snapshot skema belum memuat migrasi 043–060 dan media 20261114 (sama dengan D3) | Dump ulang snapshot dari database live |
 | B2 | Policy `daycares_specific_user_read` di database live | ✅ Sudah tidak ada saat dicek 14 November; katalog memakai RPC publik |
 | B3 | Password database pernah dibagikan | Ganti password database di dashboard Supabase |
 | B4 | Rate limit AI disimpan per instance server | Pindahkan ke tabel database atau KV saat AI dipakai di produksi |
+| B5 | 7 kode error RPC tanpa pemetaan HTTP (keluar sebagai 500) | ✅ Diperbaiki 16 Nov (`cb29b56`) |
+
+### Uji sebelum deadline backend (belum dilakukan)
+
+Pakai akun demo dari `scripts/import-demo-daycare-accounts.mjs`. API Foto Fokus Anak harus menyala, dan `CV_API_URL`/`CV_API_TOKEN` harus terisi.
+
+- [ ] Pengasuh: buat catatan draf → unggah foto → tinjau versi fokus (`ready`) → kirim catatan
+- [ ] Orang Tua: buka catatan yang sudah dikirim. Hanya versi fokus anaknya yang tampil; foto asli tidak bisa dibuka
+- [ ] Setelah versi fokus disetujui, foto asli terhapus dari `logbook-originals`
+- [ ] Bukti insiden: unggah satu foto dan satu PDF, lalu buka dari akun Orang Tua dan Pengelola
+- [ ] Vercel: `/pencarian` menampilkan daftar daycare (variabel Supabase benar)
 
 ## 4. Frontend Orang Tua
 
-| Halaman | Rute | Status | Yang perlu dikerjakan |
+Semua halaman memakai sesi Supabase dan API. Halaman yang butuh login menampilkan ajakan masuk untuk pengunjung, dan pesan "bukan untuk akun Anda" untuk peran lain.
+
+| Halaman | Rute | Status | API |
 | --- | --- | --- | --- |
-| Navbar Orang Tua | semua halaman Orang Tua | ✅ | Tombol lokasi dan bandingkan dihapus (12 Nov). Komparasi lewat tombol **Bandingkan** di kartu/detail, lalu tautan **Lihat perbandingan** |
-| Welcome, masuk, daftar, atur ulang sandi | `/welcome`, `/masuk`, `/daftar`, `/atur-ulang-sandi` | ✅ | — |
-| Katalog & pencarian | `/`, `/pencarian` | ✅ | — |
-| Detail daycare | `/detail/[id]` | ✅ | Tombol "Daftarkan anak" hanya muncul untuk mitra aktif |
-| Komparasi | `/bandingkan`, `/bandingkan/hasil` | ✅ | — |
-| Profil & anak | `/profil` | 🟡 | Hapus anak lewat `DELETE /api/children/{id}`; izin penjemput |
-| Dashboard | `/beranda` | 🟡 | `/api/enrollments`, `/activities`, `/notifications` |
-| Form pendaftaran anak | `/pendaftaran-anak` | 🟡 | `POST /api/enrollments` |
-| Status pendaftaran | `/status-pendaftaran` | 🟡 | `GET/DELETE /api/enrollments`, `POST .../payments` |
-| Catatan harian | `/catatan-harian` | 🟡 | `GET .../activities`, acknowledgements, love, komentar |
-| Laporan insiden & komplain | `/laporan` | 🟡 | `/api/incidents`, `/api/complaints` |
-| Notifikasi & ulasan | `/notifikasi`, `/ulasan` | 🟡 | `/api/notifications`, `/api/reviews` |
+| Navbar | semua halaman | ✅ | Sesi Supabase, `/api/notifications` |
+| Welcome, masuk, daftar, atur ulang sandi | `/welcome`, `/masuk`, `/daftar`, `/atur-ulang-sandi` | ✅ | Supabase Auth |
+| Katalog & pencarian | `/`, `/pencarian` | ✅ | `/api/daycares` |
+| Detail daycare | `/detail/[id]` | ✅ | `/api/daycares/{id}`. Profil daycare fiktif dihapus |
+| Komparasi | `/bandingkan`, `/bandingkan/hasil` | ✅ | `/api/daycares/compare` |
+| Dashboard | `/beranda` | ✅ | `/api/enrollments`, `/api/notifications` |
+| Form pendaftaran anak | `/pendaftaran-anak?daycare=` | ✅ | `/api/children`, `/api/daycares/{id}/offerings`, `POST /api/enrollments` |
+| Status pendaftaran + pembayaran | `/status-pendaftaran` | ✅ | `/api/enrollments`, `DELETE` (batal), `POST …/payments` (QR QRIS) |
+| Logbook harian | `/catatan-harian` | ✅ | `…/activities`, `/photos`, `/love`, `/comments`, `/acknowledgements` |
+| Laporan insiden & komplain | `/laporan` | ✅ | `/api/incidents`, `/api/complaints` |
+| Notifikasi | `/notifikasi` | ✅ | `/api/notifications` |
+| Ulasan | `/ulasan` | ✅ | `POST /api/reviews` |
+| Profil & anak | `/profil` | ✅ | `/api/me`, `/api/children`, `/health` |
 
 ## 5. Frontend Pengelola/Pengasuh dan Admin
 
-| Halaman | Rute | Status | Endpoint |
-| --- | --- | --- | --- |
-| Undangan staf | `/undangan` | ✅ | `POST /api/invitations/accept` |
-| Uji Foto Fokus Anak | `/pengelola/foto-fokus` | ✅ (uji coba) | `/api/ai/focus/*` |
-| Dashboard Pengelola | `/pengelola` | 🟡 | `/api/me/daycares`, `/api/enrollments?daycare_id=`, `/api/incidents` |
-| Pendaftaran masuk | `/pengelola/pendaftaran` | 🟡 | `GET/PATCH /api/enrollments` |
-| Laporan harian + tambah | `/pengelola/laporan-harian`, `/tambah` | 🟡 | `/api/enrollments/{id}/activities` + Foto Fokus Anak + Logbook Drafter |
-| Profil daycare + edit | `/pengelola/profil`, `/profil/edit` | 🟡 | `/api/me/daycares/{id}/{onboarding,profile,offerings,photos}` |
-| Dokumen legal | `/pengelola/dokumen` | 🟡 | `/api/me/daycares/{id}/documents`, `/api/daycare-documents/{id}/file` |
-| Ulasan & balasan | `/pengelola/ulasan` | 🟡 | `/api/daycares/{id}/reviews`, `/api/reviews/{id}/reply` |
-| Staf, undangan Pengasuh, delegasi | — | ⬜ | `/api/me/daycares/{id}/{staff,staff/invitations,delegations}` |
-| Penjemputan anak | — | ⬜ | `/api/enrollments/{id}/pickup` |
-| Dashboard Admin | `/admin` | 🟡 | `/api/admin/partners`, `/api/admin/moderation` |
-| Daycare mitra | `/admin/daycare` | 🟡 | `/api/admin/partners/*`; tampilkan tautan `/undangan#<invitation_token>` |
-| Verifikasi legal | `/admin/verifikasi-legal` | 🟡 | `/api/admin/{daycare-documents,documents,prices,photos,staff}` |
-| Insiden | `/admin/insiden` | 🟡 | `GET/PATCH /api/incidents` |
-| Komplain, investigasi, sanksi | — | ⬜ | `/api/admin/{complaints,investigations,sanctions}` |
-| Moderasi ulasan & pembayaran | — | ⬜ | `/api/admin/moderation`, `/api/admin/transactions/{id}` |
+Portal staf hanya terbuka untuk akun dengan peran yang sesuai. Daycare diambil dari `/api/me/daycares`. Menu Pengelola dan Pengasuh berbeda.
+
+| Halaman | Rute | Peran | Status | API |
+| --- | --- | --- | --- | --- |
+| Dashboard | `/pengelola` | Pengelola, Pengasuh | ✅ | `/api/enrollments?daycare_id=`, `/api/incidents`, `/api/me/assignments` |
+| Kelola pendaftaran | `/pengelola/pendaftaran` | Pengelola | ✅ | `PATCH /api/enrollments/{id}` (terima/tolak, tugaskan, check-in, selesai) |
+| Logbook harian | `/pengelola/laporan-harian` | Keduanya | ✅ | `…/activities`, unggah foto + Foto Fokus Anak, tinjau varian, kirim |
+| Tulis catatan | `/pengelola/laporan-harian/tambah` | Pengasuh | ✅ | `POST …/activities` |
+| Laporan insiden | `/pengelola/insiden` (baru) | Keduanya | ✅ | `POST /api/incidents`; Pengelola juga mengubah status |
+| Ulasan & balasan | `/pengelola/ulasan` | Pengelola | ✅ | `/api/daycares/{id}/reviews`, `/reply` |
+| Staf & undangan | `/pengelola/staf` (baru) | Pengelola | ✅ | `/staff`, `/staff/invitations` (tautan `/undangan#token`) |
+| Dokumen legalitas | `/pengelola/dokumen` | Pengelola | ✅ | `/documents`, `/api/daycare-documents/{id}/file` |
+| Profil bisnis + layanan | `/pengelola/profil`, `/edit` | Pengelola | ✅ | `/onboarding`, `/profile`, `/offerings` |
+| Uji Foto Fokus | `/pengelola/foto-fokus` | Keduanya | ✅ | `/api/ai/focus/*` |
+| Undangan staf | `/undangan` | Calon staf | ✅ | `POST /api/invitations/accept` |
+| Overview + pembayaran + moderasi | `/admin` | Admin | ✅ | `/api/admin/transactions`, `/api/admin/moderation`, antrean |
+| Daycare mitra | `/admin/daycare` | Admin | ✅ | `/api/admin/partners` (buat + tautan undangan, ubah status) |
+| Verifikasi | `/admin/verifikasi-legal` | Admin | ✅ | `/api/admin/{daycare-documents,prices,photos,staff}` |
+| Insiden & komplain | `/admin/insiden` | Admin | ✅ | `/api/incidents`, `/api/admin/complaints` |
+
+Belum ada UI untuk: delegasi Pengelola ke Pengasuh, penjemputan anak (`/pickup`), izin penjemput Orang Tua, investigasi dan sanksi Admin, serta lampiran bukti komplain/insiden. API untuk semuanya sudah tersedia.
 
 ## 6. AI
 
@@ -111,14 +136,15 @@ Prioritas bisnis: **(1) Laporan Harian Instan** (Foto Fokus Anak + Logbook Draft
 | Item | Status | Catatan |
 | --- | --- | --- |
 | Kerangka API AI (`lib/ai`, `/api/ai/features`, `/api/ai/sandbox/{feature}`) | ✅ | 8 fitur, validasi kontrak, retry, rate limit |
-| Foto Fokus Anak: model tahap 1 + API | ✅ | Model `ayomi-focus-segmenter` (HF privat). API berjalan lokal; rencana hosting di Oracle Cloud |
+| Foto Fokus Anak: model tahap 1 + API | ✅ | Model `ayomi-focus-segmenter` (HF privat). API berjalan lokal; hosting di Oracle Cloud belum (panduan sudah ada) |
 | Foto Fokus Anak: route & halaman uji coba | ✅ | `/api/ai/focus/{segment,render}`, `/pengelola/foto-fokus` |
 | Foto Fokus Anak: kualitas model | 🟡 | Kelas dewasa lemah dan ada label kembar di data; notebook sudah diperbaiki, perlu training ulang |
-| Foto Fokus Anak di form logbook + varian per anak | ⬜ | Butuh penyimpanan `attachments`/`attachment_variants` |
-| Logbook Drafter | ⬜ | Model bahasa open source lewat adapter `openai-compatible` |
+| Foto Fokus Anak di logbook: backend | ✅ | Unggah foto memanggil `/render`, menyimpan varian per anak, dan menunggu tinjauan staf (Annisa, 14 Nov) |
+| Foto Fokus Anak di logbook: form Pengasuh | ✅ | Tombol **Foto** di daftar logbook: kamera HP atau galeri, pilih anak target, tinjau varian |
+| Logbook Drafter | ✅ | `POST .../activities/{activityId}/ai-draft` + tombol **Buat draf AI** di `/pengelola/laporan-harian/tambah`. Model `qwen/qwen3.8-27b` via Groq, prompt `logbook-draft-v2`. Pencatatan `ai_jobs` butuh migrasi `20261117100000`. Uji dengan akun Pengasuh sungguhan belum |
 | Incident Urgency Triage | 🟡 | **Keputusan: data sintetis saja.** Notebook dan [panduan](./panduan-incident-triage.md) siap; integrasi ke alur insiden belum |
 | Safety Score & Legal Verification | 🟡 | Notebook eksperimen ada; belum tersambung ke dokumen di onboarding Annisa |
-| Persistensi `ai_jobs` dan endpoint produksi | ⬜ | Saat ini hanya sandbox Admin dan route Foto Fokus |
+| Persistensi `ai_jobs` dan endpoint produksi | 🟡 | Logbook Drafter sudah mencatat ke `ai_jobs`; fitur lain belum |
 | Smart Reply, ringkasan ulasan, moderasi AI | ⬜ | Belakangan |
 
 ### Perlu perbaikan di AI
@@ -130,7 +156,7 @@ Prioritas bisnis: **(1) Laporan Harian Instan** (Foto Fokus Anak + Logbook Draft
 | A3 | Hugging Face Space Docker kini butuh PRO | API CV di-host di Oracle Cloud (Always Free) |
 | A4 | Triage hanya diuji dengan data sintetis | Laporkan sebagai batasan; angka evaluasi bukan akurasi di dunia nyata |
 
-## Status database per 14 November 2026
+## Status database per 16 November 2026
 
 | Item | Status saat ini | Tindak lanjut |
 | --- | --- | --- |

@@ -40,3 +40,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Supabase CLI local state
+supabase/.temp/
+
+# raw team/daycare photos (processed into public/images by npm run foto)
+/foto-mentah/
