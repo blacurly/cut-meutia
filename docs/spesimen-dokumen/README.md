@@ -49,16 +49,35 @@ Tanggal penilaian: **18 November 2026**. Rubrik ini masih usulan dan perlu disah
 
 ## Cara mencoba di aplikasi
 
-Pengelola mengunggah dokumen di menu **Dokumen**, lalu Admin memeriksanya di **Verifikasi legal**. Ketiga jenis dokumen baru (SOP, sertifikat staf, dan pemeriksaan fasilitas) sudah tersedia di pilihan jenis dokumen.
+Jalankan dulu migrasi `supabase/migrations/20261118100000_safety_score_admin_review.sql` di Supabase SQL Editor. Setelah itu:
 
-Unggah paket ini hanya ke **daycare uji** yang tidak tampil di katalog publik, jangan ke akun daycare demo yang memakai nama daycare sungguhan. Daycare uji ini belum ada, jadi perlu dibuat dulu sebagai bagian dari langkah 2.
+1. **Buat daycare uji (Admin).** Buka **Manajemen daycare**, lalu tambah mitra dengan data daycare fiktif A, misalnya "Taman Asuh Pelangi Biru" dengan alamat dari `kunci-jawaban.json`. Undang email Pengelola yang bisa Anda buka. Mitra baru otomatis berstatus nonaktif, jadi **tidak tampil di katalog**.
+2. **Unggah dokumen (Pengelola).** Terima undangan, lalu buka menu **Dokumen**. Unggah kelima PDF milik A satu per satu, pilih jenis dokumen yang sesuai, dan isi nomor serta tanggal sesuai isi PDF.
+3. **Verifikasi dokumen (Admin).** Buka **Verifikasi legalitas**. Untuk tiap dokumen, tekan **Baca dengan AI** (butuh migrasi `20261119100000` serta `OCR_API_URL`/`OCR_API_TOKEN`), lalu bandingkan usulan AI dan pemeriksaannya dengan berkas asli. Setelah itu pilih **Setujui** dengan alasan. Coba juga isi nomor yang salah saat mengunggah: AI akan memberi peringatan bahwa nomornya berbeda.
+4. **Nilai Safety Score (Admin).** Di **Manajemen daycare**, klik **Safety Score** pada daycare uji. Pilih status, tulis alasan, dan centang dokumen bukti untuk keempat komponen. Pratinjau skor langsung berubah. Klik **Publikasikan**, atau **Simpan sebagai draf** bila legalitas belum lulus.
+5. Bandingkan hasilnya dengan `expected_score` di kunci jawaban: A = 100, B = 70, dan C = 60 (C hanya bisa disimpan sebagai draf).
+
+Aturan yang diterapkan database:
+- Status **Lulus** atau **Sebagian** wajib disertai dokumen yang sudah disetujui, sesuai komponennya, dan belum kedaluwarsa.
+- Dokumen kedaluwarsa hanya boleh dipakai sebagai bukti **Tidak lulus**, misalnya izin operasional C.
+- Kalau masih ada komponen **Belum diketahui**, skor tidak disimpan.
+- Kalau legalitas belum lulus, skor hanya bisa disimpan sebagai draf dan tidak dipublikasikan.
+- Skor publik otomatis disembunyikan begitu salah satu dokumen buktinya kedaluwarsa atau diganti versi baru. Halaman daycare lalu menampilkan "Sedang ditinjau ulang".
+- Skor publik hanya tampil untuk daycare yang **aktif**. Daycare uji yang nonaktif bisa dinilai dan dicoba tanpa terlihat di katalog.
+- Alasan per komponen ikut tampil di halaman publik, jadi jangan menulis nama staf atau data pribadi di sana.
+
+Jangan mengaktifkan daycare uji di produksi. Kalau ingin mendemokan skor di halaman publik, aktifkan sebentar saja, lalu nonaktifkan lagi.
 
 ## Membuat ulang dokumen
 
+Pembuat dokumen ini (Python) tidak disimpan di project ini, melainkan di folder layanan OCR, `ayomi-ocr-api/tools/specimen/generate.py`. Hasilnya tetap ditulis ke folder ini:
+
 ```bash
-python -m venv .venv-specimen
-.venv-specimen/Scripts/python -m pip install -r scripts/specimen-documents/requirements.txt
-.venv-specimen/Scripts/python scripts/specimen-documents/generate.py
+cd ../ayomi-ocr-api
+.venv/Scripts/python -m pip install -r requirements-dev.txt
+.venv/Scripts/python tools/specimen/generate.py
 ```
 
-Data daycare dan skenarionya ada di bagian atas `scripts/specimen-documents/generate.py`. Setiap kali dijalankan, skrip menghasilkan berkas yang sama persis, sehingga git hanya mencatat perubahan yang memang disengaja. Setelah mengubah skenario, jalankan `node --test lib/document-types.test.mjs`.
+Data daycare dan skenarionya ada di bagian atas `generate.py`. Setiap kali dijalankan, skrip menghasilkan berkas yang sama persis, sehingga git hanya mencatat perubahan yang memang disengaja. Setelah mengubah skenario, jalankan `node --test lib/document-types.test.mjs` di project ini.
+
+Akurasi OCR pada dokumen-dokumen ini diukur dengan `ayomi-ocr-api/tools/evaluate.py`.

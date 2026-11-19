@@ -168,14 +168,39 @@ AI_JSON_MODE=true   # hanya jika provider/model mendukung response_format json_o
 
 Router Hugging Face (`https://router.huggingface.co/v1`) juga bisa dipakai, tetapi per November 2026 akun gratis tidak lagi mendapat kredit Inference Providers. Groq memberi akses gratis (dengan batas per menit dan per hari) ke model open source seperti Qwen dan GPT-OSS. Daftar model Groq berubah; cek di console Groq sebelum mengganti `AI_TEXT_MODEL`.
 
-Di produksi, `AI_PROVIDER` yang kosong berarti AI nonaktif (`503 MODEL_UNAVAILABLE`), bukan otomatis memakai fixture. Fitur gambar dan dokumen (`privacy_masking`, `legal_verification`) membutuhkan adapter detektor wajah atau OCR tersendiri. Sampai adapter itu dibuat, keduanya hanya berjalan dengan fixture di luar produksi.
+Di produksi, `AI_PROVIDER` yang kosong berarti AI nonaktif (`503 MODEL_UNAVAILABLE`), bukan otomatis memakai fixture. `privacy_masking` memakai layanan CV (`CV_API_URL`), dan `legal_verification` memakai layanan OCR (lihat di bawah).
+
+### Legal Verification (baca dokumen dengan AI)
+
+Admin menekan **Baca dengan AI** di Verifikasi legalitas, lalu `POST /api/admin/daycare-documents/{id}/ai-read` berjalan (`lib/api/legal-read.js`). `GET` di alamat yang sama mengembalikan hasil terakhir.
+
+1. Database mengambil dokumen, daycare, dan lampiran terbarunya (`app_admin_get_document_for_ai`). Server mengunduh berkasnya, lalu mencocokkan SHA-256-nya dengan catatan unggahan; kalau berbeda, hasilnya `409 SOURCE_CHANGED`.
+2. **Layanan OCR** (repo terpisah `ayomi-ocr-api` di Dokploy: RapidOCR, PP-OCRv5 Latin) mengembalikan teks per halaman. PDF yang punya lapisan teks dibaca langsung tanpa OCR.
+3. **Model bahasa** (`AI_*`, prompt `legal-extract-ocr-v1`) mengisi kontrak `legal_verification`: isian, kutipan bukti per halaman, isian yang hilang, dan masalah. `run.js` menolak hasil yang punya isian tanpa bukti (`EVIDENCE_MISMATCH`).
+4. **Kode server memeriksa ulang:** kutipan dan nilainya harus benar-benar ada di teks OCR. Isian yang tidak lolos dikosongkan (`evidence_not_found`), jadi tidak pernah ditampilkan.
+5. **Pemeriksaan tanpa model:** masa berlaku dibandingkan dengan hari ini, nomor dan tanggal dibandingkan dengan isian Pengelola, nama dan alamat daycare dicari di dokumen, kalimat yang mencoba memerintah AI dideteksi, dan kualitas scan dinilai.
+6. Hasilnya dicatat di `ai_jobs` lewat `app_admin_record_legal_verification_job`, yang hanya bisa dipanggil Admin. Pengelola tidak bisa membuat "hasil AI" untuk dokumennya sendiri.
+
+AI hanya mengusulkan. Keputusan tetap di `app_admin_decide_daycare_document`.
+
+```text
+OCR_API_URL=https://ayomi-ocr-api.neoartd.my.id
+OCR_API_TOKEN=<API_TOKEN layanan OCR>
+```
+
+Butuh migrasi `20261119100000_legal_verification_ai_read.sql`. Batasnya 6 pembacaan per menit per Admin, dan route ini boleh berjalan sampai 300 detik.
+
+Hasil uji 19 November 2026 pada dokumen spesimen fiktif, dengan OCR di Dokploy dan Qwen di Groq:
+- tidak ada nilai salah yang lolos; isian yang tidak terbaca dikosongkan;
+- waktu baca 2–33 detik per dokumen;
+- kuota gratis Groq bisa habis (`RATE_LIMITED`) bila banyak dokumen dibaca beruntun.
 
 Adapter baru cukup mengekspor `{ id, configured(), generate({ feature, instructions, input, outputSchema }) → { output, meta } }`, lalu didaftarkan di `lib/ai/providers/index.js`. Semua validasi dan pemeriksaan tetap berjalan sama untuk adapter apa pun.
 
 ## 5. Langkah berikutnya (belum dibuat)
 
 1. **Pilih fitur utama dan model** bersama mentor (lihat bagian 1).
-2. **Endpoint produksi per fitur.** Logbook Drafter sudah dibuat (`.../activities/{activityId}/ai-draft`). Berikutnya: Smart Reply dan ringkasan ulasan dengan pola yang sama.
+2. **Endpoint produksi per fitur.** Logbook Drafter (`.../activities/{activityId}/ai-draft`) dan Legal Verification (`/api/admin/daycare-documents/{id}/ai-read`) sudah dibuat. Berikutnya: Smart Reply dan ringkasan ulasan dengan pola yang sama.
 3. **Persistensi `ai_jobs`:** Logbook Drafter mencatat job secara sinkron lewat `app_record_logbook_draft_job`. Untuk fitur lain dan proses latar belakang: migrasi kolom antrean (`available_at`, `lease_*`, `applied_at`; kontrak bagian 9), RPC pencatatan job yang hanya dapat dipanggil `service_role`, `GET /api/ai/jobs/{id}`, dan eksekusi dengan `after()` dari `next/server` agar respons `202` tidak menunggu model.
 4. **UI:** loading, hasil dengan penanda AI, kosong/abstain, error, serta aksi tinjau/terapkan.
 5. **Evaluasi:** set uji berlabel per fitur dan laporan metrik (pipeline AI bagian 7).

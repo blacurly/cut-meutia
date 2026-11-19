@@ -9,6 +9,7 @@ import { Copy, Plus, ShieldCheck } from "lucide-react";
 import { apiSend, useApi } from "@/lib/client-api";
 import { invitationUrl } from "@/lib/auth";
 import { documentTypeLabel } from "@/lib/document-types";
+import DocumentAiRead from "./DocumentAiRead";
 import { PageHeader, Panel } from "@/components/features/ParentUI";
 import { Badge, COMPLAINT_STATUS, Empty, ErrorNote, INCIDENT_STATUS, Loading, URGENCY, dateText, dateTimeText, rupiah } from "./ui";
 import p from "@/components/features/Parent.module.css";
@@ -173,6 +174,7 @@ export function AdminVerification() {
         {pendingDocs.map(d => <div key={d.id} style={{ borderTop: "1px solid #eef2f5", paddingTop: 12, marginTop: 12 }}>
           <div className={p.between}><strong>{d.daycare?.name} · {documentTypeLabel(d.document_type)} v{d.version}</strong><button type="button" className={p.link} onClick={() => view(d.id)}>Lihat berkas</button></div>
           <p className={p.small}>{d.document_number ?? "—"} · {d.issuer ?? "—"} · berlaku sampai {dateText(d.expires_on)} · status {d.status}</p>
+          <DocumentAiRead document={d} />
           <Decide busy={action.busy} onDecide={patch(`/api/admin/daycare-documents/${d.id}`, documents.reload, "Keputusan dokumen tersimpan.")} options={[["approved", "Setujui", true], ["revision_required", "Minta revisi"], ["rejected", "Tolak"]]} />
         </div>)}
         {!documents.loading && pendingDocs.length === 0 && <p className={p.muted}>Tidak ada antrean.</p>}
