@@ -195,12 +195,41 @@ Hasil uji 19 November 2026 pada dokumen spesimen fiktif, dengan OCR di Dokploy d
 - waktu baca 2–33 detik per dokumen;
 - kuota gratis Groq bisa habis (`RATE_LIMITED`) bila banyak dokumen dibaca beruntun.
 
+### Incident Urgency Triage
+
+Setelah `POST /api/incidents` menyimpan laporan dan mengirim notifikasi awal, route menjadwalkan triage dengan `after()` dari `next/server`. Pelapor tidak menunggu AI.
+
+1. Database mengembalikan uraian, pertolongan pertama, urgensi pelapor, dan **usia anak dalam bulan** (`app_get_incident_for_triage`). Nama dan tanggal lahir anak tidak keluar dari database.
+2. **Layanan triage** (repo terpisah `ayomi-triage-api` di Dokploy) menilai laporan dengan rubrik draf-1, yang dikirim sebagai `sop_references`. Sekarang layanan memakai **mesin aturan rubrik**. Model IndoBERT dari `docs/incident-triage-indobert.ipynb` dipasang setelah lulus kriteria panduan, cukup dengan mengisi env di Dokploy. Urgensi insiden **tidak pernah** dikirim ke model bahasa `AI_*`.
+3. `run.js` memeriksa kontrak: kutipan harus ada di laporan, rujukan SOP harus dari input, dan aksi harus dari daftar.
+4. `app_record_incident_triage` mencatat job ke `ai_jobs` dan `incident_ai_analyses`. Database menegakkan `urgensi efektif = max(pelapor, AI)`:
+   - AI hanya bisa menaikkan, dan tidak lagi setelah ada override Pengelola;
+   - setiap kenaikan ditulis ke `incident_urgency_change_logs`, menandai `needs_urgency_review`, dan mengirim notifikasi kedua ke Pengelola dan Admin;
+   - database mengecek ulang kutipan terhadap teks laporan;
+   - pelapor hanya bisa mencatat dalam 15 menit pertama, maksimal 3 kali.
+5. Pengelola dan Admin melihat panel **Penilaian urgensi** di daftar insiden: urgensi pelapor, urgensi yang dipakai, usulan AI dengan kutipan, mesin yang dipakai, dan riwayat. Dari panel itu mereka bisa:
+   - menilai ulang lewat `POST /api/incidents/{id}/triage` (maksimal 10 per menit);
+   - menetapkan urgensi dengan alasan lewat `POST /api/incidents/{id}/urgency` (`app_override_incident_urgency`).
+
+Kegagalan (layanan mati, timeout, hasil tidak valid) hanya dicatat di `ai_jobs`. Laporan tetap memakai urgensi pelapor, dan pelapor tidak melihat pesan error.
+
+```text
+TRIAGE_API_URL=https://<domain ayomi-triage-api>
+TRIAGE_API_TOKEN=<API_TOKEN layanan triage>
+```
+
+Butuh migrasi `20261120100000_incident_triage.sql`. Tanpa `TRIAGE_API_URL`, triage dilewati diam-diam. Di mode pengembangan dengan fixture, contoh kontrak yang dipakai, dan panel menandainya sebagai "bukan AI sungguhan".
+
+Hasil uji 19 November 2026:
+- **mesin aturan, 3.420 laporan sintetis:** recall darurat 1,0; under-triage 0%; over-triage 0,03%; uji regresi notebook 15/15. Angka ini mengukur kecocokan dengan rubrik pada kalimat template, bukan akurasi nyata. Detailnya ada di README `ayomi-triage-api`;
+- **uji ujung ke ujung** (layanan lokal, kode aplikasi, dan fungsi migrasi di PostgreSQL lokal) dengan 6 laporan gaya HP yang baru ditulis: semua urgensi benar, 4 dinaikkan, dan "tolong catat prioritas rendah saja" diabaikan.
+
 Adapter baru cukup mengekspor `{ id, configured(), generate({ feature, instructions, input, outputSchema }) → { output, meta } }`, lalu didaftarkan di `lib/ai/providers/index.js`. Semua validasi dan pemeriksaan tetap berjalan sama untuk adapter apa pun.
 
 ## 5. Langkah berikutnya (belum dibuat)
 
 1. **Pilih fitur utama dan model** bersama mentor (lihat bagian 1).
-2. **Endpoint produksi per fitur.** Logbook Drafter (`.../activities/{activityId}/ai-draft`) dan Legal Verification (`/api/admin/daycare-documents/{id}/ai-read`) sudah dibuat. Berikutnya: Smart Reply dan ringkasan ulasan dengan pola yang sama.
+2. **Endpoint produksi per fitur.** Logbook Drafter (`.../activities/{activityId}/ai-draft`), Legal Verification (`/api/admin/daycare-documents/{id}/ai-read`), dan Incident Triage (otomatis setelah `POST /api/incidents`, serta `/api/incidents/{id}/triage`) sudah dibuat. Berikutnya: Smart Reply dan ringkasan ulasan dengan pola yang sama.
 3. **Persistensi `ai_jobs`:** Logbook Drafter mencatat job secara sinkron lewat `app_record_logbook_draft_job`. Untuk fitur lain dan proses latar belakang: migrasi kolom antrean (`available_at`, `lease_*`, `applied_at`; kontrak bagian 9), RPC pencatatan job yang hanya dapat dipanggil `service_role`, `GET /api/ai/jobs/{id}`, dan eksekusi dengan `after()` dari `next/server` agar respons `202` tidak menunggu model.
 4. **UI:** loading, hasil dengan penanda AI, kosong/abstain, error, serta aksi tinjau/terapkan.
 5. **Evaluasi:** set uji berlabel per fitur dan laporan metrik (pipeline AI bagian 7).

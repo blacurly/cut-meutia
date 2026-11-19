@@ -14,6 +14,7 @@ import { DAYCARE_DOCUMENT_TYPES, documentTypeLabel } from "@/lib/document-types"
 import { LinkButton, PageHeader, Panel } from "@/components/features/ParentUI";
 import { useDaycare } from "./DaycareContext";
 import PhotoTargetPicker from "./PhotoTargetPicker";
+import IncidentTriage from "./IncidentTriage";
 import {
   ACTIVITY_TYPES, Badge, ENROLLMENT_STATUS, Empty, ErrorNote, INCIDENT_STATUS, Loading, URGENCY,
   dateText, dateTimeText, nowLocalInput, rupiah, todayJakarta,
@@ -420,6 +421,7 @@ export function StaffIncidents() {
         <div className={p.between}><div><strong>{i.child_name ?? "Anak"}</strong><p className={p.small}>{dateTimeText(i.occurred_at)}</p></div>
           <div className={p.row}><Badge map={URGENCY} value={i.urgency} /><Badge map={INCIDENT_STATUS} value={i.status} /></div></div>
         <p style={{ marginTop: 6 }}>{i.description}</p><p className={p.small}>Pertolongan pertama: {i.first_aid}</p>
+        <IncidentTriage incident={i} onChanged={incidents.reload} />
         {i.status !== "resolved" && <div className={p.row} style={{ marginTop: 10 }}>
           <input className={p.select} placeholder="Alasan perubahan status (minimal 10 karakter)" value={statusReason[i.id] ?? ""} onChange={e => setStatusReason(r => ({ ...r, [i.id]: e.target.value }))} aria-label="Alasan" style={{ flex: 1 }} />
           {i.status === "new" && <button type="button" className={`${p.button} ${p.secondary}`} disabled={action.busy} onClick={() => setStatus(i.id, "in_progress")}>Tangani</button>}

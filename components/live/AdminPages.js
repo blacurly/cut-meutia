@@ -10,6 +10,7 @@ import { apiSend, useApi } from "@/lib/client-api";
 import { invitationUrl } from "@/lib/auth";
 import { documentTypeLabel } from "@/lib/document-types";
 import DocumentAiRead from "./DocumentAiRead";
+import IncidentTriage from "./IncidentTriage";
 import { PageHeader, Panel } from "@/components/features/ParentUI";
 import { Badge, COMPLAINT_STATUS, Empty, ErrorNote, INCIDENT_STATUS, Loading, URGENCY, dateText, dateTimeText, rupiah } from "./ui";
 import p from "@/components/features/Parent.module.css";
@@ -245,6 +246,7 @@ export function AdminIncidents() {
         <div className={p.between}><div><strong>{i.daycare?.name} · {i.child_name ?? "Anak"}</strong><p className={p.small}>{dateTimeText(i.occurred_at)}</p></div>
           <div className={p.row}><Badge map={URGENCY} value={i.urgency} /><Badge map={INCIDENT_STATUS} value={i.status} /></div></div>
         <p style={{ marginTop: 6 }}>{i.description}</p><p className={p.small}>Pertolongan pertama: {i.first_aid}</p>
+        <IncidentTriage incident={i} onChanged={incidents.reload} />
         {i.status !== "resolved" && <Decide busy={action.busy} placeholder="Alasan perubahan status (minimal 10 karakter)" onDecide={setStatus(i.id)} options={[["in_progress", "Tangani"], ["resolved", "Selesai", true]]} />}
       </Panel>)}
     </div>

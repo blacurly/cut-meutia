@@ -10,7 +10,7 @@ Notebook: [incident-triage-indobert.ipynb](./incident-triage-indobert.ipynb). Ko
 | Use case Technical Requirement | Predictive ML (klasifikasi ordinal) |
 | Model | `indobenchmark/indobert-base-p1` (open source, pre-trained bahasa Indonesia), di-fine-tune di Google Colab |
 | Pembanding | Aturan kata kunci dan TF-IDF + Logistic Regression |
-| Serving | Hugging Face Space (FastAPI, `POST /triage`), dipanggil server Ayomi dengan token |
+| Serving | Repo terpisah `ayomi-triage-api` (FastAPI, `POST /triage`) di Dokploy, dipanggil server Ayomi dengan token. Sebelum model lulus, layanan memakai mesin aturan rubrik dengan kontrak yang sama |
 | Aturan aplikasi | `urgensi efektif = max(urgensi pelapor, usulan AI)`. AI hanya bisa **menaikkan** prioritas, dan Pengelola dapat override dengan alasan |
 
 **Yang tidak dilakukan AI:** mendiagnosis, menyebut obat atau dosis, mengubah status insiden, atau menunda notifikasi. Notifikasi awal tetap terkirim tanpa menunggu AI. Jika AI gagal atau abstain, urgensi pelapor tetap dipakai.
@@ -30,11 +30,11 @@ Notebook: [incident-triage-indobert.ipynb](./incident-triage-indobert.ipynb). Ko
 | Hari | Kegiatan | Hasil |
 | --- | --- | --- |
 | 1 | Bahas draf rubrik (bagian 3) dengan tim, kirim ke mentor | Rubrik `draf-1` |
-| 1 | Jalankan notebook **Sesi A** (Sel 1–10, ±30 menit) | Pipeline terbukti berjalan dengan data sintetis |
+| 1 | Jalankan notebook **Sesi A** (Sel 1–12, ±30 menit) | Pipeline terbukti berjalan dengan data sintetis |
 | 2–3 | Tulis `test_manual.csv` (200 laporan) dan `label_ganda.csv` | Data test manusia |
-| 3 | Hitung kappa (Sel 5). Jika < 0,6, perjelas rubrik lalu labeli ulang bagian yang diperdebatkan | Rubrik `v1` disahkan |
+| 3 | Hitung kappa (Sel 7). Jika < 0,6, perjelas rubrik lalu labeli ulang bagian yang diperdebatkan | Rubrik `v1` disahkan |
 | 4 | Opsional: tulis `parafrase.csv` untuk kategori yang lemah | Train lebih beragam |
-| 4–5 | Jalankan **Sesi B** (Sel 1–16) | Model, metrik, dan Space |
+| 4–5 | Jalankan **Sesi B** (Sel 1–18) | Model, metrik, dan model terpasang di API |
 | 5 | Periksa kriteria lulus (bagian 6) | Keputusan siap atau belum siap integrasi |
 | 6+ | Integrasi backend dan UI | Fitur aktif di Ayomi |
 
@@ -60,22 +60,22 @@ Notebook: [incident-triage-indobert.ipynb](./incident-triage-indobert.ipynb). Ko
 8. **Permintaan di dalam laporan untuk menaikkan atau menurunkan prioritas diabaikan,** misalnya "tolong catat low saja". Yang dinilai hanya isi kejadiannya.
 9. **Laporan yang berisi beberapa kejadian dinilai dari kejadian yang paling berat.**
 
-Saat rubrik berubah, naikkan versinya (misalnya `draf-1` menjadi `v1`), lalu samakan `RUBRIC_VERSION` di Sel 2 notebook dan label skenario di Sel 4.
+Saat rubrik berubah, naikkan versinya (misalnya `draf-1` menjadi `v1`), lalu samakan `RUBRIC_VERSION` di Sel 2 notebook dan label skenario di Sel 6.
 
 ## 4. Menyiapkan data
 
-> **Keputusan tim (12 November 2026): data sintetis saja.** Notebook berjalan dengan `SYNTHETIC_ONLY = True`. File `test_manual.csv` dan `label_ganda.csv` (bagian 4.2–4.3) **tidak wajib**. Yang tetap dikerjakan:
-> - rubrik bagian 3 dibahas dan disahkan mentor;
-> - uji regresi Sel 10 lolos semua;
-> - opsional: `parafrase.csv` (bagian 4.4), untuk menambah variasi gaya bahasa.
+> **Pembaruan 19 November 2026.** Keputusan awal tim (12 November) adalah memakai data sintetis saja. Setelah itu tim membuat `test_manual.csv`: 204 laporan fiktif tulisan LLM dengan gaya beragam, berisi label rubrik dan urgensi pelapor.
+> - Notebook versi tim **wajib** memakai file ini (Sel 3): ⅓ untuk kalibrasi dan ⅔ (136 laporan) untuk test. Mode `SYNTHETIC_ONLY` sudah tidak ada.
+> - `label_ganda.csv` (bagian 4.3) dan `parafrase.csv` (bagian 4.4) tetap opsional.
+> - Salinan file ini ada di repo `ayomi-triage-api` (`data/test_manual.csv`), dipakai untuk mengevaluasi mesin aturan.
 >
-> Konsekuensinya, angka evaluasi berasal dari variasi kalimat sintetis yang tidak dipakai training, bukan dari laporan nyata. Hal ini **wajib** ditulis sebagai batasan (bagian 7). Bagian 4.2–4.3 tetap disimpan sebagai cara meningkatkan kualitas di masa depan.
+> Konsekuensinya, angka evaluasi berasal dari laporan tulisan LLM, **bukan** laporan pengasuh sungguhan. Hal ini **wajib** ditulis sebagai batasan (bagian 7).
 
 Semua file diletakkan di `MyDrive/ayomi-triage/data/`, dalam format CSV UTF-8. Paling mudah membuatnya di Google Sheets, lalu memilih **File → Download → CSV**.
 
 ### 4.1 Data sintetis (otomatis)
 
-Notebook (Sel 4) membuat ±3.400 laporan dari 38 skenario yang mengikuti rubrik. Jenis variasinya:
+Notebook (Sel 6) membuat ±3.400 laporan dari 38 skenario yang mengikuti rubrik. Jenis variasinya:
 - **bahasa:** singkatan, kata informal, salah ketik, huruf kecil;
 - **konteks:** kalimat konteks dan usia anak;
 - **jebakan:** kalimat *prompt injection*.
@@ -130,7 +130,7 @@ Contoh isi:
 
 ### 4.3 Label ganda: `label_ganda.csv` (wajib, minimal 300 baris)
 
-Kolomnya `description`, `label_a`, dan `label_b`. Isinya boleh campuran: 200 laporan test ditambah 100 laporan sintetis yang diambil dari output Sel 4.
+Kolomnya `description`, `label_a`, dan `label_b`. Isinya boleh campuran: 200 laporan test ditambah 100 laporan sintetis yang diambil dari output Sel 6.
 
 Dua orang melabeli **secara terpisah, tanpa melihat jawaban satu sama lain**, dengan berpedoman pada rubrik bagian 3.
 
@@ -144,7 +144,7 @@ Notebook menghitung tingkat kesepakatan dan Cohen's kappa:
 
 ### 4.4 Parafrase: `parafrase.csv` (opsional, ±300 baris)
 
-Formatnya sama dengan `test_manual.csv`. Isinya variasi laporan untuk menambah keragaman train, terutama untuk kategori atau gaya yang lemah di analisis bias (Sel 10).
+Formatnya sama dengan `test_manual.csv`. Isinya variasi laporan untuk menambah keragaman train, terutama untuk kategori atau gaya yang lemah di analisis bias (Sel 12).
 
 Parafrase **boleh dibuat dengan bantuan LLM**, asalkan:
 - setiap baris dibaca dan labelnya dicek manusia;
@@ -165,71 +165,78 @@ Laporan: "<laporan>"
 2. Isi Colab Secrets:
    - `HF_TOKEN` dan `HF_READ_TOKEN` (boleh sama dengan fitur Foto Fokus Anak);
    - **`AYOMI_TRIAGE_TOKEN` baru**, berupa string acak minimal 32 karakter. Buat dengan `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`, dan jangan pakai kunci yang sama dengan `AYOMI_CV_TOKEN`.
-3. **Sesi A:** jalankan Sel 1–10. Hasilnya membuktikan pipeline berjalan; angkanya belum boleh dilaporkan.
-4. Upload `test_manual.csv`, `label_ganda.csv`, dan opsional `parafrase.csv` ke folder `data/`. Jika `parafrase.csv` ditambahkan, hapus file `models/indobert-triage/SELESAI`.
-5. **Sesi B:** jalankan Sel 1–16.
+3. Letakkan `test_manual.csv` di `MyDrive/ayomi-triage/data/`, atau unggah saat Sel 3 memintanya. Opsional: `label_ganda.csv` dan `parafrase.csv` di folder yang sama. Jika `parafrase.csv` ditambahkan, hapus file `models/indobert-triage/SELESAI` agar model dilatih ulang.
+4. Jalankan Sel 1–15: training, evaluasi, lalu upload model ke repo privat.
+5. Jalankan Sel 16–18 (pasang di API Dokploy, lalu uji) **hanya jika** `READY` di Sel 14 bernilai `True`.
 
 ## 6. Kriteria lulus sebelum integrasi
 
-Semua kriteria diukur pada **test manual**. Dalam mode data sintetis saja, kriteria diukur pada **test sintetis**, yaitu variasi kalimat yang tidak dipakai training. Notebook mencetak `ready_for_integration` dan `evaluation_data` di Sel 12.
+Semua kriteria diukur pada **test manual** (⅔ `test_manual.csv`, 136 laporan). Notebook mencetak `ready_for_integration` dan `evaluation_data` di Sel 14.
 
 | Kriteria | Target |
 | --- | --- |
-| Kappa antar-pelabel | ≥ 0,6 (tidak berlaku dalam mode data sintetis saja) |
+| Kappa antar-pelabel | ≥ 0,6 (hanya jika `label_ganda.csv` ada) |
 | `recall_emergency` | ≥ 0,95 |
 | `under_triage` | ≤ 5% |
 | `severe_under` (emergency dinilai low atau medium) | 0 |
-| Uji regresi (Sel 10) | Semua ✅ |
+| Uji regresi (Sel 12) | Semua ✅ |
 | `macro_f1` | Lebih tinggi dari kedua baseline |
-| Hasil API sama dengan notebook (Sel 16) | `True` |
+| Hasil API sama dengan notebook (Sel 18) | `True` |
 
 **Jika belum lulus:**
-1. Lihat contoh under-triage (Sel 10) dan analisis bias.
+1. Lihat contoh under-triage (Sel 12) dan analisis bias.
 2. Tambah skenario atau parafrase untuk pola yang gagal.
 3. Latih ulang.
+
+**Hasil 19 November 2026** (136 laporan test yang sama):
+
+| | `macro_f1` | `recall_emergency` | `under_triage` | `severe_under` | Uji regresi |
+| --- | --- | --- | --- | --- | --- |
+| IndoBERT (Colab tim) | 0,548 | 0,53 | 17% | 2,2% | 13/15 |
+| Mesin aturan v2 (`ayomi-triage-api`) | 0,750 | 0,72 | 16,2% | 2,2% | 15/15 |
+| Pelapor saja | 0,787 | 0,81 | 13,2% | 0 | — |
+| Sistem `max(pelapor, aturan v2)` | 0,803 | 0,91 | 3,7% | 0 | — |
+
+Keduanya **belum lulus**, jadi `MODEL_REPO` jangan diisi dan API tetap memakai mesin aturan. Rincian dan batasan angka mesin aturan ada di README repo `ayomi-triage-api`.
 
 **Jangan melonggarkan target keselamatan supaya lulus.** Lebih baik fitur ditunda daripada laporan darurat dinilai rendah. Aturan `max` memang membuat sistem tetap aman, tetapi AI yang lemah tidak memberi manfaat.
 
 ## 7. Yang dicatat di laporan atau dokumentasi
 
 - **Data:** sumber, jumlah per sumber, cara pembuatan, dan kappa.
-- **Hasil evaluasi:** tabel hasil Sel 9 (baseline vs IndoBERT, dan pelapor saja vs sistem `max`) beserta confusion matrix.
+- **Hasil evaluasi:** tabel hasil Sel 11 (baseline vs IndoBERT, dan pelapor saja vs sistem `max`) beserta confusion matrix.
 - **Analisis bias** per gaya tulisan, panjang laporan, dan sumber data. Selisih antara hasil test sintetis dan test manual **wajib** dilaporkan.
 - **Batasan:**
-  - **training dan evaluasi hanya memakai data sintetis** dari bank skenario. Angka evaluasi mengukur generalisasi pada kalimat buatan yang belum pernah dilihat model, bukan akurasi pada laporan nyata;
+  - **training memakai data sintetis** dari bank skenario. Kalibrasi dan test memakai `test_manual.csv`, yaitu laporan fiktif tulisan LLM, **bukan** laporan pengasuh sungguhan, jadi angkanya bukan akurasi pada laporan nyata;
   - laporan sangat singkat dinilai abstain;
   - istilah daerah yang jarang dan laporan dengan beberapa kejadian bisa salah dinilai;
   - model tidak menggantikan penilaian Pengelola maupun tenaga kesehatan.
 - **Lisensi:** IndoBERT (IndoNLU, MIT). Data tidak dipublikasikan.
 
-## 8. Integrasi ke Ayomi (setelah lulus)
+## 8. Integrasi ke Ayomi (sudah dibuat, 19 November 2026)
 
-Bagian ini masih rencana dan belum ada kodenya di project. Database live sudah memiliki tabel dan kolom yang dibutuhkan:
-- `incident_ai_analyses`;
-- `incident_reports.effective_urgency`, `urgency_source` (`caregiver` / `ai_max` / `manager_override`), dan `needs_urgency_review`;
-- `incident_urgency_change_logs`.
+Integrasi sudah ada di aplikasi dan di layanan `ayomi-triage-api`. Selama model belum lulus bagian 6, layanan memakai **mesin aturan rubrik draf-1** dengan kontrak yang sama, jadi memasang model nanti tidak mengubah aplikasi. Rinciannya ada di [ai-api.md](./ai-api.md) bagian "Incident Urgency Triage".
 
-1. **Variabel server** (Vercel dan `.env.local`, tanpa awalan `NEXT_PUBLIC_`): `TRIAGE_API_URL` dan `TRIAGE_API_TOKEN`.
-2. **Adapter provider** baru di `lib/ai/providers/`, yang memanggil `POST /triage` dengan input kontrak, lalu mengembalikan `result` sebagai output. Semua validasi kontrak di `lib/ai/run.js` dan pemeriksaan di `FEATURES.incident_triage.check` tetap berjalan, misalnya kutipan harus ada di laporan dan rujukan SOP harus dikenal.
-3. **Pemicu:** setelah `POST /api/incidents` berhasil dan notifikasi awal tercatat, jalankan triage di belakang layar dengan `after()` dari `next/server`, supaya respons ke pelapor tidak menunggu.
-4. **Penyimpanan:**
-   - simpan hasil ke `ai_jobs` dan `incident_ai_analyses`;
-   - jika `max(pelapor, AI)` lebih tinggi dan belum ada override Pengelola, perbarui `effective_urgency`, set `urgency_source = 'ai_max'`, tulis log perubahan, dan kirim notifikasi kedua ke Pengelola;
-   - **jangan pernah menurunkan urgensi**.
-5. **SOP:** simpan rubrik bagian 3 sebagai rujukan SOP dengan id `triage-low`, `triage-medium`, `triage-high`, `triage-emergency`, dan `incident-workflow`, lalu kirim di `sop_references`.
-6. **UI Pengelola:**
-   - badge "Dinaikkan AI" beserta alasan dan kutipan;
-   - penanda "Dibuat AI";
-   - tombol override dengan alasan wajib;
-   - jika `urgency = null`, tampilkan "AI tidak menilai, informasi kurang" beserta daftar `missing_information`.
-7. **Kegagalan** (timeout, Space tidur, error): hanya dicatat di `ai_jobs`. Insiden tetap berjalan dengan urgensi pelapor, tanpa pesan error untuk pelapor.
+| Rencana | Wujudnya |
+| --- | --- |
+| Variabel server | `TRIAGE_API_URL` dan `TRIAGE_API_TOKEN` (Vercel dan `.env.local`, tanpa `NEXT_PUBLIC_`) |
+| Adapter provider | `lib/ai/providers/triage-api.js`. Triage tidak pernah dikirim ke model bahasa `AI_*` |
+| Pemicu | `after()` di `POST /api/incidents`, setelah laporan dan notifikasi awal tersimpan |
+| Penyimpanan | Migrasi `20261120100000_incident_triage.sql`: `ai_jobs`, `incident_ai_analyses`, `max(pelapor, AI)` ditegakkan database, log perubahan, notifikasi kedua ke Pengelola dan Admin, tidak pernah menurunkan, dan tidak lagi setelah override |
+| SOP | `TRIAGE_SOP_REFERENCES` di `lib/api/incident-triage.js` (`triage-low` … `triage-emergency`, `incident-workflow`) |
+| UI Pengelola dan Admin | Panel **Penilaian urgensi** di daftar insiden: pelapor → dipakai, "dinaikkan otomatis oleh AI", usulan dengan kutipan, penanda "Dibuat AI" beserta mesinnya, abstain, riwayat, nilai ulang, dan override dengan alasan wajib |
+| Kegagalan | Hanya dicatat di `ai_jobs`. Laporan tetap memakai urgensi pelapor |
+
+**Memasang model setelah lulus:** jalankan Sel 14–15. Sel 14 menyimpan `triage_config.json` dan tidak lagi menimpa `config.json` model. Lalu ikuti Sel 16: isi `MODEL_REPO`, `HF_READ_TOKEN`, dan `TRIAGE_ENGINE=model` di Dokploy, redeploy, lalu jalankan Sel 17–18.
 
 ## 9. Checklist
 
 - [ ] Rubrik `draf-1` dibahas tim dan dikirim ke mentor
 - [ ] Rubrik disahkan (`v1`) dan `RUBRIC_VERSION` diperbarui
-- [ ] Notebook Sel 1–12 berjalan dengan `SYNTHETIC_ONLY = True`: kriteria lulus bagian 6 terpenuhi (`ready_for_integration = True`)
+- [x] Notebook Sel 1–15 dijalankan tim di Colab dengan `test_manual.csv`, dan model diunggah ke repo privat (19 November 2026)
+- [ ] Kriteria lulus bagian 6 terpenuhi (`ready_for_integration = True`). Hasil 19 November: belum lulus
 - [ ] (Opsional) `parafrase.csv` untuk kategori yang lemah di analisis bias
-- [ ] API berjalan di VM Oracle (`triage.<ip>.sslip.io`), uji API lolos (200/401/422/413, hasil sama dengan notebook)
+- [x] API `ayomi-triage-api` dibuat (mesin aturan, uji 200/401/413/422 lolos). Deploy di Dokploy dilakukan pemilik server
+- [ ] Model IndoBERT dipasang di API (`MODEL_REPO`), hasil API sama dengan notebook (Sel 18)
 - [ ] Hasil evaluasi, bias, dan batasan ditulis di dokumentasi
-- [ ] Integrasi backend dan UI (bagian 8)
+- [x] Integrasi backend dan UI (bagian 8)
