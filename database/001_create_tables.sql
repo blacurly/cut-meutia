@@ -1,5 +1,5 @@
 -- AYOMI: 60 tabel aplikasi untuk Supabase / PostgreSQL
--- Sumber: docs/alur-bisnis-dan-database-ayomi.md, kamus tabel fisik v1.
+-- Sumber: kamus tabel fisik v1.
 -- Jalankan seluruh file SEKALI melalui Supabase SQL Editor pada schema aplikasi kosong.
 -- Tidak menghapus atau mengganti tabel yang sudah ada. Jika ada konflik, transaksi dibatalkan.
 -- auth.users disediakan Supabase dan tidak dihitung sebagai tabel aplikasi.

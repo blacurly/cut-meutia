@@ -2,11 +2,6 @@
 export const caregiverDaycareId = "kasih-bunda";
 export const emptyCaregiver = { enabled:false, seeded:false, journals:[], replies:[], responses:[], documents:[], business:null };
 export const activityTypes = {checkin:"Kedatangan",play:"Bermain & belajar",meal:"Makan",sleep:"Istirahat"};
-export const exampleReviews = [
-  {id:"example-sustri",daycareId:caregiverDaycareId,author:"Bunda Sustri · contoh",rating:5,text:"Pengasuhnya sabar dan ruang bermain bersih. Catatan harian membantu kami mengikuti kegiatan anak.",createdAt:"2026-10-24T08:00:00+07:00"},
-  {id:"example-rama",daycareId:caregiverDaycareId,author:"Ayah Rama · contoh",rating:3,text:"Kegiatan anak menyenangkan. Informasi perubahan jadwal penjemputan masih bisa disampaikan lebih awal.",createdAt:"2026-10-23T08:00:00+07:00"},
-];
-
 export function normalizeCaregiver(value) {
   const object=v=>v&&typeof v==="object"&&!Array.isArray(v);
   const text=v=>typeof v==="string";

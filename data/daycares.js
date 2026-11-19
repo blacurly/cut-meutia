@@ -37,9 +37,3 @@ export const daycares = fixtures.map(([id, name, province, city, district, price
     { id: "daily", name: "Harian", hours: "07.00–18.00", price: Math.round(price / 15 / 5000) * 5000, unit: "hari" },
   ],
 }));
-export const journalExamples = [
-  { id: "arrival", time: "08:00", type: "checkin", title: "Datang dengan senyum", body: "Si kecil mengikuti penyambutan pagi dan mulai berkenalan dengan teman bermain.", caregiver: "Mbak Siti", image: null },
-  { id: "play", time: "09:30", type: "play", title: "Eksplorasi bentuk & warna", body: "Bermain menyusun balok dan mengenal warna. Kegiatan melatih koordinasi serta kerja sama.", caregiver: "Mbak Siti", image: roomImage },
-  { id: "meal", time: "12:15", type: "meal", title: "Waktunya makan siang", body: "Contoh menu hari ini: nasi, sup sayur, dan ayam. Catatan contoh: makan dengan lahap.", caregiver: "Mbak Rani", image: null },
-  { id: "sleep", time: "13:00", type: "sleep", title: "Istirahat setelah bermain", body: "Contoh catatan: tidur siang selama 1,5 jam dalam suasana tenang.", caregiver: "Mbak Rani", image: null },
-];
