@@ -1,13 +1,54 @@
 "use client";
 import { useCallback, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, CheckCircle2, Clock, FileCheck2, Info, MapPin, Star, Users, Wallet } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Clock, FileCheck2, Info, MapPin, ShieldCheck, Star, Users, Wallet } from "lucide-react";
+import { SAFETY_CRITERIA, safetyStatusLabel } from "@/lib/safety-score";
 import Tabs from "@/components/ui/Tabs";
 import Modal from "@/components/ui/Modal";
 import { FACILITY_TAGS } from "@/lib/daycare-facilities";
 import { ageText, rupiah } from "@/lib/daycare-directory";
 import { CompareButton, DaycarePhoto, LinkButton, ListingBadge, Panel } from "./ParentUI";
 import p from "./Parent.module.css";
+
+const STATUS_TONE = { pass: "", partial: p.amber, fail: p.red };
+const dateId = value => (value ? new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" })
+  .format(new Date(String(value).length === 10 ? `${value}T00:00:00+07:00` : value)) : null);
+
+// Safety Score published by Ayomi Admin from verified documents. Hidden while
+// any evidence has expired; catalog-only daycares are never scored.
+function SafetyScorePanel({ safety, partner }) {
+  const title = <h2 className={p.sectionTitle}><ShieldCheck size={17} style={{ display: "inline", marginRight: 6 }} />Safety Score</h2>;
+  if (!safety?.current) {
+    return <Panel>
+      {title}
+      <p className={p.muted}>{safety
+        ? "Sedang ditinjau ulang karena sebagian dokumen bukti sudah kedaluwarsa atau diperbarui."
+        : partner ? "Belum dinilai. Skor muncul setelah tim Ayomi memverifikasi dokumen legalitas, SOP, sertifikat staf, dan pemeriksaan fasilitas daycare ini."
+          : "Belum dinilai. Safety Score hanya diberikan kepada daycare mitra Ayomi yang dokumennya sudah diverifikasi."}</p>
+    </Panel>;
+  }
+  const score = Number(safety.score).toLocaleString("id-ID", { maximumFractionDigits: 2 });
+  return <Panel>
+    <div className={p.between}>
+      {title}
+      <span><strong className={p.price} style={{ fontSize: 30 }}>{score}</strong><span className={p.small}> / 100</span></span>
+    </div>
+    <ul className={p.stack} style={{ gap: 10, marginTop: 12 }}>
+      {SAFETY_CRITERIA.map(criterion => {
+        const item = safety.criteria?.find(entry => entry.id === criterion.id);
+        return <li key={criterion.id}>
+          <div className={p.between}><strong style={{ fontSize: 13 }}>{criterion.label} <span className={p.small}>· bobot {criterion.weight}</span></strong>
+            {item && <span className={`${p.badge} ${STATUS_TONE[item.status] ?? p.neutral}`}>{safetyStatusLabel(item.status)}</span>}</div>
+          {item?.reason && <p className={p.small}>{item.reason}</p>}
+        </li>;
+      })}
+    </ul>
+    <p className={p.notice} style={{ marginTop: 16 }}>
+      Dinilai tim Ayomi dari dokumen yang sudah diverifikasi per {dateId(safety.as_of)}{safety.valid_until ? `; berlaku sampai ${dateId(safety.valid_until)}` : ""}.
+      Skor menilai bukti pada tanggal tersebut, bukan sertifikasi keselamatan. Rubrik penilaian masih versi uji coba.
+    </p>
+  </Panel>;
+}
 
 const TABS = [
   { id: "summary", label: "Ringkasan" },
@@ -54,6 +95,7 @@ export default function ListingDetail({ daycare }) {
         <Tabs tabs={TABS} activeTab={tab} onChange={setTab} label="Informasi daycare" idPrefix="listing-tab" panelId="listing-content" />
         <div id="listing-content" role="tabpanel" aria-labelledby={`listing-tab-${tab}`} className={p.tabContent}>
           {tab === "summary" && <div className={p.stack}>
+            <SafetyScorePanel safety={daycare.safetyScore} partner={!listing || daycare.acceptsEnrollment} />
             <Panel>
               <h2 className={p.sectionTitle}>Tentang daycare</h2>
               <p className={p.muted}>{daycare.description || "Deskripsi belum tersedia."}</p>

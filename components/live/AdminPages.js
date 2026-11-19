@@ -4,7 +4,8 @@
 // Admin portal pages backed by the API: overview with moderation and payment
 // confirmation, partner daycares, verification queues, incidents/complaints.
 import { useState } from "react";
-import { Copy, Plus } from "lucide-react";
+import Link from "next/link";
+import { Copy, Plus, ShieldCheck } from "lucide-react";
 import { apiSend, useApi } from "@/lib/client-api";
 import { invitationUrl } from "@/lib/auth";
 import { documentTypeLabel } from "@/lib/document-types";
@@ -142,7 +143,7 @@ export function AdminDaycares() {
       <Panel><h2 className={p.sectionTitle}>Tambah daycare mitra</h2><PartnerForm onCreated={partners.reload} /></Panel>
       {partners.loading ? <Loading /> : <ErrorNote error={partners.error || action.error} onRetry={partners.reload} />}<Notice text={action.notice} />
       {list(partners.data).map(d => <Panel key={d.id}>
-        <div className={p.between}><div><strong>{d.name}</strong><p className={p.small}>Pengelola: {d.manager?.full_name ?? "belum ada"} · dibuat {dateText(d.created_at)}</p></div><span className={p.badge}>{d.status}</span></div>
+        <div className={p.between}><div><strong>{d.name}</strong><p className={p.small}>Pengelola: {d.manager?.full_name ?? "belum ada"} · dibuat {dateText(d.created_at)}</p></div><div className={p.row}><Link className={p.link} style={{ display: "inline-flex", alignItems: "center", gap: 4 }} href={`/admin/daycare/${d.id}/safety-score`}><ShieldCheck size={14} />Safety Score</Link><span className={p.badge}>{d.status}</span></div></div>
         <Decide busy={action.busy} onDecide={decide(d.id)} options={[["active", "Aktifkan", true], ["inactive", "Nonaktifkan"], ["suspended", "Tangguhkan"]]} />
       </Panel>)}
     </div>
