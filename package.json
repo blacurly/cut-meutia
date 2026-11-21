@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "foto": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/process-photos.mjs"
+    "foto": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/process-photos.mjs",
+    "docs:api": "node scripts/generate-openapi.mjs",
+    "docs:erd": "node scripts/generate-erd.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

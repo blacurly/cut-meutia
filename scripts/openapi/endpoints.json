@@ -1,0 +1,578 @@
+{
+  "POST /api/activities/{id}/acknowledgements": {
+    "access": "Orang Tua / Pengelola",
+    "description": "Tandai dibaca (`parent_read`) atau ditinjau (`manager_review`)"
+  },
+  "GET /api/activities/{id}/comments": {
+    "access": "Orang Tua, Pengelola, Pengasuh bertugas",
+    "description": "Daftar komentar catatan"
+  },
+  "POST /api/activities/{id}/comments": {
+    "access": "Orang Tua, Pengelola, Pengasuh bertugas",
+    "description": "Tulis komentar"
+  },
+  "DELETE /api/activities/{id}/comments/{commentId}": {
+    "access": "Penulis komentar",
+    "description": "Hapus komentar sendiri"
+  },
+  "PUT /api/activities/{id}/love": {
+    "access": "Orang Tua",
+    "description": "Beri tanda love (favorit) pada catatan"
+  },
+  "DELETE /api/activities/{id}/love": {
+    "access": "Orang Tua",
+    "description": "Hapus tanda love"
+  },
+  "GET /api/activities/{id}/photos": {
+    "access": "Pengasuh bertugas, Pengelola",
+    "description": "Daftar foto (versi fokus per anak) pada catatan harian, dengan status tinjauan dan tautan bertanda tangan 5 menit",
+    "summary": "Daftar foto versi fokus pada catatan harian"
+  },
+  "POST /api/activities/{id}/photos": {
+    "access": "Pengasuh bertugas",
+    "description": "**Foto Fokus Anak (produksi).** Unggah foto kegiatan (multipart `file`, JPG/PNG/WebP ≤ 4 MB) beserta `child_id` dan `target_polygon`; server membuat versi fokus lewat layanan CV dan menyimpannya privat. Foto asli tidak pernah dikirim ke Orang Tua",
+    "summary": "Foto Fokus Anak: unggah foto dan simpan versi fokus"
+  },
+  "PATCH /api/activities/{id}/photos/{variantId}": {
+    "access": "Pengasuh bertugas, Pengelola",
+    "description": "Tandai varian foto `ready` atau `failed` setelah tinjauan",
+    "summary": "Tinjau atau setujui versi fokus sebelum dikirim"
+  },
+  "GET /api/admin/complaints": {
+    "access": "Admin",
+    "description": "Antrean komplain dengan prioritas emergency lebih dahulu",
+    "query": [
+      {
+        "name": "status",
+        "description": "Saring status komplain"
+      },
+      {
+        "name": "priority",
+        "description": "Saring prioritas"
+      }
+    ]
+  },
+  "PATCH /api/admin/complaints/{id}": {
+    "access": "Admin",
+    "description": "Mulai, minta informasi, usulkan penyelesaian, atau alihkan penanggung jawab"
+  },
+  "GET /api/admin/daycare-documents": {
+    "access": "Admin",
+    "description": "Daftar berkas legal untuk verifikasi",
+    "query": [
+      {
+        "name": "daycare_id",
+        "description": "UUID daycare"
+      }
+    ]
+  },
+  "GET /api/admin/daycare-documents/{id}/ai-read": {
+    "access": "Admin",
+    "description": "Hasil terakhir **Baca dengan AI** untuk dokumen legal: teks OCR per halaman, isian usulan beserta kutipan, peringatan, dan model yang dipakai",
+    "summary": "Hasil terakhir baca dokumen dengan AI"
+  },
+  "POST /api/admin/daycare-documents/{id}/ai-read": {
+    "access": "Admin",
+    "description": "**Legal Verification (OCR + model bahasa).** Tanpa body. Server mengunduh berkas, mencocokkan SHA-256, menjalankan OCR, lalu model bahasa mengusulkan isian. Isian tanpa kutipan di teks OCR dikosongkan. Maksimal 6 per menit; boleh berjalan sampai 300 detik",
+    "summary": "Baca dokumen legal dengan OCR + model bahasa"
+  },
+  "PATCH /api/admin/daycare-documents/{id}": {
+    "access": "Admin",
+    "description": "Setujui, tolak, atau minta revisi dokumen dengan alasan"
+  },
+  "GET /api/admin/daycares/{id}/safety-score": {
+    "access": "Admin",
+    "description": "Data penilaian Safety Score: dokumen bukti yang sudah disetujui, skor terakhir, dan riwayat"
+  },
+  "POST /api/admin/daycares/{id}/safety-score": {
+    "access": "Admin",
+    "description": "Simpan draf atau publikasikan Safety Score dari 4 komponen (Legalitas 40, SOP 25, Staf 20, Fasilitas 15). Komponen Lulus wajib punya dokumen bukti yang sudah disetujui; Legalitas yang belum lulus menahan publikasi"
+  },
+  "DELETE /api/admin/daycares/{id}/safety-score": {
+    "access": "Admin",
+    "description": "Tarik Safety Score yang sudah terbit, dengan alasan"
+  },
+  "GET /api/admin/documents": {
+    "access": "Admin",
+    "description": "Daftar dokumen legal untuk diverifikasi Admin, bisa disaring per daycare dengan `daycare_id`",
+    "summary": "Antrean dokumen legal semua daycare"
+  },
+  "PATCH /api/admin/documents/{id}": {
+    "access": "Admin",
+    "description": "Setujui (`approved`), tolak (`rejected`), atau minta revisi (`revision_required`) dokumen legal dengan alasan. Pengelola melihat keputusan dan alasannya",
+    "summary": "Putuskan dokumen legal"
+  },
+  "GET /api/admin/investigations": {
+    "access": "Admin",
+    "description": "Daftar investigasi atau mulai investigasi dari komplain/insiden"
+  },
+  "POST /api/admin/investigations": {
+    "access": "Admin",
+    "description": "Daftar investigasi atau mulai investigasi dari komplain/insiden"
+  },
+  "GET /api/admin/investigations/{id}/attachments": {
+    "access": "Admin",
+    "description": "Baca atau unggah bukti internal investigasi"
+  },
+  "POST /api/admin/investigations/{id}/attachments": {
+    "access": "Admin",
+    "description": "Baca atau unggah bukti internal investigasi"
+  },
+  "PATCH /api/admin/investigations/{id}": {
+    "access": "Admin",
+    "description": "Perbarui status, temuan, dan rekomendasi; penyelesaian wajib berisi temuan"
+  },
+  "GET /api/admin/moderation": {
+    "access": "Admin",
+    "description": "Antrean moderasi ulasan dan balasan"
+  },
+  "PATCH /api/admin/moderation/{kind}/{versionId}": {
+    "access": "Admin",
+    "description": "Terbitkan (`approved`) atau tolak (`rejected`) satu versi ulasan (`kind = reviews`) atau balasan Pengelola (`kind = replies`), dengan alasan 5–500 karakter",
+    "summary": "Moderasi ulasan atau balasan"
+  },
+  "GET /api/admin/partners": {
+    "access": "Admin",
+    "description": "Daftar daycare mitra, status, dan Manager aktif"
+  },
+  "POST /api/admin/partners": {
+    "access": "Admin",
+    "description": "Buat daycare nonaktif dan undangan Manager; token undangan dikembalikan satu kali"
+  },
+  "PATCH /api/admin/partners/{id}": {
+    "access": "Admin",
+    "description": "Ubah status mitra dengan alasan dan catatan audit"
+  },
+  "GET /api/admin/photos": {
+    "access": "Admin",
+    "description": "Antrean moderasi foto fasilitas"
+  },
+  "PATCH /api/admin/photos/{id}": {
+    "access": "Admin",
+    "description": "Setujui atau tolak foto dengan alasan"
+  },
+  "GET /api/admin/prices": {
+    "access": "Admin",
+    "description": "Antrean harga baru yang menunggu keputusan"
+  },
+  "PATCH /api/admin/prices/{id}": {
+    "access": "Admin",
+    "description": "Setujui atau tolak harga yang diajukan Manager"
+  },
+  "GET /api/admin/sanctions": {
+    "access": "Admin",
+    "description": "Daftar sanksi atau buat sanksi dengan bukti; sanksi aktif membatasi akses akun/daycare"
+  },
+  "POST /api/admin/sanctions": {
+    "access": "Admin",
+    "description": "Daftar sanksi atau buat sanksi dengan bukti; sanksi aktif membatasi akses akun/daycare"
+  },
+  "PATCH /api/admin/sanctions/{id}": {
+    "access": "Admin",
+    "description": "Cabut sanksi dengan alasan dan catatan audit"
+  },
+  "GET /api/admin/staff": {
+    "access": "Admin",
+    "description": "Daftar Pengasuh yang menunggu verifikasi"
+  },
+  "PATCH /api/admin/staff/{id}": {
+    "access": "Admin",
+    "description": "Setujui atau tolak Pengasuh dengan alasan"
+  },
+  "GET /api/admin/transactions": {
+    "access": "Admin",
+    "description": "Antrean pembayaran yang menunggu konfirmasi (`created`/`pending`; `?status=` untuk status lain). Butuh migrasi `20261116100000`"
+  },
+  "PATCH /api/admin/transactions/{id}": {
+    "access": "Admin",
+    "description": "Catat hasil pembayaran manual"
+  },
+  "GET /api/ai/features": {
+    "access": "Publik",
+    "description": "Daftar fitur AI dan contoh input (lihat [kerangka AI](./ai-api.md))",
+    "summary": "Daftar fitur AI, model, dan contoh input"
+  },
+  "POST /api/ai/focus/render": {
+    "access": "Pengasuh, Pengelola, Admin",
+    "description": "Foto Fokus Anak: foto dengan hanya anak target yang tajam",
+    "summary": "Foto Fokus Anak: buat versi fokus satu anak"
+  },
+  "POST /api/ai/focus/segment": {
+    "access": "Pengasuh, Pengelola, Admin",
+    "description": "Foto Fokus Anak: deteksi orang di foto (uji coba)",
+    "summary": "Foto Fokus Anak: deteksi orang (anak/dewasa) dan siluetnya"
+  },
+  "POST /api/ai/sandbox/{feature}": {
+    "access": "Admin",
+    "description": "Jalankan satu tugas AI pada data sintetis",
+    "summary": "Uji satu fitur AI dengan data sintetis"
+  },
+  "POST /api/auth/login": {
+    "access": "Publik",
+    "description": "Masuk; mengembalikan peran, tujuan halaman, dan `access_token`"
+  },
+  "POST /api/auth/logout": {
+    "access": "Publik",
+    "description": "Keluar dan hapus cookie sesi"
+  },
+  "POST /api/auth/register": {
+    "access": "Publik",
+    "description": "Daftar akun Orang Tua"
+  },
+  "GET /api/children": {
+    "access": "Orang Tua",
+    "description": "Daftar anak"
+  },
+  "POST /api/children": {
+    "access": "Orang Tua",
+    "description": "Tambah anak"
+  },
+  "GET /api/children/{id}/health": {
+    "access": "Orang Tua",
+    "description": "Data kesehatan anak"
+  },
+  "PATCH /api/children/{id}/health": {
+    "access": "Orang Tua",
+    "description": "Ubah data kesehatan (berversi, tercatat di log)"
+  },
+  "GET /api/children/{id}/pickup-authorizations": {
+    "access": "Orang Tua anak",
+    "description": "Daftar atau beri izin penjemput tetap/sekali pakai"
+  },
+  "POST /api/children/{id}/pickup-authorizations": {
+    "access": "Orang Tua anak",
+    "description": "Daftar atau beri izin penjemput tetap/sekali pakai"
+  },
+  "GET /api/children/{id}": {
+    "access": "Orang Tua",
+    "description": "Detail anak"
+  },
+  "PATCH /api/children/{id}": {
+    "access": "Orang Tua",
+    "description": "Ubah data anak (tanggal lahir terkunci setelah ada pendaftaran)"
+  },
+  "DELETE /api/children/{id}": {
+    "access": "Orang Tua",
+    "description": "Arsipkan anak yang belum punya riwayat pendaftaran"
+  },
+  "GET /api/complaints": {
+    "access": "Pengaju terautentikasi; pembuatan untuk Orang Tua",
+    "description": "Daftar laporan sendiri atau buat laporan terkait pengajuan/insiden"
+  },
+  "POST /api/complaints": {
+    "access": "Pengaju terautentikasi; pembuatan untuk Orang Tua",
+    "description": "Daftar laporan sendiri atau buat laporan terkait pengajuan/insiden"
+  },
+  "GET /api/complaints/{id}/attachments": {
+    "access": "Pengaju laporan; GET juga Manager terkait/Admin",
+    "description": "Daftar tautan bukti atau unggah bukti PDF/JPG/PNG/WEBP (maks. 10 MB)"
+  },
+  "POST /api/complaints/{id}/attachments": {
+    "access": "Pengaju laporan; GET juga Manager terkait/Admin",
+    "description": "Daftar tautan bukti atau unggah bukti PDF/JPG/PNG/WEBP (maks. 10 MB)"
+  },
+  "PATCH /api/complaints/{id}": {
+    "access": "Orang Tua pengaju",
+    "description": "Balas permintaan informasi, terima penyelesaian, atau tolak dengan alasan"
+  },
+  "GET /api/daycare-documents/{id}/file": {
+    "access": "Manager daycare terkait / Admin",
+    "description": "Dapatkan URL bertanda tangan yang berlaku 5 menit"
+  },
+  "GET /api/daycares/compare": {
+    "access": "Publik",
+    "description": "Bandingkan 2–3 daycare berdampingan",
+    "query": [
+      {
+        "name": "ids",
+        "required": true,
+        "description": "2–3 UUID atau slug daycare yang berbeda, dipisah koma",
+        "example": "abc-educare-jakarta-selatan,rumah-biru-daycare-tebet"
+      }
+    ]
+  },
+  "GET /api/daycares": {
+    "access": "Publik",
+    "description": "Katalog daycare dengan filter server (lihat di bawah), termasuk mitra aktif melalui RPC dengan kolom publik yang dibatasi.",
+    "query": [
+      {
+        "name": "q",
+        "description": "Teks nama, alamat, kota, atau kecamatan",
+        "example": "tebet"
+      },
+      {
+        "name": "province",
+        "description": "Nama provinsi persis",
+        "example": "Jawa Timur"
+      },
+      {
+        "name": "city",
+        "description": "Nama kota/kabupaten persis"
+      },
+      {
+        "name": "district",
+        "description": "Nama kecamatan persis"
+      },
+      {
+        "name": "maxFee",
+        "description": "Biaya bulanan maksimal: 1500000, 2000000, 3000000, 4000000, 5000000",
+        "example": "3000000"
+      },
+      {
+        "name": "maxRatio",
+        "description": "Anak per pengasuh maksimal: 3–6",
+        "example": "4"
+      },
+      {
+        "name": "ageMonths",
+        "description": "Usia anak dalam bulan (0–84)",
+        "example": "18"
+      },
+      {
+        "name": "facilities",
+        "description": "Kode fasilitas dipisah koma (lib/daycare-facilities.js)",
+        "example": "cctv,meals"
+      },
+      {
+        "name": "legal",
+        "description": "`referenced`: hanya yang punya referensi izin publik"
+      },
+      {
+        "name": "minRating",
+        "description": "`4` atau `4.5`"
+      },
+      {
+        "name": "sort",
+        "description": "`recommended` (bawaan, skor rekomendasi), `rating`, `fee`, `ratio`, `name`",
+        "example": "recommended"
+      }
+    ]
+  },
+  "GET /api/daycares/{id}/offerings": {
+    "access": "Publik",
+    "description": "Layanan dan harga yang disetujui dari daycare mitra"
+  },
+  "GET /api/daycares/{id}/photos": {
+    "access": "Publik",
+    "description": "Foto yang disetujui untuk daycare aktif; tautan foto berlaku 5 menit"
+  },
+  "GET /api/daycares/{id}/reviews": {
+    "access": "Publik",
+    "description": "Ulasan yang lolos moderasi (tanpa identitas penulis)"
+  },
+  "GET /api/daycares/{id}": {
+    "access": "Publik",
+    "description": "Detail daycare berdasarkan UUID atau slug: profil, galeri, paket biaya; data mitra aktif diambil melalui RPC dengan kolom publik yang dibatasi. Galeri memakai foto Pengelola yang disetujui Admin (tautan bertanda tangan 1 jam); tanpa foto, `gallery` berisi gambar contoh dengan `illustration: true`"
+  },
+  "GET /api/documents/{id}/file": {
+    "access": "Pengelola daycare terkait, Admin",
+    "description": "URL bertanda tangan untuk membuka berkas dokumen legal, berlaku 5 menit",
+    "summary": "Tautan berkas dokumen legal"
+  },
+  "GET /api/enrollments": {
+    "access": "Orang Tua",
+    "description": "Pengajuan milik sendiri"
+  },
+  "POST /api/enrollments": {
+    "access": "Orang Tua",
+    "description": "Ajukan pendaftaran anak"
+  },
+  "GET /api/enrollments/{id}/activities": {
+    "access": "Orang Tua, Pengelola, Pengasuh bertugas",
+    "description": "Catatan harian"
+  },
+  "POST /api/enrollments/{id}/activities": {
+    "access": "Pengasuh bertugas",
+    "description": "Tulis catatan (draf atau kirim)"
+  },
+  "POST /api/enrollments/{id}/activities/{activityId}/ai-draft": {
+    "access": "Pengasuh penulis",
+    "description": "**Logbook Drafter:** draf AI dari catatan draf sendiri (usulan saja, tidak menyimpan). Lihat [ai-api.md](./ai-api.md)",
+    "summary": "Buat draf catatan harian dengan AI"
+  },
+  "PATCH /api/enrollments/{id}/activities/{activityId}": {
+    "access": "Pengasuh penulis",
+    "description": "Ubah draf (wajib alasan perubahan). Body boleh memuat `details` `{ meal }` atau `{ sleep }`; tanpa `details`, detail lama dipertahankan"
+  },
+  "DELETE /api/enrollments/{id}/activities/{activityId}": {
+    "access": "Pengasuh penulis",
+    "description": "Hapus draf yang belum terkirim"
+  },
+  "POST /api/enrollments/{id}/payments": {
+    "access": "Orang Tua",
+    "description": "Catat permintaan pembayaran tagihan"
+  },
+  "GET /api/enrollments/{id}/pickup": {
+    "access": "GET Parent/Manager/Admin; POST Manager atau Pengasuh dengan delegasi `confirm_pickup`",
+    "description": "Riwayat pickup dengan URL bukti 5 menit atau catat verifikasi/serah-terima dengan foto privat"
+  },
+  "POST /api/enrollments/{id}/pickup": {
+    "access": "GET Parent/Manager/Admin; POST Manager atau Pengasuh dengan delegasi `confirm_pickup`",
+    "description": "Riwayat pickup dengan URL bukti 5 menit atau catat verifikasi/serah-terima dengan foto privat"
+  },
+  "GET /api/enrollments/{id}": {
+    "access": "Orang Tua, Pengelola, Pengasuh bertugas",
+    "description": "Detail, riwayat status, pengasuh"
+  },
+  "PATCH /api/enrollments/{id}": {
+    "access": "Pengelola",
+    "description": "Pengelola menjalankan satu `action`: `decide` (terima/tolak dengan alasan; diterima → menunggu pembayaran), `assign_caregiver` (tugaskan Pengasuh dengan jam mulai dan selesai), `check_in` (hanya pada tanggal layanan), atau `complete` (selesaikan pengasuhan)",
+    "summary": "Proses pengajuan (keputusan, penugasan, check-in, selesai)"
+  },
+  "DELETE /api/enrollments/{id}": {
+    "access": "Orang Tua",
+    "description": "Batalkan pengajuan (hanya saat `pending`)"
+  },
+  "GET /api/incidents": {
+    "access": "Orang Tua, Pengelola, Admin",
+    "description": "Laporan insiden sesuai cakupan"
+  },
+  "POST /api/incidents": {
+    "access": "Orang Tua, Pengelola, Pengasuh bertugas",
+    "description": "Simpan laporan insiden dengan urgensi pilihan pelapor (`low`/`medium`/`high`/`emergency`). Notifikasi ke Orang Tua, Pengelola, dan Admin dikirim lebih dulu; **triage AI berjalan setelah respons** (`after()`), sehingga pelapor tidak menunggu AI. Kirim `Idempotency-Key` agar pengiriman ulang tidak membuat laporan ganda",
+    "summary": "Laporkan insiden"
+  },
+  "POST /api/incidents/{id}/acknowledgement": {
+    "access": "Orang Tua",
+    "description": "Konfirmasi sudah membaca laporan"
+  },
+  "GET /api/incidents/{id}/evidence": {
+    "access": "Pelapor, Pengelola, Admin",
+    "description": "Daftar foto bukti insiden dengan tautan bertanda tangan 5 menit"
+  },
+  "POST /api/incidents/{id}/evidence": {
+    "access": "Pelapor insiden",
+    "description": "Unggah satu foto bukti insiden (multipart `file`, JPG/PNG/WebP)"
+  },
+  "PATCH /api/incidents/{id}": {
+    "access": "Pengelola, Admin",
+    "description": "Ubah status (`in_progress`, `resolved`)"
+  },
+  "POST /api/incidents/{id}/triage": {
+    "access": "Pengelola, Admin",
+    "description": "**Incident Urgency Triage.** Nilai ulang urgensi laporan dengan layanan triage. Hasil masuk riwayat; AI hanya bisa menaikkan urgensi dan tidak berlaku lagi setelah Pengelola menetapkan urgensi. Maksimal 10 per menit",
+    "summary": "Nilai ulang urgensi insiden dengan AI"
+  },
+  "POST /api/incidents/{id}/urgency": {
+    "access": "Pengelola, Admin",
+    "description": "Tetapkan urgensi insiden secara manual dengan alasan (minimal 10 karakter). Setelah itu nilai ulang AI tidak mengubah urgensi",
+    "summary": "Tetapkan urgensi insiden secara manual"
+  },
+  "POST /api/invitations/accept": {
+    "access": "Login dengan email undangan",
+    "description": "Terima undangan Manager/Pengasuh setelah token dan email diverifikasi"
+  },
+  "GET /api/me/assignments": {
+    "access": "Pengasuh",
+    "description": "Pengajuan anak yang sedang ditugaskan kepada Pengasuh (titik masuk logbook). Butuh migrasi `20261116100000`"
+  },
+  "GET /api/me/daycares": {
+    "access": "Login",
+    "description": "Daycare tempat pengguna menjadi Pengelola/Pengasuh"
+  },
+  "GET /api/me/daycares/{id}/delegations": {
+    "access": "Manager daycare",
+    "description": "Daftar delegasi aktif/riwayat atau delegasikan izin terbatas ke Pengasuh"
+  },
+  "POST /api/me/daycares/{id}/delegations": {
+    "access": "Manager daycare",
+    "description": "Daftar delegasi aktif/riwayat atau delegasikan izin terbatas ke Pengasuh"
+  },
+  "DELETE /api/me/daycares/{id}/delegations/{delegationId}": {
+    "access": "Manager daycare",
+    "description": "Cabut delegasi dengan alasan"
+  },
+  "GET /api/me/daycares/{id}/documents": {
+    "access": "Manager daycare",
+    "description": "Daftar dokumen atau unggah dokumen legal privat (PDF/JPG/PNG, maks. 15 MB)"
+  },
+  "POST /api/me/daycares/{id}/documents": {
+    "access": "Manager daycare",
+    "description": "Daftar dokumen atau unggah dokumen legal privat (PDF/JPG/PNG, maks. 15 MB)"
+  },
+  "GET /api/me/daycares/{id}/offerings": {
+    "access": "Manager daycare",
+    "description": "Daftar layanan dan riwayat harga"
+  },
+  "POST /api/me/daycares/{id}/offerings": {
+    "access": "Manager daycare",
+    "description": "Buat/perbarui layanan dan ajukan versi harga baru"
+  },
+  "PATCH /api/me/daycares/{id}/offerings": {
+    "access": "Manager daycare",
+    "description": "Buat/perbarui layanan dan ajukan versi harga baru"
+  },
+  "GET /api/me/daycares/{id}/onboarding": {
+    "access": "Manager daycare",
+    "description": "Muat profil, layanan/harga, dan status dokumen untuk onboarding"
+  },
+  "GET /api/me/daycares/{id}/photos": {
+    "access": "Manager daycare",
+    "description": "Lihat foto sendiri atau ajukan foto fasilitas (JPG/PNG/WEBP, maks. 8 MB); foto pending tidak publik"
+  },
+  "POST /api/me/daycares/{id}/photos": {
+    "access": "Manager daycare",
+    "description": "Lihat foto sendiri atau ajukan foto fasilitas (JPG/PNG/WEBP, maks. 8 MB); foto pending tidak publik"
+  },
+  "PATCH /api/me/daycares/{id}/profile": {
+    "access": "Manager daycare",
+    "description": "Perbarui profil, fasilitas, jam buka, dan kapasitas"
+  },
+  "POST /api/me/daycares/{id}/staff/invitations": {
+    "access": "Manager daycare",
+    "description": "Buat undangan Pengasuh; token dikembalikan satu kali untuk dibagikan"
+  },
+  "GET /api/me/daycares/{id}/staff": {
+    "access": "Manager daycare",
+    "description": "Daftar Pengasuh daycare"
+  },
+  "DELETE /api/me/daycares/{id}/staff/{memberId}": {
+    "access": "Manager daycare",
+    "description": "Nonaktifkan keanggotaan Pengasuh dengan alasan"
+  },
+  "GET /api/me": {
+    "access": "Login",
+    "description": "Profil Orang Tua dan daftar anak"
+  },
+  "PATCH /api/me": {
+    "access": "Orang Tua",
+    "description": "Ubah nama dan nomor WhatsApp"
+  },
+  "GET /api/notifications": {
+    "access": "Login",
+    "description": "Notifikasi (`?unread=true&limit=20`)",
+    "summary": "Daftar notifikasi",
+    "query": [
+      {
+        "name": "unread",
+        "description": "`true` untuk hanya yang belum dibaca",
+        "example": "true"
+      },
+      {
+        "name": "limit",
+        "description": "Jumlah maksimal",
+        "example": "20"
+      }
+    ]
+  },
+  "PATCH /api/notifications/{id}": {
+    "access": "Login",
+    "description": "Tandai dibaca"
+  },
+  "DELETE /api/pickup-authorizations/{authorizationId}": {
+    "access": "Orang Tua pemberi izin",
+    "description": "Cabut izin penjemput yang belum digunakan"
+  },
+  "POST /api/reviews": {
+    "access": "Orang Tua",
+    "description": "Tulis ulasan setelah pengasuhan selesai"
+  },
+  "POST /api/reviews/{id}/reply": {
+    "access": "Pengelola",
+    "description": "Balas ulasan yang sudah terbit"
+  },
+  "DELETE /api/reviews/{id}": {
+    "access": "Orang Tua",
+    "description": "Tarik ulasan"
+  }
+}

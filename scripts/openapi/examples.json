@@ -1,0 +1,894 @@
+{
+  "POST /api/auth/register": {
+    "request": {
+      "email": "bunda@example.com",
+      "password": "rahasia123",
+      "full_name": "Bunda Sari",
+      "phone": "081234567890",
+      "terms": true
+    },
+    "responses": {
+      "201": {
+        "user": null,
+        "role": "parent",
+        "needs_email_confirmation": true,
+        "session": null
+      },
+      "400": {
+        "code": "invalid_password",
+        "error": "Kata sandi minimal 8 karakter dengan huruf dan angka."
+      }
+    }
+  },
+  "POST /api/auth/login": {
+    "request": {
+      "email": "parent.demo01@example.com",
+      "password": "********",
+      "role": "parent"
+    },
+    "responses": {
+      "200": {
+        "user": {
+          "id": "380262a9-9507-48a3-8c62-ba8db74bc145",
+          "email": "parent.demo01@example.com"
+        },
+        "profile": {
+          "role": "parent",
+          "full_name": "Alya Puspita"
+        },
+        "session": {
+          "access_token": "eyJhbGciOi…",
+          "token_type": "bearer",
+          "expires_at": 1795280007
+        },
+        "redirect_to": "/beranda"
+      },
+      "401": {
+        "code": "invalid_credentials",
+        "error": "Email atau kata sandi salah."
+      },
+      "403": {
+        "code": "role_not_allowed",
+        "error": "Akun ini tidak memiliki peran yang dipilih."
+      }
+    }
+  },
+  "GET /api/daycares": {
+    "responses": {
+      "200": [
+        {
+          "id": "f62d7b22-9022-4fe3-a3c7-813c0efac348",
+          "slug": "abc-educare-jakarta-selatan",
+          "name": "ABC Educare",
+          "source": "supabase",
+          "kind": "partner",
+          "address": "Villa balcony 14 jl. Jeruk Purut No.14, RT.4/RW.3, Kav.5, RT.4/RW.3, East Cilandak, Pasar Minggu, South Jakarta City, Jakarta 12560",
+          "postalCode": "12560",
+          "province": "DKI Jakarta",
+          "city": "Jakarta Selatan",
+          "district": "Pasar Minggu",
+          "description": "ABC Educare adalah layanan penitipan anak di Pasar Minggu, Jakarta Selatan. Menerima anak usia 6 bulan hingga 6 tahun dengan satu pengasuh untuk setiap 3 anak. Layanan yang tercatat di sumber publik antara lain menerima bayi, program prasekolah.",
+          "facilitiesText": "Baby class, toddler, preschool, kindergarten",
+          "facilities": [
+            "infant",
+            "preschool"
+          ],
+          "facilityLabels": [
+            "Menerima bayi",
+            "Program prasekolah"
+          ],
+          "rating": 5,
+          "ratingSource": "Rating ulasan publik daring dari dataset tim Ayomi",
+          "legalStatus": "not_available",
+          "legalReference": null,
+          "legalReferenceUrl": null,
+          "dataNotes": [
+            "Kecamatan dikoreksi sesuai alamat (Cilandak Timur adalah kelurahan)."
+          ],
+          "coverImageUrl": "/images/daycares/ilustrasi/5.webp",
+          "coverIsIllustration": true,
+          "gallery": [
+            {
+              "url": "/images/daycares/ilustrasi/5.webp",
+              "illustration": true
+            },
+            {
+              "url": "/images/daycares/ilustrasi/6.webp",
+              "illustration": true
+            },
+            {
+              "url": "/images/daycares/ilustrasi/1.webp",
+              "illustration": true
+            },
+            {
+              "url": "/images/daycares/ilustrasi/2.webp",
+              "illustration": true
+            },
+            {
+              "url": "/images/daycares/ilustrasi/3.webp",
+              "illustration": true
+            },
+            {
+              "url": "/images/daycares/ilustrasi/4.webp",
+              "illustration": true
+            }
+          ],
+          "claimedDaycareId": "18d92cbd-bda2-4807-85d9-585830b42d0a",
+          "acceptsEnrollment": false,
+          "profile": {
+            "origin": "synthetic",
+            "estimated": true,
+            "monthlyFeeMin": 2290000,
+            "monthlyFeeMax": 2290000,
+            "dailyFee": 104259,
+            "registrationFee": 1150000,
+            "caregiverCount": 9,
+            "hours": "07.00–17.00",
+            "operatingDays": "Senin–Jumat",
+            "packages": [
+              {
+                "code": "daily",
+                "name": "Harian",
+                "unit": "hari",
+                "hours": "07.00–17.00",
+                "price": 104259
+              },
+              {
+                "code": "monthly_full",
+                "name": "Bulanan penuh",
+                "unit": "bulan",
+                "hours": "07.00–17.00",
+                "price": 2290000
+              }
+            ]
+          },
+          "monthlyFee": 2290000,
+          "ratio": 3,
+          "capacity": 25,
+          "ageMinMonths": 6,
+          "ageMaxMonths": 72,
+          "partnerId": "18d92cbd-bda2-4807-85d9-585830b42d0a",
+          "status": "active"
+        }
+      ]
+    }
+  },
+  "GET /api/daycares/compare": {
+    "responses": {
+      "200": {
+        "daycares": [
+          {
+            "id": "…",
+            "slug": "…",
+            "name": "…",
+            "city": "…"
+          }
+        ],
+        "rows": [
+          {
+            "key": "monthly_fee",
+            "label": "Biaya bulanan (mulai dari)",
+            "estimated": true,
+            "values": [
+              {
+                "value": 2100000,
+                "display": "Rp 2.100.000"
+              },
+              {
+                "value": 3650000,
+                "display": "Rp 3.650.000"
+              }
+            ],
+            "best": [
+              0
+            ]
+          }
+        ],
+        "notes": [
+          "Status legalitas dan rating berasal dari sumber publik …"
+        ]
+      }
+    }
+  },
+  "GET /api/enrollments": {
+    "responses": {
+      "200": [
+        {
+          "id": "20e34c0b-37f2-40a1-95da-59ee8c80b752",
+          "child": {
+            "child_id": "dacf8e29-b081-49cf-a80c-f130d6f922bb",
+            "full_name": "Anak Demo 01",
+            "birth_date": "2025-11-18"
+          },
+          "charge": {
+            "id": "ca4f8c51-ddf8-446f-8665-ec9b0881e716",
+            "due_at": "2026-11-21T05:07:44.071112+00:00",
+            "status": "paid",
+            "currency": "IDR",
+            "total_amount": 113153
+          },
+          "status": "approved",
+          "daycare": {
+            "id": "030d17a5-e6c9-4663-a5d2-b333d6a680c6",
+            "name": "Rumah Biru Daycare Tebet"
+          },
+          "offering": {
+            "id": "4eaf688c-7b62-42c7-b02e-e893569ae961",
+            "name": "Penitipan Harian",
+            "service_type": "daily"
+          },
+          "reference": "20E34C0B",
+          "created_at": "2026-11-18T12:20:54.575367+00:00",
+          "completed_at": null,
+          "service_date": "2026-11-25",
+          "checked_in_at": null,
+          "decision_reason": "Di terima",
+          "manager_decision": "accepted",
+          "payment_deadline": "2026-11-21T05:07:44.071112+00:00"
+        }
+      ]
+    }
+  },
+  "POST /api/enrollments": {
+    "request": {
+      "child_id": "5f0c3d8e-1a2b-4c3d-9e8f-0a1b2c3d4e5f",
+      "offering_id": "7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d",
+      "service_date": "2026-11-12",
+      "consents": {
+        "service_terms": true,
+        "child_data_processing": true
+      }
+    },
+    "responses": {
+      "201": {
+        "id": "c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f",
+        "reference": "C1D2E3F4",
+        "status": "pending",
+        "manager_decision": "undecided",
+        "service_date": "2026-11-12",
+        "daycare": {
+          "id": "…",
+          "name": "Daycare Mitra"
+        },
+        "offering": {
+          "id": "…",
+          "name": "Penitipan harian",
+          "service_type": "daily"
+        },
+        "child": {
+          "child_id": "5f0c3d8e-…",
+          "full_name": "Arka",
+          "birth_date": "2024-03-14"
+        },
+        "charge": null,
+        "viewer_role": "parent",
+        "status_logs": [
+          {
+            "from_status": null,
+            "to_status": "pending",
+            "actor_type": "user",
+            "reason": "Parent submitted enrollment"
+          }
+        ],
+        "caregivers": []
+      },
+      "409": {
+        "code": "duplicate_active_enrollment",
+        "error": "Anak ini sudah punya pengajuan aktif di daycare tersebut."
+      }
+    }
+  },
+  "PATCH /api/enrollments/{id}": {
+    "request": {
+      "action": "decide",
+      "decision": "accepted",
+      "reason": "Slot tersedia"
+    },
+    "responses": {
+      "409": {
+        "code": "daycare_capacity_full",
+        "error": "Kapasitas daycare pada tanggal tersebut sudah penuh."
+      }
+    }
+  },
+  "POST /api/enrollments/{id}/payments": {
+    "request": {
+      "method": "qris"
+    },
+    "responses": {
+      "201": {
+        "transaction_id": "…",
+        "amount": 150000,
+        "currency": "IDR",
+        "method": "qris",
+        "expires_at": "2026-11-12T03:00:00.000Z",
+        "status": "created",
+        "qr": {
+          "mode": "qris_dynamic",
+          "payload": "000201010212…6304ABCD",
+          "image_data_url": "data:image/png;base64,…",
+          "confirmation": "manual_admin"
+        }
+      }
+    }
+  },
+  "PATCH /api/admin/transactions/{id}": {
+    "request": {
+      "status": "succeeded",
+      "provider": "manual",
+      "reason": "Transfer diverifikasi"
+    }
+  },
+  "POST /api/enrollments/{id}/activities": {
+    "request": {
+      "report_date": "2026-11-12",
+      "activity_type": "meal",
+      "title": "Makan siang",
+      "body": "Menghabiskan nasi, sayur bayam, dan buah pepaya.",
+      "occurred_at": "2026-11-12T05:10:00Z",
+      "status": "draft",
+      "is_urgent": false
+    },
+    "responses": {
+      "201": {
+        "id": "…"
+      }
+    }
+  },
+  "POST /api/enrollments/{id}/activities/{activityId}/ai-draft": {
+    "responses": {
+      "200": {
+        "job_id": "…",
+        "contract_version": "1.0.0",
+        "feature": "logbook_draft",
+        "status": "succeeded",
+        "review_state": "pending",
+        "application_state": "not_applied",
+        "result": {
+          "title": "Waktu makan",
+          "body": "Ananda makan setengah porsi nasi dan sup sayur dengan bantuan pengasuh.",
+          "missing_fields": [],
+          "used_fact_indices": [
+            0
+          ],
+          "requires_caregiver_review": true
+        },
+        "error": null,
+        "meta": {
+          "provider": "openai-compatible",
+          "model": "qwen/qwen3.8-27b",
+          "prompt_version": "logbook-draft-v2",
+          "latency_ms": 912,
+          "ai_generated": true
+        }
+      },
+      "429": {
+        "code": "RATE_LIMITED",
+        "error": "Terlalu banyak permintaan. Coba lagi sebentar lagi."
+      }
+    }
+  },
+  "PUT /api/activities/{id}/love": {
+    "responses": {
+      "200": {
+        "activity_id": "…",
+        "loved_by_me": true,
+        "love_count": 1
+      }
+    }
+  },
+  "POST /api/activities/{id}/comments": {
+    "request": {
+      "body": "Terima kasih, Bu!"
+    },
+    "responses": {
+      "201": {
+        "id": "…",
+        "activity_id": "…",
+        "body": "Terima kasih, Bu!",
+        "author_role": "parent",
+        "author_name": "Bunda Sari",
+        "is_mine": true,
+        "created_at": "2026-11-21T03:12:00Z"
+      }
+    }
+  },
+  "POST /api/incidents": {
+    "request": {
+      "enrollment_id": "…",
+      "occurred_at": "2026-11-21T04:00:00Z",
+      "description": "Anak tersedak potongan apel, bibirnya kebiruan dan tidak bisa batuk.",
+      "first_aid": "Back blow lima kali sampai potongan keluar.",
+      "urgency": "low",
+      "urgency_reason": "Sudah tertangani"
+    },
+    "responses": {
+      "201": {
+        "id": "…"
+      }
+    }
+  },
+  "GET /api/incidents": {
+    "responses": {
+      "200": [
+        {
+          "id": "28d8e511-a4f0-4218-b71a-b635ab6b8ae3",
+          "status": "new",
+          "triage": {
+            "model": "rubric-rules",
+            "job_id": "7e582b91-dc7b-4cdd-a268-2156acf5e0b8",
+            "result": {
+              "reason": "Usulan prioritas darurat menurut rubrik (tersedak dengan tanda sulit bernapas atau membiru), berdasarkan bagian laporan: \"Anak tersedak potongan apel saat snack, bibirnya kebiruan dan tidak bisa batuk.\".",
+              "urgency": "emergency",
+              "sop_refs": [
+                "triage-emergency@draf-1",
+                "incident-workflow@1"
+              ],
+              "evidence_quotes": [
+                "Anak tersedak potongan apel saat snack, bibirnya kebiruan dan tidak bisa batuk."
+              ],
+              "needs_human_review": true,
+              "missing_information": [
+                "Kondisi anak saat ini"
+              ],
+              "operational_actions": [
+                "notify_manager",
+                "request_more_information",
+                "follow_approved_sop"
+              ]
+            },
+            "status": "succeeded",
+            "provider": "triage-api",
+            "error_code": null,
+            "finished_at": "2026-11-21T03:25:53.617698+00:00",
+            "model_version": "triage-rules-draf-1-v2"
+          },
+          "daycare": {
+            "id": "030d17a5-e6c9-4663-a5d2-b333d6a680c6",
+            "name": "Rumah Biru Daycare Tebet"
+          },
+          "urgency": "emergency",
+          "first_aid": "Back blow 5 kali, benda keluar",
+          "child_name": "Anak Demo 02",
+          "created_at": "2026-11-21T03:25:52.160942+00:00",
+          "description": "Anak tersedak potongan apel saat snack, bibirnya kebiruan dan tidak bisa batuk.",
+          "occurred_at": "2026-11-21T03:25:00+00:00",
+          "resolved_at": null,
+          "status_logs": [
+            {
+              "reason": "Incident submitted",
+              "to_status": "new",
+              "created_at": "2026-11-21T03:25:52.160942+00:00",
+              "from_status": null
+            }
+          ],
+          "enrollment_id": "10e63e0b-df42-4ac6-8bee-8782370c42e1",
+          "urgency_source": "manager_override",
+          "urgency_changes": [
+            {
+              "reason": "Dinaikkan otomatis: usulan AI lebih tinggi dari urgensi sebelumnya.",
+              "source": "ai_max",
+              "created_at": "2026-11-21T03:25:53.617698+00:00",
+              "new_urgency": "emergency",
+              "old_urgency": "low"
+            },
+            {
+              "reason": "Sesuai SOP: tersedak dengan bibir membiru.",
+              "source": "manager_override",
+              "created_at": "2026-11-21T03:26:37.515216+00:00",
+              "new_urgency": "emergency",
+              "old_urgency": "emergency"
+            }
+          ],
+          "caregiver_urgency": "low",
+          "needs_urgency_review": false,
+          "parent_acknowledged_at": null
+        }
+      ]
+    }
+  },
+  "POST /api/incidents/{id}/urgency": {
+    "request": {
+      "urgency": "high",
+      "reason": "Sudah diperiksa dokter, kondisi stabil"
+    }
+  },
+  "POST /api/reviews": {
+    "request": {
+      "enrollment_id": "…",
+      "rating": 5,
+      "body": "Pengasuh sangat komunikatif dan laporan hariannya rinci."
+    },
+    "responses": {
+      "201": {
+        "id": "…",
+        "moderation_status": "pending"
+      }
+    }
+  },
+  "GET /api/ai/features": {
+    "responses": {
+      "200": {
+        "contract_version": "1.0.0",
+        "provider": "openai-compatible",
+        "features": [
+          {
+            "id": "legal_verification",
+            "product": "Safety Score & Legal Verification",
+            "use_case": "Computer Vision: OCR/ekstraksi dokumen",
+            "processor": "vision",
+            "roles": [
+              "admin",
+              "manager"
+            ],
+            "source_column": "document_id",
+            "prompt_version": "legal-extract-v1",
+            "trigger": "Dokumen versi baru disubmit Manager; Admin meminta analisis ulang.",
+            "available": false,
+            "example_input": {
+              "document_id": "00000001-1111-4111-8111-111111111111",
+              "document_version": 1,
+              "document_type": "contoh_izin",
+              "attachment": {
+                "id": "00000002-1111-4111-8111-111111111111",
+                "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "mime_type": "application/pdf"
+              },
+              "expected_identity": {
+                "name": "Daycare Contoh",
+                "address": "Alamat contoh"
+              },
+              "as_of": "2026-11-05"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "POST /api/ai/focus/segment": {
+    "responses": {
+      "200": {
+        "image_size": {
+          "width": 1281,
+          "height": 1600
+        },
+        "people": [
+          {
+            "id": 0,
+            "class": "anak",
+            "confidence": 0.9138,
+            "polygon": [
+              [
+                1101,
+                690
+              ],
+              [
+                1038,
+                722
+              ],
+              [
+                1001,
+                772
+              ],
+              [
+                1001,
+                805
+              ]
+            ]
+          },
+          {
+            "id": 1,
+            "class": "anak",
+            "confidence": 0.8147,
+            "polygon": [
+              [
+                15,
+                1245
+              ],
+              [
+                90,
+                1245
+              ],
+              [
+                208,
+                1215
+              ],
+              [
+                223,
+                1108
+              ]
+            ]
+          }
+        ],
+        "suggested_target_id": null,
+        "quality_flags": [
+          "multiple_children",
+          "blurry"
+        ],
+        "model_version": "focus-yolo11n-seg-v1-20261111",
+        "latency_ms": 222,
+        "ai_generated": true,
+        "requires_human_review": true
+      },
+      "400": {
+        "code": "invalid_file",
+        "error": "Berkas harus JPG, PNG, atau WebP maksimal 4 MB."
+      },
+      "401": {
+        "code": "not_authenticated",
+        "error": "Sesi login berakhir. Masuk kembali lalu coba lagi."
+      },
+      "503": {
+        "code": "MODEL_UNAVAILABLE",
+        "error": "Layanan Foto Fokus belum tersedia."
+      }
+    }
+  },
+  "POST /api/ai/focus/render": {
+    "responses": {
+      "200": {
+        "image_size": {
+          "width": 1281,
+          "height": 1600
+        },
+        "image": {
+          "mime_type": "image/jpeg",
+          "base64": "/9j/4AAQSkZJRgABAQ…"
+        },
+        "other_people_blurred": 2,
+        "quality_flags": [],
+        "model_version": "focus-yolo11n-seg-v1-20261111",
+        "latency_ms": 1840
+      }
+    }
+  },
+  "GET /api/admin/daycare-documents/{id}/ai-read": {
+    "responses": {
+      "200": {
+        "model": "qwen/qwen3.8-27b",
+        "job_id": "e0964495-2b4a-4ad9-a644-3a4cb3e44f04",
+        "output": {
+          "ocr": {
+            "pages": [
+              {
+                "page": 1,
+                "text": "SPESIMEN - FIKTIF\nSPESIMEN - FIKTIF - BUKAN DOKUMEN RESMI\nDokumen spesimen fiktif untuk pengujian aplikasi Ayomi. Bukan dokumen resmi, tidak diterbitkan instans …",
+                "source": "text_layer",
+                "truncated": false,
+                "confidence": null
+              }
+            ],
+            "engine": {
+              "name": "rapidocr",
+              "runtime": "onnxruntime-cpu",
+              "detector": "PP-OCRv5 mobile",
+              "recognizer": "PP-OCRv5 mobile (latin)"
+            },
+            "version": "1.0.0",
+            "duration_ms": 18
+          },
+          "as_of": "2026-11-21",
+          "checks": [
+            {
+              "code": "valid",
+              "level": "ok",
+              "message": "Masih berlaku sampai 9 Maret 2028."
+            },
+            {
+              "code": "name_not_found",
+              "level": "warning",
+              "message": "Nama daycare \"Rumah Biru Daycare Tebet\" tidak ditemukan di dokumen. Pastikan dokumen milik daycare ini."
+            },
+            {
+              "code": "address_mismatch",
+              "level": "warning",
+              "message": "Alamat daycare tidak cocok dengan dokumen (hanya 0% kata ditemukan)."
+            }
+          ],
+          "extraction": {
+            "fields": {
+              "issuer": "DINAS PENDIDIKAN KOTA SIMULASI (INSTANSI FIKTIF)",
+              "address": "Jl. Contoh Melati No. 12, Kel. Sukasimulasi, Kec. Tengah, Kota Simulasi",
+              "issued_on": "2025-03-10",
+              "expires_on": "2028-03-09",
+              "document_type": "Izin Operasional",
+              "validity_type": "dated",
+              "document_number": "SPES/IO/KS/2025/0012",
+              "institution_name": "Taman Asuh Pelangi Biru"
+            },
+            "issues": [
+              {
+                "code": "identity_mismatch",
+                "field": "institution_name",
+                "detail": "Nama lembaga pada dokumen 'Taman Asuh Pelangi Biru' berbeda dengan identitas yang diharapkan 'Rumah Biru Daycare Tebet'."
+              },
+              {
+                "code": "identity_mismatch",
+                "field": "address",
+                "detail": "Alamat pada dokumen 'Jl. Contoh Melati No. 12, Kel. Sukasimulasi, Kec. Tengah, Kota Simulasi' berbeda dengan alamat yang diharapkan 'Komplek Jepang, Jl. Tebet Dalam IV H No. 15, RT 20/RW 01, Kelurahan Tebet Barat, Kecamatan Tebet, Kota Jakarta Selatan, DKI Jakarta 12810.'."
+              }
+            ],
+            "evidence": [
+              {
+                "page": 1,
+                "field": "document_type",
+                "quote": "IZIN OPERASIONAL",
+                "source_id": "5fd51bda-4772-4528-ab38-349150cc984f"
+              },
+              {
+                "page": 1,
+                "field": "institution_name",
+                "quote": "Nama lembaga\n: Taman Asuh Pelangi Biru",
+                "source_id": "5fd51bda-4772-4528-ab38-349150cc984f"
+              },
+              {
+                "page": 1,
+                "field": "document_number",
+                "quote": "Nomor: SPES/IO/KS/2025/0012",
+                "source_id": "5fd51bda-4772-4528-ab38-349150cc984f"
+              },
+              {
+                "page": 1,
+                "field": "issuer",
+                "quote": "DINAS PENDIDIKAN KOTA SIMULASI (INSTANSI FIKTIF)",
+                "source_id": "5fd51bda-4772-4528-ab38-349150cc984f"
+              },
+              {
+                "page": 1,
+                "field": "issued_on",
+                "quote": "Tanggal terbit\n: 10 Maret 2025",
+                "source_id": "5fd51bda-4772-4528-ab38-349150cc984f"
+              },
+              {
+                "page": 1,
+                "field": "expires_on",
+                "quote": "Berlaku sampai\n: 9 Maret 2028",
+                "source_id": "5fd51bda-4772-4528-ab38-349150cc984f"
+              },
+              {
+                "page": 1,
+                "field": "address",
+                "quote": "Alamat\n: Jl. Contoh Melati No. 12, Kel. Sukasimulasi, Kec. Tengah, Kota Simulasi",
+                "source_id": "5fd51bda-4772-4528-ab38-349150cc984f"
+              }
+            ],
+            "missing_fields": [],
+            "requires_human_verification": true
+          }
+        },
+        "status": "succeeded",
+        "provider": "ocr+openai-compatible",
+        "error_code": null,
+        "started_at": "2026-11-21T01:53:02.745+00:00",
+        "finished_at": "2026-11-21T01:53:06.710472+00:00",
+        "prompt_version": "legal-extract-ocr-v1",
+        "document_version": "1"
+      }
+    }
+  },
+  "GET /api/admin/daycares/{id}/safety-score": {
+    "responses": {
+      "200": {
+        "as_of": "2026-11-21",
+        "scores": [
+          {
+            "id": "1fa51475-4d49-4489-8653-4360efd81b66",
+            "score": 100,
+            "source": "admin",
+            "status": "published",
+            "created_at": "2026-11-21T01:54:40.080897+00:00",
+            "explanation": {
+              "blockers": [],
+              "coverage": 1,
+              "criteria": [
+                {
+                  "id": "legal",
+                  "reason": "Dokumen sah dan masih berlaku.",
+                  "status": "pass"
+                },
+                {
+                  "id": "sop",
+                  "reason": "Dokumen sah dan masih berlaku.",
+                  "status": "pass"
+                },
+                {
+                  "id": "staff",
+                  "reason": "Dokumen sah dan masih berlaku.",
+                  "status": "pass"
+                },
+                {
+                  "id": "facility",
+                  "reason": "Dokumen sah dan masih berlaku.",
+                  "status": "pass"
+                }
+              ]
+            },
+            "reviewed_at": "2026-11-21T01:54:40.080897+00:00",
+            "published_at": "2026-11-21T01:54:40.080897+00:00",
+            "formula_version": "safety-v1-draft"
+          }
+        ],
+        "daycare": {
+          "id": "c230c750-ec7f-48d1-a947-5c09553e9f47",
+          "name": "Kebun Ceria Daycare (Uji)",
+          "status": "inactive",
+          "address": "Jl. Contoh Demo No. 1 (fiktif)"
+        },
+        "documents": [
+          {
+            "id": "f8aba486-e745-4d8c-b489-69eaea5ccf8d",
+            "issuer": "Tim Inspeksi Fasilitas (fiktif)",
+            "status": "approved",
+            "expired": false,
+            "version": 1,
+            "criterion": "facility",
+            "expires_on": "2027-11-21",
+            "valid_from": "2026-10-22",
+            "approved_at": "2026-11-21T01:25:19.097776+00:00",
+            "document_type": "facility_inspection",
+            "document_number": "UJI/INSP/2026/001"
+          },
+          {
+            "id": "0bde6ca4-ea2c-48c1-9156-dc101caee98d",
+            "issuer": "Dinas Pendidikan (fiktif)",
+            "status": "approved",
+            "expired": false,
+            "version": 1,
+            "criterion": "legal",
+            "expires_on": "2027-11-21",
+            "valid_from": "2026-10-22",
+            "approved_at": "2026-11-21T01:25:19.097776+00:00",
+            "document_type": "operational_license",
+            "document_number": "UJI/IZIN-OP/2026/001"
+          },
+          {
+            "id": "63a56b3b-aa72-4ff0-b8ed-8970f44b1052",
+            "issuer": "Kebun Ceria Daycare (Uji)",
+            "status": "approved",
+            "expired": false,
+            "version": 1,
+            "criterion": "sop",
+            "expires_on": "2027-11-21",
+            "valid_from": "2026-10-22",
+            "approved_at": "2026-11-21T01:25:19.097776+00:00",
+            "document_type": "safety_sop",
+            "document_number": "UJI/SOP/2026/001"
+          },
+          {
+            "id": "1cb69da7-1150-4dc3-b66d-1e300ef1619a",
+            "issuer": "Lembaga Pelatihan PAUD (fiktif)",
+            "status": "approved",
+            "expired": false,
+            "version": 1,
+            "criterion": "staff",
+            "expires_on": "2027-11-21",
+            "valid_from": "2026-10-22",
+            "approved_at": "2026-11-21T01:25:19.097776+00:00",
+            "document_type": "staff_certificate",
+            "document_number": "UJI/SERT/2026/001"
+          }
+        ]
+      }
+    }
+  },
+  "POST /api/ai/sandbox/{feature}": {
+    "request": {
+      "input": {
+        "activity_id": "00000005-1111-4111-8111-111111111111",
+        "input_version": 1,
+        "activity_type": "meal",
+        "occurred_at": "2026-11-05T09:00:00Z",
+        "timezone": "Asia/Jakarta",
+        "observed_facts": [
+          "Makan dengan bantuan pengasuh."
+        ],
+        "meal": {
+          "food": "Nasi dan sup sayur",
+          "portion_consumed": "Setengah porsi",
+          "observed_condition": "Makan dengan bantuan pengasuh."
+        },
+        "sleep": null
+      }
+    }
+  }
+}

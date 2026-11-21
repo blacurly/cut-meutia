@@ -1,0 +1,1291 @@
+// Skema database Ayomi, dibuat otomatis oleh scripts/generate-erd.mjs.
+// Buka di https://dbdiagram.io > Import > DBML.
+
+TableGroup "Akun & peran" {
+  users
+  daycare_members
+  staff_invitations
+  daycare_delegations
+  delegation_permissions
+  account_sanctions
+}
+
+TableGroup "Daycare & katalog" {
+  daycares
+  daycare_listings
+  daycare_listing_profiles
+  daycare_photos
+  service_offerings
+  service_price_versions
+  commission_rules
+}
+
+TableGroup "Anak" {
+  children
+  child_health_profiles
+  child_health_change_logs
+  child_health_correction_requests
+}
+
+TableGroup "Pendaftaran" {
+  enrollments
+  enrollment_service_dates
+  enrollment_consents
+  enrollment_status_logs
+  caregiver_assignments
+}
+
+TableGroup "Pembayaran" {
+  charges
+  transactions
+  payment_details
+  payment_webhook_events
+  refunds
+  financial_holds
+  payouts
+  payout_items
+  daycare_payout_accounts
+  payout_account_change_requests
+}
+
+TableGroup "Catatan harian & media" {
+  daily_reports
+  daily_report_activities
+  activity_comments
+  activity_reactions
+  activity_acknowledgements
+  report_change_logs
+  attachments
+  attachment_variants
+}
+
+TableGroup "Penjemputan" {
+  authorized_pickups
+  pickup_records
+}
+
+TableGroup "Insiden" {
+  incident_reports
+  incident_ai_analyses
+  incident_urgency_change_logs
+  incident_status_logs
+  incident_parent_acknowledgements
+}
+
+TableGroup "Legalitas & Safety Score" {
+  daycare_documents
+  daycare_verifications
+  daycare_safety_scores
+}
+
+TableGroup "Ulasan" {
+  reviews
+  review_versions
+  review_replies
+  review_reply_versions
+}
+
+TableGroup "Komplain & investigasi" {
+  complaints
+  complaint_status_logs
+  complaint_assignments
+  investigations
+  admin_actions
+}
+
+TableGroup "Notifikasi" {
+  notifications
+  notification_receipts
+  notification_reminders
+  notification_delivery_logs
+}
+
+TableGroup "AI, sistem & audit" {
+  ai_jobs
+  system_settings
+  audit_logs
+}
+
+Table account_sanctions {
+  id uuid [pk]
+  target_user_id uuid
+  target_daycare_id uuid
+  investigation_id uuid
+  sanction_type text [not null]
+  reason text [not null]
+  imposed_by uuid [not null]
+  starts_at timestamp_with_time_zone [not null]
+  ends_at timestamp_with_time_zone
+  revoked_by uuid
+  revoked_at timestamp_with_time_zone
+  revocation_reason text
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table activity_acknowledgements {
+  id uuid [pk]
+  activity_id uuid [not null]
+  user_id uuid [not null]
+  ack_type text [not null]
+  acknowledged_at timestamp_with_time_zone [not null]
+}
+
+Table activity_comments {
+  id uuid [pk]
+  activity_id uuid [not null]
+  author_id uuid [not null]
+  author_role text [not null]
+  body text [not null]
+  request_id text [not null]
+  created_at timestamptz [not null]
+  deleted_at timestamptz
+}
+
+Table activity_reactions {
+  activity_id uuid [pk]
+  user_id uuid [pk]
+  reaction text [pk]
+  created_at timestamptz [not null]
+}
+
+Table admin_actions {
+  id uuid [pk]
+  admin_id uuid [not null]
+  action_type text [not null]
+  audit_log_id uuid [not null, unique]
+  complaint_id uuid
+  investigation_id uuid
+  decision_summary text [not null]
+  executed_at timestamp_with_time_zone [not null]
+}
+
+Table ai_jobs {
+  id uuid [pk]
+  feature text [not null]
+  daycare_id uuid
+  document_id uuid
+  review_version_id uuid
+  reply_version_id uuid
+  activity_id uuid
+  attachment_id uuid
+  incident_id uuid
+  provider text [not null]
+  model text [not null]
+  model_version text [not null]
+  prompt_version text [not null]
+  input_version text [not null]
+  input_snapshot jsonb [not null]
+  output jsonb
+  status text [not null]
+  attempt_number integer [not null]
+  retry_of_id uuid
+  error_code text
+  requested_by uuid
+  started_at timestamp_with_time_zone
+  finished_at timestamp_with_time_zone
+  idempotency_key text [not null, unique]
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table attachment_variants {
+  id uuid [pk]
+  attachment_id uuid [not null]
+  variant_type text [not null]
+  audience_child_id uuid
+  bucket text [not null]
+  object_path text [not null]
+  sha256 text [not null]
+  status text [not null]
+  ai_job_id uuid
+  reviewed_by uuid
+  reviewed_at timestamp_with_time_zone
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table attachments {
+  id uuid [pk]
+  activity_id uuid
+  incident_id uuid
+  pickup_id uuid
+  document_id uuid
+  payout_change_id uuid
+  complaint_id uuid
+  investigation_id uuid
+  sanction_id uuid
+  uploaded_by uuid [not null]
+  bucket text [not null]
+  object_path text [not null]
+  mime_type text [not null]
+  byte_size bigint [not null]
+  sha256 text [not null]
+  status text [not null]
+  uploaded_at timestamp_with_time_zone
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table audit_logs {
+  id uuid [pk]
+  actor_id uuid
+  actor_type text [not null]
+  action text [not null]
+  entity_type text [not null]
+  entity_id uuid [not null]
+  daycare_id uuid
+  reason text
+  before_summary jsonb
+  after_summary jsonb
+  request_id text [not null]
+  actor_label_snapshot text [not null]
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table authorized_pickups {
+  id uuid [pk]
+  child_id uuid [not null]
+  created_by uuid [not null]
+  enrollment_id uuid
+  name text [not null]
+  phone text [not null]
+  relationship text [not null]
+  permission_type text [not null]
+  valid_from timestamp_with_time_zone [not null]
+  valid_until timestamp_with_time_zone
+  revoked_at timestamp_with_time_zone
+  consumed_at timestamp_with_time_zone
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table caregiver_assignments {
+  id uuid [pk]
+  enrollment_id uuid [not null]
+  caregiver_id uuid [not null]
+  assigned_by uuid [not null]
+  starts_at timestamp_with_time_zone [not null]
+  ends_at timestamp_with_time_zone [not null]
+  ended_early_at timestamp_with_time_zone
+  end_reason text
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table charges {
+  id uuid [pk]
+  enrollment_id uuid [not null]
+  charge_type text [not null]
+  price_version_id uuid
+  commission_rule_id uuid
+  policy_snapshot jsonb [not null]
+  service_amount bigint [not null]
+  parent_admin_fee bigint [not null]
+  total_amount bigint [not null]
+  daycare_commission_amount bigint [not null]
+  currency character [not null]
+  status text [not null]
+  due_at timestamp_with_time_zone [not null]
+  paid_transaction_id uuid [unique]
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table child_health_change_logs {
+  id uuid [pk]
+  child_id uuid [not null]
+  from_version integer [not null]
+  to_version integer [not null]
+  before_data jsonb [not null]
+  after_data jsonb [not null]
+  changed_by uuid [not null]
+  reason text
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table child_health_correction_requests {
+  id uuid [pk]
+  child_id uuid [not null]
+  enrollment_id uuid [not null]
+  proposed_by uuid [not null]
+  proposed_changes jsonb [not null]
+  reason text [not null]
+  status text [not null]
+  decided_by uuid
+  decided_at timestamp_with_time_zone
+  decision_note text
+  base_health_version integer [not null]
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table child_health_profiles {
+  child_id uuid [pk]
+  allergies text
+  medical_history text
+  special_needs text
+  medication_notes text
+  version integer [not null]
+  updated_by uuid [not null]
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table children {
+  child_id uuid [pk]
+  parent_id uuid [not null]
+  full_name text [not null]
+  birth_date date
+  gender text
+  created_at timestamp_with_time_zone [not null]
+  general_notes text
+  status text [not null]
+  deleted_at timestamp_with_time_zone
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table commission_rules {
+  id uuid [pk]
+  name text [not null]
+  version integer [not null]
+  daycare_id uuid
+  offering_id uuid
+  category_code text
+  percentage numeric [not null]
+  calculation_base text [not null]
+  rounding_policy text [not null]
+  effective_from timestamp_with_time_zone [not null]
+  effective_until timestamp_with_time_zone
+  approved_by uuid [not null]
+  approved_at timestamp_with_time_zone [not null]
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table complaint_assignments {
+  id uuid [pk]
+  complaint_id uuid [not null]
+  from_admin_id uuid
+  to_admin_id uuid [not null]
+  changed_by uuid [not null]
+  reason text [not null]
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table complaint_status_logs {
+  id uuid [pk]
+  complaint_id uuid [not null]
+  from_status text
+  to_status text [not null]
+  actor_id uuid
+  actor_type text [not null]
+  reason text [not null]
+  response_text text
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table complaints {
+  id uuid [pk]
+  submitted_by uuid [not null]
+  daycare_id uuid
+  enrollment_id uuid
+  incident_id uuid
+  category text [not null]
+  priority text [not null]
+  subject text [not null]
+  description text [not null]
+  status text [not null]
+  assigned_admin_id uuid
+  resolution_text text
+  confirmation_requested_at timestamp_with_time_zone
+  confirmation_due_at timestamp_with_time_zone
+  confirmed_by uuid
+  confirmed_at timestamp_with_time_zone
+  closed_at timestamp_with_time_zone
+  closure_reason text
+  version integer [not null]
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table daily_report_activities {
+  id uuid [pk]
+  report_id uuid [not null]
+  caregiver_id uuid [not null]
+  activity_type text [not null]
+  title text [not null]
+  body text [not null]
+  occurred_at timestamp_with_time_zone [not null]
+  details jsonb [not null]
+  status text [not null]
+  is_urgent boolean [not null]
+  urgent_reason text
+  sent_at timestamp_with_time_zone
+  draft_ai_job_id uuid
+  version integer [not null]
+  deleted_at timestamp_with_time_zone
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table daily_reports {
+  id uuid [pk]
+  enrollment_id uuid [not null]
+  report_date date [not null]
+  created_by uuid [not null]
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table daycare_delegations {
+  id uuid [pk]
+  daycare_id uuid [not null]
+  grantor_id uuid [not null]
+  grantee_id uuid [not null]
+  starts_at timestamp_with_time_zone [not null]
+  ends_at timestamp_with_time_zone [not null]
+  reason text [not null]
+  revoked_at timestamp_with_time_zone
+  revoked_by uuid
+  revocation_reason text
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table daycare_documents {
+  id uuid [pk]
+  daycare_id uuid [not null]
+  document_type text [not null]
+  version integer [not null]
+  document_number text
+  issuer text
+  valid_from date
+  expires_on date
+  submitted_by uuid [not null]
+  status text [not null]
+  supersedes_id uuid
+  published_at timestamp_with_time_zone
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table daycare_listing_profiles {
+  listing_id uuid [pk]
+  data_origin text [not null]
+  generator_version text
+  description text [not null]
+  monthly_fee_min integer [not null]
+  monthly_fee_max integer [not null]
+  daily_fee integer [not null]
+  registration_fee integer [not null]
+  caregiver_ratio smallint [not null]
+  caregiver_count smallint [not null]
+  daily_capacity smallint [not null]
+  age_min_months smallint [not null]
+  age_max_months smallint [not null]
+  opening_time time [not null]
+  closing_time time [not null]
+  operating_days text [not null]
+  packages jsonb [not null]
+  gallery_images text[] [not null]
+  gallery_is_illustration boolean [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table daycare_listings {
+  id uuid [pk]
+  source_dataset text [not null]
+  source_row integer [not null]
+  slug text [not null, unique]
+  name text [not null]
+  province_code text [not null]
+  province_name text [not null]
+  city_name text [not null]
+  district_name text
+  address text [not null]
+  postal_code text
+  facilities_text text [not null]
+  facility_tags text[] [not null]
+  public_rating numeric
+  public_rating_source text
+  legal_status text [not null]
+  legal_reference text
+  legal_reference_url text
+  npsn text
+  data_quality_notes text[] [not null]
+  cover_image_path text
+  gallery_paths text[] [not null]
+  claimed_daycare_id uuid [unique]
+  visibility text [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table daycare_members {
+  id uuid [pk]
+  daycare_id uuid [not null]
+  user_id uuid [not null]
+  member_role text [not null]
+  status text [not null]
+  verified_by uuid
+  verified_at timestamp_with_time_zone
+  joined_at timestamp_with_time_zone
+  ended_at timestamp_with_time_zone
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table daycare_payout_accounts {
+  id uuid [pk]
+  daycare_id uuid [not null]
+  bank_code text [not null]
+  account_number_ciphertext text [not null]
+  account_last4 text [not null]
+  account_holder text [not null]
+  status text [not null]
+  approved_by uuid [not null]
+  approved_at timestamp_with_time_zone [not null]
+  activated_at timestamp_with_time_zone [not null]
+  deactivated_at timestamp_with_time_zone
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table daycare_safety_scores {
+  id uuid [pk]
+  daycare_id uuid [not null]
+  ai_job_id uuid [not null]
+  score numeric [not null]
+  formula_version text [not null]
+  input_snapshot jsonb [not null]
+  explanation jsonb [not null]
+  status text [not null]
+  reviewed_by uuid
+  reviewed_at timestamp_with_time_zone
+  published_at timestamp_with_time_zone
+  created_at timestamp_with_time_zone [not null]
+  source text [not null]
+}
+
+Table daycare_verifications {
+  id uuid [pk]
+  document_id uuid [not null]
+  ai_job_id uuid
+  ocr_result jsonb
+  analysis_result jsonb
+  decision text [not null]
+  reviewed_by uuid
+  reviewed_at timestamp_with_time_zone
+  reason text
+  verified_fields jsonb
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table daycares {
+  id uuid [pk]
+  slug text [not null, unique]
+  name text [not null]
+  description text [not null]
+  address text [not null]
+  province_code text [not null]
+  city_code text [not null]
+  district_code text [not null]
+  postal_code text
+  timezone text [not null]
+  contact_phone text [not null]
+  latitude numeric
+  longitude numeric
+  facilities jsonb [not null]
+  opening_hours jsonb [not null]
+  public_gallery jsonb [not null]
+  commission_category_code text
+  daily_capacity integer [not null]
+  status text [not null]
+  main_manager_id uuid
+  deleted_at timestamp_with_time_zone
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table delegation_permissions {
+  id uuid [pk]
+  delegation_id uuid [not null]
+  permission text [not null]
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table enrollment_consents {
+  id uuid [pk]
+  enrollment_id uuid [not null]
+  parent_id uuid [not null]
+  consent_type text [not null]
+  policy_version text [not null]
+  scope jsonb [not null]
+  wording_snapshot text [not null]
+  accepted_at timestamp_with_time_zone [not null]
+  revoked_at timestamp_with_time_zone
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table enrollment_service_dates {
+  id uuid [pk]
+  enrollment_id uuid [not null]
+  daycare_id uuid [not null]
+  service_date date [not null]
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table enrollment_status_logs {
+  id uuid [pk]
+  enrollment_id uuid [not null]
+  from_status text
+  to_status text [not null]
+  actor_id uuid
+  actor_type text [not null]
+  reason text [not null]
+  request_id text [not null]
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table enrollments {
+  id uuid [pk]
+  child_id uuid [not null]
+  parent_id uuid [not null]
+  daycare_id uuid [not null]
+  offering_id uuid [not null]
+  price_version_id uuid
+  service_date date [not null]
+  status text [not null]
+  manager_decision text [not null]
+  decided_by uuid
+  decided_at timestamp_with_time_zone
+  decision_reason text
+  activation_block_reason text
+  payment_deadline timestamp_with_time_zone
+  approved_at timestamp_with_time_zone
+  checked_in_at timestamp_with_time_zone
+  checked_in_by uuid
+  completed_at timestamp_with_time_zone
+  cancelled_at timestamp_with_time_zone
+  child_snapshot jsonb
+  version integer [not null]
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table financial_holds {
+  id uuid [pk]
+  daycare_id uuid
+  transaction_id uuid
+  refund_id uuid
+  payout_id uuid
+  hold_type text [not null]
+  complaint_id uuid
+  imposed_by uuid [not null]
+  reason text [not null]
+  released_by uuid
+  released_at timestamp_with_time_zone
+  release_reason text
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table incident_ai_analyses {
+  id uuid [pk]
+  incident_id uuid [not null]
+  ai_job_id uuid [not null, unique]
+  urgency text [not null]
+  reason text [not null]
+  recommendations text [not null]
+  analyzed_at timestamp_with_time_zone [not null]
+  input_version integer [not null]
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table incident_parent_acknowledgements {
+  id uuid [pk]
+  incident_id uuid [not null, unique]
+  parent_id uuid [not null]
+  acknowledged_at timestamp_with_time_zone [not null]
+}
+
+Table incident_reports {
+  id uuid [pk]
+  enrollment_id uuid [not null]
+  reported_by uuid [not null]
+  occurred_at timestamp_with_time_zone [not null]
+  description text [not null]
+  first_aid text [not null]
+  caregiver_urgency text [not null]
+  caregiver_reason text [not null]
+  effective_urgency text [not null]
+  urgency_source text [not null]
+  needs_urgency_review boolean [not null]
+  status text [not null]
+  related_incident_id uuid
+  resolved_at timestamp_with_time_zone
+  version integer [not null]
+  submission_key text [not null, unique]
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table incident_status_logs {
+  id uuid [pk]
+  incident_id uuid [not null]
+  from_status text
+  to_status text [not null]
+  actor_id uuid [not null]
+  reason text [not null]
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table incident_urgency_change_logs {
+  id uuid [pk]
+  incident_id uuid [not null]
+  old_urgency text [not null]
+  new_urgency text [not null]
+  source text [not null]
+  actor_id uuid
+  analysis_id uuid
+  reason text [not null]
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table investigations {
+  id uuid [pk]
+  complaint_id uuid
+  incident_id uuid
+  assigned_admin_id uuid [not null]
+  status text [not null]
+  scope text [not null]
+  findings text
+  recommendation text
+  completed_at timestamp_with_time_zone
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table notification_delivery_logs {
+  id uuid [pk]
+  notification_id uuid [not null]
+  reminder_id uuid
+  channel text [not null]
+  attempt_number smallint [not null]
+  status text [not null]
+  provider_reference text
+  attempted_at timestamp_with_time_zone
+  delivered_at timestamp_with_time_zone
+  next_retry_at timestamp_with_time_zone
+  error_code text
+  delivery_key text [not null, unique]
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table notification_receipts {
+  id uuid [pk]
+  notification_id uuid [not null, unique]
+  user_id uuid [not null]
+  seen_at timestamp_with_time_zone
+  read_at timestamp_with_time_zone
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table notification_reminders {
+  id uuid [pk]
+  notification_id uuid [not null]
+  reminder_kind text [not null]
+  sequence integer [not null]
+  due_at timestamp_with_time_zone [not null]
+  status text [not null]
+  claimed_at timestamp_with_time_zone
+  lease_until timestamp_with_time_zone
+  sent_at timestamp_with_time_zone
+  deduplication_key text [not null, unique]
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table notifications {
+  id uuid [pk]
+  recipient_id uuid [not null]
+  event_type text [not null]
+  enrollment_id uuid
+  activity_id uuid
+  incident_id uuid
+  complaint_id uuid
+  document_id uuid
+  health_change_id uuid
+  title text [not null]
+  body text [not null]
+  priority text [not null]
+  deduplication_key text [not null, unique]
+  available_at timestamp_with_time_zone [not null]
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table payment_details {
+  id uuid [pk]
+  transaction_id uuid [not null, unique]
+  method_details jsonb [not null]
+  provider_fee_amount bigint
+  provider_receipt_reference text
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table payment_webhook_events {
+  id uuid [pk]
+  provider text [not null]
+  event_id text [not null]
+  resource_kind text [not null]
+  provider_resource_id text [not null]
+  transaction_id uuid
+  refund_id uuid
+  payout_id uuid
+  payload_digest text [not null]
+  sanitized_payload jsonb [not null]
+  verified_at timestamp_with_time_zone [not null]
+  processing_status text [not null]
+  processed_at timestamp_with_time_zone
+  error_code text
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table payout_account_change_requests {
+  id uuid [pk]
+  daycare_id uuid [not null]
+  requested_by uuid [not null]
+  current_account_id uuid
+  proposed_bank_code text [not null]
+  proposed_number_ciphertext text [not null]
+  proposed_last4 text [not null]
+  proposed_holder text [not null]
+  status text [not null]
+  reviewed_by uuid
+  reviewed_at timestamp_with_time_zone
+  reason text
+  result_account_id uuid
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table payout_items {
+  id uuid [pk]
+  payout_id uuid [not null]
+  charge_id uuid [not null]
+  gross_amount bigint [not null]
+  commission_amount bigint [not null]
+  refund_deduction bigint [not null]
+  other_deduction bigint [not null]
+  net_amount bigint [not null]
+  calculation_snapshot jsonb [not null]
+  reservation_status text [not null]
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table payouts {
+  id uuid [pk]
+  daycare_id uuid [not null]
+  payout_account_id uuid [not null]
+  account_snapshot jsonb [not null]
+  amount bigint [not null]
+  currency character [not null]
+  status text [not null]
+  approved_by uuid
+  approved_at timestamp_with_time_zone
+  provider text
+  provider_reference text
+  idempotency_key text [not null, unique]
+  paid_at timestamp_with_time_zone
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table pickup_records {
+  id uuid [pk]
+  enrollment_id uuid [not null]
+  authorization_id uuid
+  collector_snapshot jsonb [not null]
+  verification_status text [not null]
+  verification_note text [not null]
+  confirmed_by uuid [not null]
+  verified_at timestamp_with_time_zone [not null]
+  handed_over_at timestamp_with_time_zone
+  late_minutes integer [not null]
+  request_id text [not null, unique]
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table refunds {
+  id uuid [pk]
+  transaction_id uuid [not null]
+  complaint_id uuid
+  requested_by uuid [not null]
+  decision text [not null]
+  amount bigint [not null]
+  reason text [not null]
+  decided_by uuid
+  decided_at timestamp_with_time_zone
+  status text [not null]
+  provider_reference text
+  idempotency_key text [not null, unique]
+  completed_at timestamp_with_time_zone
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table report_change_logs {
+  id uuid [pk]
+  activity_id uuid [not null]
+  changed_by uuid [not null]
+  before_title text [not null]
+  after_title text [not null]
+  before_body text [not null]
+  after_body text [not null]
+  reason text [not null]
+  from_version integer [not null]
+  to_version integer [not null]
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table review_replies {
+  id uuid [pk]
+  review_id uuid [not null, unique]
+  manager_id uuid [not null]
+  published_version_id uuid
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table review_reply_versions {
+  id uuid [pk]
+  reply_id uuid [not null]
+  version integer [not null]
+  body text [not null]
+  status text [not null]
+  draft_ai_job_id uuid
+  moderation_ai_job_id uuid
+  submitted_by uuid [not null]
+  moderated_by uuid
+  moderated_at timestamp_with_time_zone
+  moderation_reason text
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table review_versions {
+  id uuid [pk]
+  review_id uuid [not null]
+  version integer [not null]
+  rating smallint [not null]
+  body text [not null]
+  moderation_status text [not null]
+  ai_job_id uuid
+  moderated_by uuid
+  moderated_at timestamp_with_time_zone
+  moderation_reason text
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table reviews {
+  id uuid [pk]
+  parent_id uuid [not null]
+  daycare_id uuid [not null]
+  qualifying_enrollment_id uuid [not null]
+  published_version_id uuid
+  revision_allowed_by uuid
+  revision_complaint_id uuid
+  revision_granted_at timestamp_with_time_zone
+  revision_used_at timestamp_with_time_zone
+  withdrawn_at timestamp_with_time_zone
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table service_offerings {
+  id uuid [pk]
+  daycare_id uuid [not null]
+  name text [not null]
+  service_type text [not null]
+  description text [not null]
+  min_age_months integer [not null]
+  max_age_months integer [not null]
+  is_active boolean [not null]
+  published_price_id uuid
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table service_price_versions {
+  id uuid [pk]
+  offering_id uuid [not null]
+  version integer [not null]
+  service_amount bigint [not null]
+  currency character [not null]
+  late_pickup_terms jsonb [not null]
+  status text [not null]
+  proposed_by uuid [not null]
+  decided_by uuid
+  decided_at timestamp_with_time_zone
+  decision_reason text
+  effective_from timestamp_with_time_zone
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table staff_invitations {
+  id uuid [pk]
+  daycare_id uuid [not null]
+  email text [not null]
+  invited_role text [not null]
+  token_hash text [not null, unique]
+  invited_by uuid [not null]
+  expires_at timestamp_with_time_zone [not null]
+  accepted_by uuid
+  accepted_at timestamp_with_time_zone
+  revoked_at timestamp_with_time_zone
+  created_at timestamp_with_time_zone [not null]
+}
+
+Table system_settings {
+  id uuid [pk]
+  key text [not null]
+  version integer [not null]
+  value jsonb [not null]
+  status text [not null]
+  effective_from timestamp_with_time_zone
+  approved_by uuid
+  approved_at timestamp_with_time_zone
+  reason text
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table transactions {
+  id uuid [pk]
+  charge_id uuid [not null]
+  provider text [not null]
+  provider_transaction_id text
+  idempotency_key text [not null, unique]
+  method text [not null]
+  amount bigint [not null]
+  currency character [not null]
+  status text [not null]
+  reconciliation_status text [not null]
+  reconciliation_reason text
+  paid_at timestamp_with_time_zone
+  expires_at timestamp_with_time_zone
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+}
+
+Table users {
+  id uuid [pk]
+  role text [not null]
+  full_name text
+  phone character
+  status text [not null]
+  created_at timestamp_with_time_zone [not null]
+  updated_at timestamp_with_time_zone [not null]
+  deleted_at timestamp_with_time_zone
+}
+
+Table daycare_photos {
+  id uuid [pk]
+  daycare_id uuid [not null]
+  object_path text [not null, unique]
+  caption text
+  display_order smallint [not null]
+  status text [not null]
+  submitted_by uuid [not null]
+  reviewed_by uuid
+  reviewed_at timestamptz
+  decision_reason text
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Ref: account_sanctions.imposed_by > users.id
+Ref: account_sanctions.investigation_id > investigations.id
+Ref: account_sanctions.revoked_by > users.id
+Ref: account_sanctions.target_daycare_id > daycares.id
+Ref: account_sanctions.target_user_id > users.id
+Ref: activity_acknowledgements.activity_id > daily_report_activities.id
+Ref: activity_acknowledgements.user_id > users.id
+Ref: activity_comments.activity_id > daily_report_activities.id
+Ref: activity_comments.author_id > users.id
+Ref: activity_reactions.activity_id > daily_report_activities.id
+Ref: activity_reactions.user_id > users.id
+Ref: admin_actions.admin_id > users.id
+Ref: admin_actions.audit_log_id > audit_logs.id
+Ref: admin_actions.complaint_id > complaints.id
+Ref: admin_actions.investigation_id > investigations.id
+Ref: ai_jobs.activity_id > daily_report_activities.id
+Ref: ai_jobs.attachment_id > attachments.id
+Ref: ai_jobs.daycare_id > daycares.id
+Ref: ai_jobs.document_id > daycare_documents.id
+Ref: ai_jobs.incident_id > incident_reports.id
+Ref: ai_jobs.reply_version_id > review_reply_versions.id
+Ref: ai_jobs.requested_by > users.id
+Ref: ai_jobs.retry_of_id > ai_jobs.id
+Ref: ai_jobs.review_version_id > review_versions.id
+Ref: attachment_variants.ai_job_id > ai_jobs.id
+Ref: attachment_variants.attachment_id > attachments.id
+Ref: attachment_variants.audience_child_id > children.child_id
+Ref: attachment_variants.reviewed_by > users.id
+Ref: attachments.activity_id > daily_report_activities.id
+Ref: attachments.complaint_id > complaints.id
+Ref: attachments.document_id > daycare_documents.id
+Ref: attachments.incident_id > incident_reports.id
+Ref: attachments.investigation_id > investigations.id
+Ref: attachments.payout_change_id > payout_account_change_requests.id
+Ref: attachments.pickup_id > pickup_records.id
+Ref: attachments.sanction_id > account_sanctions.id
+Ref: attachments.uploaded_by > users.id
+Ref: audit_logs.actor_id > users.id
+Ref: audit_logs.daycare_id > daycares.id
+Ref: authorized_pickups.child_id > children.child_id
+Ref: authorized_pickups.created_by > users.id
+Ref: authorized_pickups.enrollment_id > enrollments.id
+Ref: caregiver_assignments.assigned_by > users.id
+Ref: caregiver_assignments.caregiver_id > users.id
+Ref: caregiver_assignments.enrollment_id > enrollments.id
+Ref: charges.commission_rule_id > commission_rules.id
+Ref: charges.enrollment_id > enrollments.id
+Ref: charges.paid_transaction_id > transactions.id
+Ref: charges.price_version_id > service_price_versions.id
+Ref: child_health_change_logs.changed_by > users.id
+Ref: child_health_change_logs.child_id > children.child_id
+Ref: child_health_correction_requests.decided_by > users.id
+Ref: child_health_correction_requests.enrollment_id > enrollments.id
+Ref: child_health_correction_requests.proposed_by > users.id
+Ref: child_health_profiles.child_id > children.child_id
+Ref: child_health_profiles.updated_by > users.id
+Ref: children.parent_id > users.id
+Ref: commission_rules.approved_by > users.id
+Ref: commission_rules.daycare_id > daycares.id
+Ref: commission_rules.offering_id > service_offerings.id
+Ref: complaint_assignments.changed_by > users.id
+Ref: complaint_assignments.complaint_id > complaints.id
+Ref: complaint_assignments.from_admin_id > users.id
+Ref: complaint_assignments.to_admin_id > users.id
+Ref: complaint_status_logs.actor_id > users.id
+Ref: complaint_status_logs.complaint_id > complaints.id
+Ref: complaints.assigned_admin_id > users.id
+Ref: complaints.confirmed_by > users.id
+Ref: complaints.daycare_id > daycares.id
+Ref: complaints.enrollment_id > enrollments.id
+Ref: complaints.incident_id > incident_reports.id
+Ref: complaints.submitted_by > users.id
+Ref: daily_report_activities.caregiver_id > users.id
+Ref: daily_report_activities.draft_ai_job_id > ai_jobs.id
+Ref: daily_report_activities.report_id > daily_reports.id
+Ref: daily_reports.created_by > users.id
+Ref: daily_reports.enrollment_id > enrollments.id
+Ref: daycare_delegations.daycare_id > daycares.id
+Ref: daycare_delegations.grantee_id > users.id
+Ref: daycare_delegations.grantor_id > users.id
+Ref: daycare_delegations.revoked_by > users.id
+Ref: daycare_documents.daycare_id > daycares.id
+Ref: daycare_documents.submitted_by > users.id
+Ref: daycare_documents.supersedes_id > daycare_documents.id
+Ref: daycare_listing_profiles.listing_id > daycare_listings.id
+Ref: daycare_listings.claimed_daycare_id > daycares.id
+Ref: daycare_members.daycare_id > daycares.id
+Ref: daycare_members.user_id > users.id
+Ref: daycare_members.verified_by > users.id
+Ref: daycare_payout_accounts.approved_by > users.id
+Ref: daycare_payout_accounts.daycare_id > daycares.id
+Ref: daycare_safety_scores.ai_job_id > ai_jobs.id
+Ref: daycare_safety_scores.daycare_id > daycares.id
+Ref: daycare_safety_scores.reviewed_by > users.id
+Ref: daycare_verifications.ai_job_id > ai_jobs.id
+Ref: daycare_verifications.document_id > daycare_documents.id
+Ref: daycare_verifications.reviewed_by > users.id
+Ref: daycares.main_manager_id > users.id
+Ref: delegation_permissions.delegation_id > daycare_delegations.id
+Ref: enrollment_consents.enrollment_id > enrollments.id
+Ref: enrollment_service_dates.enrollment_id > enrollments.id
+Ref: enrollment_status_logs.actor_id > users.id
+Ref: enrollment_status_logs.enrollment_id > enrollments.id
+Ref: enrollments.checked_in_by > users.id
+Ref: enrollments.child_id > children.child_id
+Ref: enrollments.decided_by > users.id
+Ref: enrollments.offering_id > service_offerings.id
+Ref: enrollments.offering_id > service_price_versions.offering_id
+Ref: financial_holds.complaint_id > complaints.id
+Ref: financial_holds.daycare_id > daycares.id
+Ref: financial_holds.imposed_by > users.id
+Ref: financial_holds.payout_id > payouts.id
+Ref: financial_holds.refund_id > refunds.id
+Ref: financial_holds.released_by > users.id
+Ref: financial_holds.transaction_id > transactions.id
+Ref: incident_ai_analyses.ai_job_id > ai_jobs.id
+Ref: incident_ai_analyses.incident_id > incident_reports.id
+Ref: incident_parent_acknowledgements.incident_id > incident_reports.id
+Ref: incident_parent_acknowledgements.parent_id > users.id
+Ref: incident_reports.enrollment_id > enrollments.id
+Ref: incident_reports.related_incident_id > incident_reports.id
+Ref: incident_reports.reported_by > users.id
+Ref: incident_status_logs.actor_id > users.id
+Ref: incident_status_logs.incident_id > incident_reports.id
+Ref: incident_urgency_change_logs.actor_id > users.id
+Ref: incident_urgency_change_logs.analysis_id > incident_ai_analyses.id
+Ref: incident_urgency_change_logs.incident_id > incident_reports.id
+Ref: investigations.assigned_admin_id > users.id
+Ref: investigations.complaint_id > complaints.id
+Ref: investigations.incident_id > incident_reports.id
+Ref: notification_delivery_logs.notification_id > notifications.id
+Ref: notification_delivery_logs.reminder_id > notification_reminders.id
+Ref: notification_receipts.notification_id > notifications.id
+Ref: notification_reminders.notification_id > notifications.id
+Ref: notifications.activity_id > daily_report_activities.id
+Ref: notifications.complaint_id > complaints.id
+Ref: notifications.document_id > daycare_documents.id
+Ref: notifications.enrollment_id > enrollments.id
+Ref: notifications.health_change_id > child_health_change_logs.id
+Ref: notifications.incident_id > incident_reports.id
+Ref: notifications.recipient_id > users.id
+Ref: payment_details.transaction_id > transactions.id
+Ref: payment_webhook_events.payout_id > payouts.id
+Ref: payment_webhook_events.refund_id > refunds.id
+Ref: payment_webhook_events.transaction_id > transactions.id
+Ref: payout_account_change_requests.current_account_id > daycare_payout_accounts.id
+Ref: payout_account_change_requests.result_account_id > daycare_payout_accounts.id
+Ref: payout_account_change_requests.daycare_id > daycares.id
+Ref: payout_account_change_requests.requested_by > users.id
+Ref: payout_account_change_requests.reviewed_by > users.id
+Ref: payout_items.charge_id > charges.id
+Ref: payout_items.payout_id > payouts.id
+Ref: payouts.approved_by > users.id
+Ref: payouts.daycare_id > daycares.id
+Ref: payouts.payout_account_id > daycare_payout_accounts.id
+Ref: pickup_records.authorization_id > authorized_pickups.id
+Ref: pickup_records.confirmed_by > users.id
+Ref: pickup_records.enrollment_id > enrollments.id
+Ref: refunds.complaint_id > complaints.id
+Ref: refunds.decided_by > users.id
+Ref: refunds.requested_by > users.id
+Ref: refunds.transaction_id > transactions.id
+Ref: report_change_logs.activity_id > daily_report_activities.id
+Ref: report_change_logs.changed_by > users.id
+Ref: review_replies.manager_id > users.id
+Ref: review_replies.id > review_reply_versions.reply_id
+Ref: review_replies.review_id > reviews.id
+Ref: review_reply_versions.draft_ai_job_id > ai_jobs.id
+Ref: review_reply_versions.moderated_by > users.id
+Ref: review_reply_versions.moderation_ai_job_id > ai_jobs.id
+Ref: review_reply_versions.reply_id > review_replies.id
+Ref: review_reply_versions.submitted_by > users.id
+Ref: review_versions.ai_job_id > ai_jobs.id
+Ref: review_versions.moderated_by > users.id
+Ref: review_versions.review_id > reviews.id
+Ref: reviews.daycare_id > daycares.id
+Ref: reviews.parent_id > users.id
+Ref: reviews.id > review_versions.review_id
+Ref: reviews.qualifying_enrollment_id > enrollments.id
+Ref: reviews.revision_allowed_by > users.id
+Ref: reviews.revision_complaint_id > complaints.id
+Ref: service_offerings.daycare_id > daycares.id
+Ref: service_offerings.id > service_price_versions.offering_id
+Ref: service_price_versions.decided_by > users.id
+Ref: service_price_versions.offering_id > service_offerings.id
+Ref: service_price_versions.proposed_by > users.id
+Ref: staff_invitations.accepted_by > users.id
+Ref: staff_invitations.daycare_id > daycares.id
+Ref: staff_invitations.invited_by > users.id
+Ref: system_settings.approved_by > users.id
+Ref: transactions.charge_id > charges.id
+Ref: daycare_photos.daycare_id > daycares.id
+Ref: daycare_photos.submitted_by > users.id
+Ref: daycare_photos.reviewed_by > users.id
