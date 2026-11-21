@@ -2,9 +2,9 @@
 
 | Jenis | Tautan |
 | --- | --- |
-| **High-fidelity design (Figma)** | _Tempel tautan Figma tim di sini_ |
+| **High-fidelity design (Figma)** | https://www.figma.com/design/rKHNinwrfNPStcZ0EZTqMd/Ayomi-Project?node-id=0-1&m=dev |
 | **Prototype berjalan (website production)** | https://project-ayomi-cut-meutia.vercel.app |
-| **Video demo produk (≤ 3 menit)** | _Tempel tautan video demo di sini_ |
+| **Video demo produk (≤ 3 menit)** | https://youtu.be/9TdnSmbQ2FA?si=Z3dC31BFp773Lilp |
 
 Website production adalah prototype yang sudah terhubung ke database Supabase dan semua fitur AI. Alur yang bisa dicoba per peran ada di [`user-flow.md`](user-flow.md), dan skenario ujinya di [`../07-pengujian/UAT-ayomi.md`](../07-pengujian/UAT-ayomi.md).
 
