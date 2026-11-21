@@ -46,9 +46,3 @@ supabase/.temp/
 
 # raw team/daycare photos (processed into public/images by npm run foto)
 /foto-mentah/
-
-
-# AI-assisted working documents (guides, notebooks, checklists, specimens, UAT,
-# audit notes) stay local. docs/brief/ holds the team and course brief.
-/docs/*
-!/docs/brief/

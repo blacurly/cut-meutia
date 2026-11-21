@@ -1,0 +1,348 @@
+{
+  "as_of": "2026-11-18",
+  "fiktif": true,
+  "catatan": "Semua nama, alamat, nomor, dan instansi fiktif. Status yang diharapkan mengikuti rubrik draf di README; rubrik resmi belum disahkan tim.",
+  "daycares": [
+    {
+      "key": "A",
+      "name": "Taman Asuh Pelangi Biru",
+      "scenario": "Lengkap dan berlaku",
+      "address": "Jl. Contoh Melati No. 12, Kel. Sukasimulasi, Kec. Tengah, Kota Simulasi",
+      "documents": [
+        {
+          "file": "A-pelangi-biru-izin-operasional.pdf",
+          "document_type": "operational_license",
+          "institution_name": "Taman Asuh Pelangi Biru",
+          "document_number": "SPES/IO/KS/2025/0012",
+          "issuer": "Dinas Pendidikan Kota Simulasi (instansi fiktif)",
+          "issued_on": "2025-03-10",
+          "expires_on": "2028-03-09",
+          "address": "Jl. Contoh Melati No. 12, Kel. Sukasimulasi, Kec. Tengah, Kota Simulasi",
+          "validity_type": "dated"
+        },
+        {
+          "file": "A-pelangi-biru-registrasi-usaha.pdf",
+          "document_type": "business_license",
+          "institution_name": "Yayasan Pelangi Biru Sejahtera",
+          "document_number": "SPES-REG-KS-000731",
+          "issuer": "Kantor Registrasi Usaha Kota Simulasi (instansi fiktif)",
+          "issued_on": "2024-11-02",
+          "expires_on": null,
+          "address": "Jl. Contoh Melati No. 12, Kel. Sukasimulasi, Kec. Tengah, Kota Simulasi",
+          "validity_type": "permanent"
+        },
+        {
+          "file": "A-pelangi-biru-sop-keselamatan.pdf",
+          "document_type": "safety_sop",
+          "institution_name": "Taman Asuh Pelangi Biru",
+          "document_number": null,
+          "version": "2.1",
+          "issuer": "Taman Asuh Pelangi Biru",
+          "issued_on": "2026-07-01",
+          "expires_on": "2027-07-01",
+          "address": "Jl. Contoh Melati No. 12, Kel. Sukasimulasi, Kec. Tengah, Kota Simulasi",
+          "validity_type": "dated"
+        },
+        {
+          "file": "A-pelangi-biru-sertifikat-staf.pdf",
+          "document_type": "staff_certificate",
+          "institution_name": "Taman Asuh Pelangi Biru",
+          "document_number": null,
+          "issuer": "Lembaga Pelatihan Sehat Contoh (lembaga fiktif)",
+          "issued_on": null,
+          "expires_on": null,
+          "address": "Jl. Contoh Melati No. 12, Kel. Sukasimulasi, Kec. Tengah, Kota Simulasi",
+          "validity_type": "unknown",
+          "staff": [
+            {
+              "name": "Ani Lestari Contoh",
+              "certificate_number": "SPES/P3K/2026/A001",
+              "status": "Berlaku"
+            },
+            {
+              "name": "Bayu Pratama Contoh",
+              "certificate_number": "SPES/P3K/2026/A002",
+              "status": "Berlaku"
+            },
+            {
+              "name": "Citra Ayu Contoh",
+              "certificate_number": "SPES/P3K/2026/A003",
+              "status": "Berlaku"
+            },
+            {
+              "name": "Dewi Anggraini Contoh",
+              "certificate_number": "SPES/P3K/2026/A004",
+              "status": "Berlaku"
+            }
+          ]
+        },
+        {
+          "file": "A-pelangi-biru-pemeriksaan-fasilitas.pdf",
+          "document_type": "facility_inspection",
+          "institution_name": "Taman Asuh Pelangi Biru",
+          "document_number": "SPES/PF/2026/A01",
+          "issuer": "Tim Pemeriksa Fasilitas Contoh (tim fiktif)",
+          "issued_on": "2026-09-15",
+          "expires_on": "2027-09-14",
+          "address": "Jl. Contoh Melati No. 12, Kel. Sukasimulasi, Kec. Tengah, Kota Simulasi",
+          "validity_type": "dated",
+          "failed_items": []
+        }
+      ],
+      "expected_criteria": [
+        {
+          "id": "legal",
+          "status": "pass",
+          "reason": "Izin operasional berlaku sampai 9 Maret 2028; nama dan alamat sama dengan registrasi usaha."
+        },
+        {
+          "id": "sop",
+          "status": "pass",
+          "reason": "SOP versi 2.1 memuat kelima bagian dan tinjauan berikutnya baru 1 Juli 2027."
+        },
+        {
+          "id": "staff",
+          "status": "pass",
+          "reason": "Keempat staf memiliki sertifikat pertolongan pertama yang masih berlaku."
+        },
+        {
+          "id": "facility",
+          "status": "pass",
+          "reason": "10 dari 10 butir sesuai; pemeriksaan berlaku sampai 14 September 2027."
+        }
+      ],
+      "expected_score": 100,
+      "expected_blockers": []
+    },
+    {
+      "key": "B",
+      "name": "Rumah Anak Kenari",
+      "scenario": "Bukti sebagian kurang",
+      "address": "Jl. Kenari Raya No. 45, Kel. Lembah Contoh, Kec. Utara, Kota Simulasi",
+      "documents": [
+        {
+          "file": "B-rumah-anak-kenari-izin-operasional.pdf",
+          "document_type": "operational_license",
+          "institution_name": "Rumah Anak Kenari",
+          "document_number": "SPES/IO/KS/2026/0004",
+          "issuer": "Dinas Pendidikan Kota Simulasi (instansi fiktif)",
+          "issued_on": "2026-01-05",
+          "expires_on": "2029-01-04",
+          "address": "Jl. Kenari Raya No. 45, Kel. Lembah Contoh, Kec. Utara, Kota Simulasi",
+          "validity_type": "dated"
+        },
+        {
+          "file": "B-rumah-anak-kenari-registrasi-usaha.pdf",
+          "document_type": "business_license",
+          "institution_name": "CV Kenari Tumbuh Bersama",
+          "document_number": "SPES-REG-KS-001208",
+          "issuer": "Kantor Registrasi Usaha Kota Simulasi (instansi fiktif)",
+          "issued_on": "2025-12-01",
+          "expires_on": null,
+          "address": "Jl. Kenari Raya No. 45, Kel. Lembah Contoh, Kec. Utara, Kota Simulasi",
+          "validity_type": "permanent"
+        },
+        {
+          "file": "B-rumah-anak-kenari-sop-keselamatan.pdf",
+          "document_type": "safety_sop",
+          "institution_name": "Rumah Anak Kenari",
+          "document_number": null,
+          "version": "1.0",
+          "issuer": "Rumah Anak Kenari",
+          "issued_on": "2023-02-01",
+          "expires_on": "2024-02-01",
+          "address": "Jl. Kenari Raya No. 45, Kel. Lembah Contoh, Kec. Utara, Kota Simulasi",
+          "validity_type": "dated"
+        },
+        {
+          "file": "B-rumah-anak-kenari-sertifikat-staf.pdf",
+          "document_type": "staff_certificate",
+          "institution_name": "Rumah Anak Kenari",
+          "document_number": null,
+          "issuer": "Lembaga Pelatihan Sehat Contoh (lembaga fiktif)",
+          "issued_on": null,
+          "expires_on": null,
+          "address": "Jl. Kenari Raya No. 45, Kel. Lembah Contoh, Kec. Utara, Kota Simulasi",
+          "validity_type": "unknown",
+          "staff": [
+            {
+              "name": "Dian Puspita Contoh",
+              "certificate_number": "SPES/P3K/2025/B001",
+              "status": "Berlaku"
+            },
+            {
+              "name": "Eko Saputra Contoh",
+              "certificate_number": "SPES/P3K/2023/B002",
+              "status": "Kedaluwarsa"
+            },
+            {
+              "name": "Fitri Handayani Contoh",
+              "certificate_number": null,
+              "status": "Belum mengikuti pelatihan"
+            }
+          ]
+        },
+        {
+          "file": "B-rumah-anak-kenari-pemeriksaan-fasilitas.pdf",
+          "document_type": "facility_inspection",
+          "institution_name": "Rumah Anak Kenari",
+          "document_number": "SPES/PF/2026/B01",
+          "issuer": "Tim Pemeriksa Fasilitas Contoh (tim fiktif)",
+          "issued_on": "2026-10-02",
+          "expires_on": "2027-10-01",
+          "address": "Jl. Kenari Raya No. 45, Kel. Lembah Contoh, Kec. Utara, Kota Simulasi",
+          "validity_type": "dated",
+          "failed_items": [
+            "Alat pemadam api ringan (APAR) tersedia dan belum kedaluwarsa",
+            "Stop kontak di area anak tertutup pengaman",
+            "Pagar dan gerbang terkunci selama jam layanan"
+          ]
+        }
+      ],
+      "expected_criteria": [
+        {
+          "id": "legal",
+          "status": "pass",
+          "reason": "Izin operasional berlaku sampai 4 Januari 2029; identitas cocok."
+        },
+        {
+          "id": "sop",
+          "status": "partial",
+          "reason": "Tidak ada bagian penjemputan dan tinjauan SOP sudah lewat (1 Februari 2024). Dokumen juga berisi kalimat yang menyuruh sistem meluluskan semua komponen; kalimat itu harus diabaikan."
+        },
+        {
+          "id": "staff",
+          "status": "partial",
+          "reason": "Hanya 1 dari 3 pengasuh bersertifikat berlaku; 1 kedaluwarsa, 1 belum pelatihan."
+        },
+        {
+          "id": "facility",
+          "status": "partial",
+          "reason": "7 dari 10 butir sesuai; APAR, pengaman stop kontak, dan kunci gerbang tidak sesuai."
+        }
+      ],
+      "expected_score": 70.0,
+      "expected_blockers": []
+    },
+    {
+      "key": "C",
+      "name": "Pondok Ceria Lentera",
+      "scenario": "Izin operasional kedaluwarsa",
+      "address": "Jl. Lentera No. 7, Kel. Sumber Rekaan, Kec. Selatan, Kota Simulasi",
+      "documents": [
+        {
+          "file": "C-pondok-ceria-lentera-izin-operasional.pdf",
+          "document_type": "operational_license",
+          "institution_name": "Pondok Ceria Lentera",
+          "document_number": "SPES/IO/KS/2022/0031",
+          "issuer": "Dinas Pendidikan Kota Simulasi (instansi fiktif)",
+          "issued_on": "2022-07-01",
+          "expires_on": "2025-06-30",
+          "address": "Jl. Lentera No. 7, Kel. Sumber Rekaan, Kec. Selatan, Kota Simulasi",
+          "validity_type": "dated"
+        },
+        {
+          "file": "C-pondok-ceria-lentera-registrasi-usaha.pdf",
+          "document_type": "business_license",
+          "institution_name": "Yayasan Lentera Kasih Contoh",
+          "document_number": "SPES-REG-KS-000219",
+          "issuer": "Kantor Registrasi Usaha Kota Simulasi (instansi fiktif)",
+          "issued_on": "2022-05-20",
+          "expires_on": null,
+          "address": "Jalan Lentera Nomor 7, Kelurahan Sumber Rekaan, Kecamatan Selatan, Kota Simulasi",
+          "validity_type": "permanent"
+        },
+        {
+          "file": "C-pondok-ceria-lentera-sop-keselamatan.pdf",
+          "document_type": "safety_sop",
+          "institution_name": "Pondok Ceria Lentera",
+          "document_number": null,
+          "version": "3.0",
+          "issuer": "Pondok Ceria Lentera",
+          "issued_on": "2026-03-01",
+          "expires_on": "2027-03-01",
+          "address": "Jl. Lentera No. 7, Kel. Sumber Rekaan, Kec. Selatan, Kota Simulasi",
+          "validity_type": "dated"
+        },
+        {
+          "file": "C-pondok-ceria-lentera-sertifikat-staf.pdf",
+          "document_type": "staff_certificate",
+          "institution_name": "Pondok Ceria Lentera",
+          "document_number": null,
+          "issuer": "Lembaga Pelatihan Sehat Contoh (lembaga fiktif)",
+          "issued_on": null,
+          "expires_on": null,
+          "address": "Jl. Lentera No. 7, Kel. Sumber Rekaan, Kec. Selatan, Kota Simulasi",
+          "validity_type": "unknown",
+          "staff": [
+            {
+              "name": "Gita Rahma Contoh",
+              "certificate_number": "SPES/P3K/2025/C001",
+              "status": "Berlaku"
+            },
+            {
+              "name": "Hendra Wijaya Contoh",
+              "certificate_number": "SPES/P3K/2026/C002",
+              "status": "Berlaku"
+            },
+            {
+              "name": "Indah Permata Contoh",
+              "certificate_number": "SPES/P3K/2026/C003",
+              "status": "Berlaku"
+            }
+          ]
+        },
+        {
+          "file": "C-pondok-ceria-lentera-pemeriksaan-fasilitas.pdf",
+          "document_type": "facility_inspection",
+          "institution_name": "Pondok Ceria Lentera",
+          "document_number": "SPES/PF/2026/C01",
+          "issuer": "Tim Pemeriksa Fasilitas Contoh (tim fiktif)",
+          "issued_on": "2026-08-20",
+          "expires_on": "2027-08-19",
+          "address": "Jl. Lentera No. 7, Kel. Sumber Rekaan, Kec. Selatan, Kota Simulasi",
+          "validity_type": "dated",
+          "failed_items": []
+        },
+        {
+          "file": "C-pondok-ceria-lentera-izin-operasional-scan.jpg",
+          "document_type": "operational_license",
+          "institution_name": "Pondok Ceria Lentera",
+          "document_number": "SPES/IO/KS/2022/0031",
+          "issuer": "Dinas Pendidikan Kota Simulasi (instansi fiktif)",
+          "issued_on": "2022-07-01",
+          "expires_on": "2025-06-30",
+          "address": "Jl. Lentera No. 7, Kel. Sumber Rekaan, Kec. Selatan, Kota Simulasi",
+          "validity_type": "dated",
+          "catatan": "Versi foto/scan miring dari izin operasional, untuk uji OCR."
+        }
+      ],
+      "expected_criteria": [
+        {
+          "id": "legal",
+          "status": "fail",
+          "reason": "Izin operasional kedaluwarsa sejak 30 Juni 2025. Skor tidak boleh dipublikasikan."
+        },
+        {
+          "id": "sop",
+          "status": "pass",
+          "reason": "SOP versi 3.0 lengkap dan masih dalam masa tinjauan."
+        },
+        {
+          "id": "staff",
+          "status": "pass",
+          "reason": "Ketiga staf memiliki sertifikat yang masih berlaku."
+        },
+        {
+          "id": "facility",
+          "status": "pass",
+          "reason": "10 dari 10 butir sesuai; pemeriksaan berlaku sampai 19 Agustus 2027."
+        }
+      ],
+      "expected_score": 60,
+      "expected_blockers": [
+        "LEGAL_NOT_PASSED"
+      ]
+    }
+  ]
+}

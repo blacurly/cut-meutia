@@ -26,7 +26,7 @@ node scripts/build-daycare-seed.mjs \
   --jatim "path/DATASET DAYCARE - JAWA TIMUR.csv"
 ```
 
-Skrip menulis ulang seed SQL dan laporan `docs/dataset-daycare-3-provinsi.md`. Koreksi manual
+Skrip menulis ulang seed SQL dan laporan `docs/04-database/dataset-daycare-3-provinsi.md`. Koreksi manual
 (wilayah salah, baris di luar provinsi, catatan legalitas) ada di `CORRECTIONS` pada
 `lib/daycare-dataset.js`, masing-masing dengan alasannya. Jangan mengedit file seed secara manual.
 

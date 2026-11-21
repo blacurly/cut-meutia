@@ -72,7 +72,7 @@ const lines = [
     `| ${l.provinceName} | ${l.sourceRow} | ${l.name.replace(/\|/g, "/")} | ${l.dataQualityNotes.join(" ")} |`),
   "",
 ];
-const reportPath = path.join(root, "docs", "dataset-daycare-3-provinsi.md");
+const reportPath = path.join(root, "docs", "04-database", "dataset-daycare-3-provinsi.md");
 await mkdir(path.dirname(reportPath), { recursive: true });
 await writeFile(reportPath, lines.join("\n"));
 
