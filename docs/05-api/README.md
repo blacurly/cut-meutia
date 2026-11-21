@@ -24,6 +24,13 @@ Tombol **Try it out** di Swagger UI yang dibuka dari berkas lokal akan ditolak b
 
 Di browser, sesi juga dibaca dari cookie Supabase. **Peran dibaca dari database**, bukan dari request; mengganti ID di URL atau body tidak menaikkan hak akses, dan data milik akun lain dijawab `404`.
 
+## Route Handlers dan Server Actions
+
+- **Route Handlers** (`app/api/`) adalah REST API yang didokumentasikan di sini. Dipakai website dan juga klien lain seperti Thunder Client dan Postman.
+- **Server Actions** (`lib/actions/parent.js`) dipakai untuk mutasi data dari form di halaman `/profil`: `updateProfileAction` (ubah profil Orang Tua) dan `addChildAction` (tambah anak).
+- Kedua jalur memanggil fungsi yang sama di `lib/api/parent.js`, sehingga validasi, kode error, dan fungsi database Supabase identik. Endpoint `PATCH /api/me` dan `POST /api/children` tetap tersedia.
+- Server Action memeriksa login dari cookie sesi dan menolak kolom yang tidak dikenal. Next.js juga menolak panggilan dari origin lain.
+
 ## Konvensi
 
 - Body JSON dengan `Content-Type: application/json` (selain itu `415`), kecuali unggahan `multipart/form-data`.
