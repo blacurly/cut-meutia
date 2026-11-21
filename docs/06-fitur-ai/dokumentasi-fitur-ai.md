@@ -17,6 +17,7 @@ Ditambah bagian keamanan integrasi, penanganan kondisi, dan Responsible AI.
 | [`notebooks/foto-fokus-anak-yolo11n-seg.ipynb`](notebooks/foto-fokus-anak-yolo11n-seg.ipynb) | Pelatihan, evaluasi, dan deploy model Foto Fokus Anak (Google Colab) |
 | [`notebooks/incident-triage-indobert.ipynb`](notebooks/incident-triage-indobert.ipynb) | Data sintetis, fine-tune IndoBERT, kalibrasi, dan evaluasi triage |
 | [`notebooks/safety-score-legal-verification.ipynb`](notebooks/safety-score-legal-verification.ipynb) | Eksperimen rubrik Safety Score dan verifikasi dokumen |
+| [`notebooks/safety-score-ocr-awal.ipynb`](notebooks/safety-score-ocr-awal.ipynb) | Pipeline awal OCR untuk validasi legalitas daycare (Oktober 2026, dari repository tim `blacurly/cut-meutia`) |
 | [`spesimen-dokumen/`](spesimen-dokumen/README.md) | 16 dokumen legal **fiktif** beserta kunci jawaban, untuk menguji OCR dan Safety Score |
 
 Kode setiap layanan model ada di repository terpisah, masing-masing dengan README yang menjelaskan model, data, cara menjalankan, dan evaluasinya:
