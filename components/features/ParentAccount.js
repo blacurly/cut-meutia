@@ -4,15 +4,17 @@ import { Mail, Phone, Plus, ShieldCheck, UserRound } from "lucide-react";
 import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 import { normalizePhone } from "@/lib/auth";
-import { ApiRequestError, requestApi } from "@/lib/api-client";
+import { ApiRequestError, actionResult, requestApi } from "@/lib/api-client";
+import { addChildAction, updateProfileAction } from "@/lib/actions/parent";
 import { dateLabel, todayISO, validISODate, validateChild } from "@/lib/parent";
 import { useSession } from "@/components/session/SessionProvider";
 import { RequireRole } from "@/components/live/ui";
 import { EmptyState, LinkButton, PageHeader, Panel } from "./ParentUI";
 import p from "./Parent.module.css";
 
-// Parent profile, children, and health data (GET/PATCH /api/me,
-// /api/children, /api/children/{id}/health).
+// Parent profile, children, and health data. Reads use GET /api/me and
+// /api/children/{id}/health; saving the profile and adding a child use the
+// Server Actions in lib/actions/parent.js.
 function HealthProfileEditor({ child, onClose }) {
   const [health, setHealth] = useState({ allergies: "", medical_history: "", special_needs: "", medication_notes: "" });
   const [version, setVersion] = useState(1);
@@ -140,9 +142,7 @@ function AuthenticatedParentProfile({ user }) {
 
     setProfileSaving(true);
     try {
-      const { profile: savedProfile } = await requestApi("/api/me", {
-        method: "PATCH", body: { full_name: fullName, phone: phone || null },
-      });
+      const { profile: savedProfile } = actionResult(await updateProfileAction({ full_name: fullName, phone: phone || null }));
       setProfile(savedProfile);
       setProfileNotice("Profil berhasil disimpan ke akun Ayomi.");
     } catch (error) {
@@ -167,9 +167,7 @@ function AuthenticatedParentProfile({ user }) {
 
     setSaving(true);
     try {
-      await requestApi("/api/children", {
-        method: "POST", body: { full_name: child.name.trim(), birth_date: child.dob },
-      });
+      actionResult(await addChildAction({ full_name: child.name.trim(), birth_date: child.dob }));
 
       setChild({ name: "", dob: "" });
       setNotice("Profil anak berhasil disimpan ke akun Ayomi.");

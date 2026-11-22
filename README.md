@@ -20,10 +20,64 @@ Semua hasil AI diberi label di tampilan, punya status loading, hasil kosong, dan
 | **Draf catatan harian** | Generatif pendukung | `qwen/qwen3.8-27b` (Groq), prompt `logbook-draft-v2` | Catatan singkat pengasuh → draf catatan untuk orang tua, tanpa menambah fakta | Pengasuh menulis catatan harian |
 | **Rekomendasi pencarian** | Recommendation (rule-based weighted scoring) | Rumus berbobot di server | Legalitas, rating, fasilitas → urutan hasil | Katalog `/pencarian` |
 
-**Hasil evaluasi singkat** (rinciannya di [`docs/06-fitur-ai/`](docs/06-fitur-ai/dokumentasi-fitur-ai.md)):
-- **Foto Fokus Anak** (300 foto uji, 1.142 anak): membedakan anak dan dewasa **97,5%**; anak bisa difokuskan 90,8% (target 95% belum tercapai); deteksi palsu turun 23% dibanding model dasar. Karena siluet orang yang menempel masih bisa ikut tajam, pengasuh wajib meninjau setiap foto.
-- **Triage** (136 laporan uji fiktif): recall darurat **0,91** (target 0,95 belum tercapai), under-triage **3,7%**, dan **0** kasus darurat yang dinilai rendah.
-- **OCR** (16 dokumen spesimen fiktif): **80/81 isian (99%)** terbaca tepat; tidak ada nilai salah yang lolos ke usulan AI.
+### Dokumentasi per fitur AI
+
+Setiap fitur dijelaskan dengan lima poin dari Technical Requirement: (1) use case dan alasan AI dibutuhkan, (2) model dan alasan pemilihannya, (3) sumber dan jenis data, (4) input dan output, (5) hasil evaluasi, batasan, dan risiko. Rincian lengkapnya ada di [`docs/06-fitur-ai/`](docs/06-fitur-ai/dokumentasi-fitur-ai.md) dan di README setiap repository layanan.
+
+#### 1. Foto Fokus Anak (fitur AI utama) · [ayomi-cv-api](https://github.com/taworld-star/ayomi-cv-api)
+
+| Poin | Isi |
+| --- | --- |
+| **Use case dan alasan** | **Computer Vision.** PRD: orang tua butuh laporan harian yang transparan **tanpa melanggar privasi anak lain**. Foto kegiatan hampir selalu berisi beberapa anak, dan memburamkan secara manual tidak mungkin dilakukan pengasuh untuk setiap foto |
+| **Model dan alasannya** | **YOLO11n-seg** (Ultralytics, open source, pre-trained COCO), di-fine-tune ke kelas `anak`/`dewasa`, dijalankan sebagai ONNX di CPU. Dipilih karena ukuran nano cukup cepat tanpa GPU, menghasilkan **mask segmentasi** sehingga pemburaman mengikuti bentuk tubuh, dan mudah dilatih di Colab |
+| **Sumber dan jenis data** | Gambar **Open Images V7** (Google; anotasi CC BY 4.0) dengan mask berlabel Boy/Girl → `anak` dan Man/Woman → `dewasa`: train 2.747, validasi 338, uji 300 gambar. Saat dipakai: foto kegiatan yang diunggah pengasuh, disimpan di bucket privat |
+| **Input → output** | Foto JPG/PNG/WebP ≤ 4 MB → daftar orang (kelas, **confidence**, siluet) dan penanda kualitas foto → pengasuh memilih anak → foto versi fokus: anak terpilih tajam, orang lain dan latar diburamkan |
+| **Evaluasi** | 300 foto uji (1.142 anak): membedakan anak dan dewasa **97,5%**; deteksi palsu turun **23%** dibanding model dasar; anak bisa difokuskan 90,8% (target 95% belum tercapai) |
+| **Batasan dan risiko** | Orang yang menempel dengan anak target bisa ikut tajam (kebocoran 62%), sehingga **pengasuh wajib meninjau** setiap foto. Model belum dilatih dengan foto daycare, dan bias (warna kulit, cahaya redup, hijab, kerumunan) belum diuji. Foto asli dihapus setelah ditinjau; tidak ada pengenalan wajah |
+
+#### 2. Triage urgensi insiden · [ayomi-triage-api](https://github.com/taworld-star/ayomi-triage-api)
+
+| Poin | Isi |
+| --- | --- |
+| **Use case dan alasan** | **Klasifikasi teks** 4 tingkat urgensi. PRD: orang tua ingin **prioritas respons yang jelas**. Laporan insiden ditulis cepat dalam kondisi panik, dan urgensi pilihan pelapor bisa terlalu rendah |
+| **Model dan alasannya** | Production: **mesin aturan rubrik `draf-1` v2**. Eksperimen: **IndoBERT** `indobenchmark/indobert-base-p1` (MIT). Mesin aturan dipilih karena lebih baik pada data uji (macro F1 0,750 vs 0,548) dan setiap keputusannya bisa ditelusuri ke kalimat laporan |
+| **Sumber dan jenis data** | Teks laporan **fiktif**: ±3.400 laporan sintetis dari 38 skenario rubrik untuk latih, dan 204 laporan tulisan LLM dengan gaya beragam untuk kalibrasi (68) dan uji (136). Bukan laporan pengasuh sungguhan |
+| **Input → output** | Uraian, fakta yang diamati, pertolongan pertama, urgensi pelapor, usia anak dalam bulan (tanpa nama) → usulan urgensi, alasan, dan **kutipan kalimat** bukti |
+| **Evaluasi** | 136 laporan uji, sistem `max(pelapor, AI)`: recall darurat **0,91** (29 dari 32), under-triage **3,7%**, **0** kasus darurat dinilai rendah/sedang |
+| **Batasan dan risiko** | Target recall 0,95 belum tercapai; data uji tulisan LLM dan sedikit; rubrik belum disahkan mentor. Pengaman: AI **hanya bisa menaikkan** urgensi, notifikasi awal tidak menunggu AI, dan Pengelola bisa menetapkan urgensi dengan alasan. **Bukan diagnosis medis** |
+
+#### 3. Baca dokumen legal (Safety Score & Legal Verification) · [ayomi-ocr-api](https://github.com/taworld-star/ayomi-ocr-api)
+
+| Poin | Isi |
+| --- | --- |
+| **Use case dan alasan** | **Computer Vision (OCR)** + model bahasa. PRD: orang tua tidak punya tolok ukur legalitas daycare yang terstandarisasi. Admin harus memeriksa banyak dokumen; OCR mempercepat pemeriksaan dan menandai ketidakcocokan |
+| **Model dan alasannya** | **RapidOCR PP-OCRv5** Latin (Apache-2.0) di CPU, lalu model bahasa terbuka `qwen/qwen3.8-27b` lewat Groq untuk mengambil isian. OCR dipilih karena ringan, open source, dan menjaga huruf serta spasi bahasa Indonesia |
+| **Sumber dan jenis data** | Dokumen legal (PDF/JPG/PNG) yang diunggah Pengelola. Untuk pengujian: 16 dokumen spesimen **fiktif** buatan tim dengan kunci jawaban |
+| **Input → output** | Berkas dokumen → teks per halaman → usulan nomor, penerbit, tanggal terbit dan berlaku, nama, alamat, lengkap dengan **kutipan per halaman**, plus peringatan (kedaluwarsa, nomor berbeda) |
+| **Evaluasi** | **80/81 isian (99%)** terbaca tepat; tidak ada nilai salah yang lolos karena isian tanpa kutipan di teks OCR dikosongkan; 3–14 detik per dokumen |
+| **Batasan dan risiko** | Scan buram atau miring menurunkan kualitas; dokumen spesimen bersih sehingga angkanya bukan akurasi dokumen asli; OCR tidak bisa memastikan keaslian dokumen. **Admin yang memutuskan**, dan Safety Score dihitung dari dokumen yang disetujui Admin |
+
+#### 4. Draf catatan harian
+
+| Poin | Isi |
+| --- | --- |
+| **Use case dan alasan** | **Generatif pendukung.** PRD: pengelola kesulitan membuat catatan harian secara manual. Draf dari catatan singkat mengurangi waktu menulis tanpa mengurangi waktu mengasuh |
+| **Model dan alasannya** | `qwen/qwen3.8-27b` (open-weight) lewat Groq, prompt `logbook-draft-v2`. Dipilih setelah dibandingkan dengan `openai/gpt-oss-120b`: semua fakta terpakai, ±0,5–1,5 detik, dan instruksi di dalam catatan diabaikan |
+| **Sumber dan jenis data** | Teks catatan pengasuh (maksimal 30 fakta) dan detail makan/tidur, dibaca dari database, bukan dari browser. Foto anak **tidak** dikirim ke model |
+| **Input → output** | Catatan singkat → judul dan isi untuk orang tua, dengan indeks fakta yang dipakai; tidak boleh menambah fakta |
+| **Evaluasi** | Uji manual pada catatan makan, tidur, dan bermain, ditambah uji *prompt injection*. Belum ada evaluasi berbasis dataset |
+| **Batasan dan risiko** | Model bisa menulis kalimat yang kurang tepat; karena itu draf berlabel AI, server menolak fakta di luar catatan, dan **pengasuh wajib mengedit dan menyetujui** sebelum terkirim |
+
+#### 5. Rekomendasi pencarian
+
+| Poin | Isi |
+| --- | --- |
+| **Use case dan alasan** | **Recommendation System** (rule-based weighted scoring, diperbolehkan Technical Requirement). Orang tua perlu melihat daycare paling tepercaya lebih dulu |
+| **Model dan alasannya** | Rumus berbobot di server (`lib/daycare-directory.js`): daycare mitra Ayomi mendapat skor 100; daycare katalog dinilai dari legalitas (punya referensi izin publik 20, sedang diproses 5) + rating × 2 + jumlah fasilitas (maksimal 6) × 0,5. Dipilih karena transparan dan tidak butuh riwayat pengguna |
+| **Sumber dan jenis data** | Data katalog 104 daycare dari dataset publik DKI Jakarta, Jawa Barat, Jawa Timur ([`docs/04-database/`](docs/04-database/dataset-daycare-3-provinsi.md)) |
+| **Input → output** | Legalitas, rating, fasilitas, dan filter pengguna → urutan hasil pencarian. Pengguna baru langsung mendapat urutan ini tanpa data interaksi |
+| **Evaluasi** | Belum dievaluasi dengan metrik; urutannya bisa diperiksa langsung dari rumus |
+| **Batasan dan risiko** | Belum dipersonalisasi per akun. Rating dan legalitas katalog berasal dari sumber publik, bukan verifikasi Ayomi, dan ditandai demikian di aplikasi |
 
 ### Arsitektur AI
 
@@ -74,7 +128,7 @@ Model bahasa untuk draf catatan harian dan isian dokumen tidak punya repository 
 | Bagian | Teknologi |
 | --- | --- |
 | Front-end | Next.js 16 (App Router), React 19, JavaScript (JSX), Tailwind CSS v4, `lucide-react` |
-| Back-end | Next.js Route Handlers (`app/api/`, 86 route, 117 metode) |
+| Back-end | **Route Handlers** untuk REST API (`app/api/`, 86 route, 117 metode) dan **Server Actions** untuk mutasi data dari form (`lib/actions/`). Keduanya memakai validasi dan fungsi database yang sama di `lib/api/` |
 | Database | Supabase PostgreSQL, 66 tabel dengan Row Level Security, fungsi database `app_*` |
 | Auth | Supabase Auth (email dan kata sandi); 4 peran: Orang Tua, Pengasuh, Pengelola, Admin |
 | Storage | Supabase Storage, bucket privat dengan tautan bertanda tangan 5 menit |
@@ -144,6 +198,7 @@ components/
 ├── ui/ layout/ features/ live/               # Komponen UI, layout, fitur, dan halaman yang terhubung API
 lib/
 ├── api/                                      # Validasi dan logika per endpoint
+├── actions/                                  # Server Actions untuk form (memanggil lib/api)
 ├── ai/                                       # Kontrak AI v1, provider, validasi output
 └── supabase/                                 # Client Supabase
 supabase/
